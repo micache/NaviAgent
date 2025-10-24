@@ -4,9 +4,8 @@ from dotenv import load_dotenv
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 import re
-import requests
 
-env_path = Path(__file__).resolve().parent.parent.parent.parent / '.env'
+env_path = Path(__file__).resolve().parent.parent.parent.parent.parent / '.env'
 # print(f"Loading from: {env_path}")
 load_dotenv(dotenv_path=env_path, override=True)
 
@@ -15,8 +14,9 @@ class TextDestinationAgent(Agent):
     
     def __init__(self):
         api_key = os.getenv("OPENAI_API_KEY")
+        model = os.getenv("OPENAI_MODEL")
         super().__init__(
-            model=OpenAIChat(id='gpt-4o-mini', api_key=api_key),
+            model=OpenAIChat(id=model, api_key=api_key),
             markdown=False
         )
     
@@ -34,12 +34,17 @@ class TextDestinationAgent(Agent):
         response_text = re.sub(r"```json|```", "", response_text).strip()
         
         return response_text
-    
-def main():
-    agent = TextDestinationAgent()
-    description = "A quiet place with flowers, pine trees, chilling temperature and supports recreational activities like hiking and camping."
-    result = agent.suggest_destination(description)
-    print("Suggested Destination:", result)
 
-if __name__ == "__main__":
-    main()
+def get_destination_suggestion(description: str) -> str:
+    agent = TextDestinationAgent()
+    return agent.suggest_destination(description)
+
+# def main():
+#     agent = TextDestinationAgent()
+#     description = input("Enter a description of your ideal travel destination: ")
+#     # description = "A quiet place with flowers, pine trees, chilling temperature and supports recreational activities like hiking and camping."
+#     result = agent.suggest_destination(description)
+#     print("Suggested Destination:", result)
+
+# if __name__ == "__main__":
+#     main()
