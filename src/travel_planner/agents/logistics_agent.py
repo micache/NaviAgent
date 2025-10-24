@@ -1,6 +1,6 @@
 """
 Logistics Agent
-Provides flight information and accommodation suggestions
+Provides flight information and accommodation suggestions using Agno's structured input/output
 """
 
 import ssl
@@ -11,123 +11,109 @@ import certifi
 import httpx
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
+from agno.tools.reasoning import ReasoningTools
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import json
-
-from config import settings  # Thêm dòng này
+from config import settings
+from models.schemas import LogisticsAgentInput, LogisticsAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_logistics_agent(model: str = "gpt-4") -> Agent:
+def create_logistics_agent(model: str = "gpt-4o-mini") -> Agent:
     """
-    Creates an agent specialized in travel logistics
+    Create a Logistics Agent with structured input/output.
+
+    Args:
+        model: OpenAI model ID to use
+
+    Returns:
+        Agent configured with LogisticsAgentInput and LogisticsAgentOutput schemas
     """
-
-    if not settings.openai_api_key:
-        raise ValueError("OPENAI_API_KEY not set in environment variables")
-
+    # Create SSL context with certifi
     ssl_context = ssl.create_default_context(cafile=certifi.where())
     http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
 
-    agent = Agent(
+    return Agent(
         name="LogisticsAgent",
         model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
-        tools=[search_tools],
-        description="""You are a travel logistics expert specializing in flights,
-        accommodation, and transportation planning.""",
+        tools=[ReasoningTools(add_instructions=True, add_few_shot=True), search_tools],
         instructions=[
-            "Search for current flight prices and options between the origin and destination",
-            "Research accommodation options and recommend specific areas/neighborhoods",
-            "Consider budget constraints when making recommendations",
-            "Provide practical transportation tips for getting around",
-            "Include information about airport transfers",
-            "Suggest booking strategies and timing",
-            "Generate a JSON structure with the following format:",
-            """
-            {
-                "flight_info": "Direct flights available from Hanoi to Tokyo (Haneda/Narita). Major carriers: Vietnam Airlines, ANA, JAL. Flight time: ~5-6 hours. Best to book 2-3 months in advance for better rates.",
-                "estimated_flight_cost": 15000000,
-                "accommodation_suggestions": [
-                    "Shibuya/Shinjuku: Central location, great for first-time visitors, extensive train connections. Budget: 1,500,000-3,000,000 VND/night",
-                    "Asakusa: Traditional atmosphere, near Senso-ji Temple, more affordable. Budget: 1,000,000-2,000,000 VND/night",
-                    "Ueno: Excellent value, good transportation links, near museums and parks. Budget: 800,000-1,800,000 VND/night",
-                    "Ginza: Upscale area, luxury shopping, higher prices. Budget: 2,500,000-5,000,000 VND/night"
-                ],
-                "transportation_tips": [
-                    "Purchase JR Pass before arrival for unlimited JR train travel (7-day pass ~3,000,000 VND)",
-                    "Get IC card (Suica/Pasmo) for convenient metro and bus payments",
-                    "Airport to city: Narita Express (1 hour, ~400,000 VND) or Airport Limousine Bus (90 min, ~350,000 VND)",
-                    "Download apps: Google Maps, Hyperdia (train routes), Tokyo Metro app",
-                    "Taxis are expensive - use trains/metro for most travel"
-                ]
-            }
-            """,
-            "Base estimates on current market prices",
-            "Consider seasonal variations in flight and hotel prices",
-            "Recommend neighborhoods based on budget and travel style",
+            "You are a travel logistics expert specializing in flights, accommodation, and transportation planning.",
+            "CRITICAL: Use the 'think' tool to reason through cost optimization and booking strategies.",
+            "Use 'analyze' tool to compare different flight options, accommodation areas, and transportation methods.",
+            "CRITICAL: Use search tools to find current flight prices for the specific departure date.",
+            "Search for '{departure_point} to {destination} flights {date}' to get accurate pricing.",
+            "Consider the weather information when recommending accommodation (e.g., suggest hotels with pools for hot weather).",
+            "Search for accommodation options and recommend specific areas/neighborhoods based on budget and travel style.",
+            "Consider budget constraints when making recommendations.",
+            "Provide practical transportation tips for getting around the destination.",
+            "Include information about airport transfers and public transportation.",
+            "Suggest booking strategies and optimal timing for best prices.",
+            "Base all cost estimates on current market prices in VND.",
+            "Consider seasonal variations in flight and hotel prices based on the travel date.",
+            "Recommend specific neighborhoods/areas to stay with price ranges.",
         ],
+        input_schema=LogisticsAgentInput,
+        output_schema=LogisticsAgentOutput,
+        markdown=True,
+        debug_mode=True,
+        add_datetime_to_context=True,
+        add_location_to_context=True,
     )
-
-    return agent
 
 
 async def run_logistics_agent(
-    agent: Agent, departure_point: str, destination: str, budget: float, duration: int
-) -> dict:
+    agent: Agent,
+    departure_point: str,
+    destination: str,
+    departure_date,
+    budget: float,
+    duration: int,
+    weather_info: str = "",
+) -> LogisticsAgentOutput:
     """
-    Run the logistics agent and extract structured output
+    Run the logistics agent with structured input and output.
 
     Args:
-        agent: The LogisticsAgent instance
-        departure_point: Origin city/airport
-        destination: Destination city/country
-        budget: Total trip budget
+        agent: The configured Logistics Agent
+        departure_point: Starting location/city
+        destination: Destination location/city
+        departure_date: Departure date
+        budget: Total budget in VND
         duration: Trip duration in days
+        weather_info: Weather information from Weather Agent
 
     Returns:
-        Dictionary with logistics information
+        LogisticsAgentOutput with structured logistics information
     """
+    print(f"[LogisticsAgent] Planning logistics from {departure_point} to {destination}")
+    print(
+        f"[LogisticsAgent] Departure: {departure_date}, Duration: {duration} days, Budget: {budget:,.0f} VND"
+    )
 
-    prompt = f"""
-    Provide comprehensive logistics information for travel from {departure_point} to {destination}.
+    # Create structured input
+    agent_input = LogisticsAgentInput(
+        departure_point=departure_point,
+        destination=destination,
+        departure_date=departure_date,
+        budget=budget,
+        duration_days=duration,
+        weather_info=weather_info,
+    )
 
-    Duration: {duration} days
-    Total Budget: {budget:,.0f}
+    # Run agent with structured input
+    response = await agent.arun(input=agent_input)
 
-    IMPORTANT:
-    1. Search for CURRENT flight prices from {departure_point} to {destination}
-    2. Research accommodation options and prices in {destination}
-    3. Recommend specific neighborhoods/areas to stay based on the budget
-    4. Provide practical transportation tips
-    5. Return the output as a valid JSON object matching the structure in your instructions
-    """
-
-    response = await agent.arun(prompt)
-
-    try:
-        content = response.content
-        start_idx = content.find("{")
-        end_idx = content.rfind("}") + 1
-
-        if start_idx != -1 and end_idx > start_idx:
-            json_str = content[start_idx:end_idx]
-            result = json.loads(json_str)
-            return result
-        else:
-            return {
-                "flight_info": content,
-                "estimated_flight_cost": None,
-                "accommodation_suggestions": [],
-                "transportation_tips": [],
-                "raw_response": content,
-            }
-    except Exception as e:
-        return {
-            "flight_info": f"Error: {str(e)}",
-            "estimated_flight_cost": None,
-            "accommodation_suggestions": [],
-            "transportation_tips": [],
-            "raw_response": response.content,
-        }
+    # Response.content will be a LogisticsAgentOutput object
+    if isinstance(response.content, LogisticsAgentOutput):
+        print(
+            f"[LogisticsAgent] ✓ Estimated flight cost: {response.content.estimated_flight_cost:,.0f} VND"
+        )
+        print(
+            f"[LogisticsAgent] ✓ Provided {len(response.content.accommodation_suggestions)} accommodation suggestions"
+        )
+        return response.content
+    else:
+        print(f"[LogisticsAgent] ⚠ Unexpected response type: {type(response.content)}")
+        raise ValueError(f"Expected LogisticsAgentOutput, got {type(response.content)}")

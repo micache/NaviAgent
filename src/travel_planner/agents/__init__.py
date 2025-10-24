@@ -6,7 +6,7 @@ from .advisory_agent import create_advisory_agent
 from .budget_agent import create_budget_agent
 from .itinerary_agent import create_itinerary_agent
 from .logistics_agent import create_logistics_agent
-from .orchestrator import OrchestratorAgent
+from .orchestrator_agent import OrchestratorAgent
 from .souvenir_agent import create_souvenir_agent
 
 __all__ = [

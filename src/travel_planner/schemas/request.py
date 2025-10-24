@@ -2,6 +2,7 @@
 Request schemas for Travel Planner API
 """
 
+from datetime import date
 from enum import Enum
 from typing import Optional
 
@@ -26,6 +27,8 @@ class TravelRequest(BaseModel):
         ..., description="Điểm đến chính (tên thành phố hoặc quốc gia)", min_length=1
     )
 
+    departure_date: date = Field(..., description="Ngày khởi hành (YYYY-MM-DD)")
+
     budget: float = Field(..., description="Ngân sách dự kiến (VNĐ hoặc USD)", gt=0)
 
     num_travelers: int = Field(..., description="Số lượng người đi", gt=0)
@@ -43,6 +46,7 @@ class TravelRequest(BaseModel):
             "example": {
                 "departure_point": "Hanoi",
                 "destination": "Tokyo, Japan",
+                "departure_date": "2025-12-15",
                 "budget": 50000000,
                 "num_travelers": 2,
                 "trip_duration": 7,

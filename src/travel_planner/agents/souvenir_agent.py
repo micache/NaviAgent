@@ -1,6 +1,6 @@
 """
 Souvenir Agent
-Suggests souvenirs and where to buy them
+Suggests souvenirs and where to buy them using Agno's structured input/output
 """
 
 import ssl
@@ -14,123 +14,72 @@ from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import json
-
-from config import settings  # Thêm dòng này
+from config import settings
+from models.schemas import SouvenirAgentInput, SouvenirAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_souvenir_agent(model: str = "gpt-4") -> Agent:
+def create_souvenir_agent(model: str = "gpt-4o-mini") -> Agent:
     """
-    Creates an agent specialized in souvenir recommendations
+    Create a Souvenir Agent with structured input/output.
+
+    Args:
+        model: OpenAI model ID to use
+
+    Returns:
+        Agent configured with SouvenirAgentInput and SouvenirAgentOutput schemas
     """
-
-    if not settings.openai_api_key:
-        raise ValueError("OPENAI_API_KEY not set in environment variables")
-
+    # Create SSL context with certifi
     ssl_context = ssl.create_default_context(cafile=certifi.where())
     http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
 
-    agent = Agent(
+    return Agent(
         name="SouvenirAgent",
         model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
-        tools=[search_tools],
-        description="""You are a souvenir and gift specialist with extensive knowledge
-        of authentic local products, traditional crafts, and popular gift items from
-        destinations around the world.""",
         instructions=[
-            "Search for popular and authentic souvenirs from the destination",
-            "Recommend a mix of traditional items, food products, and practical gifts",
-            "Include price ranges based on current market prices",
-            "Suggest specific shops, markets, or districts where items can be purchased",
-            "Consider portability and customs regulations",
-            "Include both budget-friendly and premium options",
-            "Highlight items unique to the destination",
-            "Generate a JSON array with the following format:",
-            """
-            [
-                {
-                    "item_name": "Matcha Tea Set",
-                    "description": "Authentic Japanese matcha powder with traditional bamboo whisk and ceramic bowl. Perfect for tea enthusiasts.",
-                    "estimated_price": "1,000,000 - 3,000,000 VND",
-                    "where_to_buy": "Nakamise Shopping Street (Asakusa), Takashimaya Department Store"
-                },
-                {
-                    "item_name": "Furoshiki (Wrapping Cloth)",
-                    "description": "Traditional Japanese wrapping cloth with beautiful patterns. Eco-friendly and versatile for gift wrapping or decoration.",
-                    "estimated_price": "200,000 - 800,000 VND",
-                    "where_to_buy": "Oriental Bazaar (Harajuku), Tokyu Hands"
-                },
-                {
-                    "item_name": "KitKat Special Flavors",
-                    "description": "Japan-exclusive KitKat flavors like matcha, sake, and regional specialties. Easy to pack and popular gifts.",
-                    "estimated_price": "50,000 - 200,000 VND per box",
-                    "where_to_buy": "Airport duty-free, Don Quijote, any convenience store"
-                },
-                {
-                    "item_name": "Kokeshi Dolls",
-                    "description": "Traditional wooden dolls handcrafted with unique designs. Authentic Japanese folk art and collectibles.",
-                    "estimated_price": "500,000 - 2,000,000 VND",
-                    "where_to_buy": "Asakusa Nakamise, Kyoto specialty shops"
-                },
-                {
-                    "item_name": "Japanese Snack Box",
-                    "description": "Assorted traditional snacks including mochi, rice crackers, and regional specialties. Great for sharing.",
-                    "estimated_price": "300,000 - 800,000 VND",
-                    "where_to_buy": "Supermarkets, Don Quijote, station gift shops"
-                }
-            ]
-            """,
-            "Recommend at least 5-8 different souvenirs",
-            "Include a range of price points",
-            "Be specific about shopping locations",
+            "You are a souvenir and gift specialist with extensive knowledge of authentic local products, traditional crafts, and popular gift items.",
+            "Search for popular and authentic souvenirs from the destination.",
+            "Recommend a mix of traditional items, food products, and practical gifts.",
+            "Include price ranges in VND based on current market prices.",
+            "Suggest specific shops, markets, or districts where items can be purchased.",
+            "Consider portability and customs regulations.",
+            "Include both budget-friendly and premium options.",
+            "Highlight items unique to the destination.",
+            "Recommend at least 5-8 different souvenirs with varied price points.",
+            "Be specific about shopping locations and neighborhoods.",
         ],
+        input_schema=SouvenirAgentInput,
+        output_schema=SouvenirAgentOutput,
+        markdown=True,
+        debug_mode=True,
+        add_datetime_to_context=True,
+        add_location_to_context=True,
     )
 
-    return agent
 
-
-async def run_souvenir_agent(agent: Agent, destination: str) -> list:
+async def run_souvenir_agent(agent: Agent, destination: str) -> SouvenirAgentOutput:
     """
-    Run the souvenir agent and extract structured output
+    Run the souvenir agent with structured input and output.
+
+    Args:
+        agent: The configured Souvenir Agent
+        destination: Destination location
+
+    Returns:
+        SouvenirAgentOutput with structured souvenir recommendations
     """
+    print(f"[SouvenirAgent] Finding souvenir recommendations for {destination}")
 
-    prompt = f"""
-    Suggest authentic souvenirs and local products from {destination}.
+    # Create structured input
+    agent_input = SouvenirAgentInput(destination=destination)
 
-    IMPORTANT:
-    1. Search for POPULAR and AUTHENTIC local souvenirs
-    2. Include items at various price points
-    3. Provide specific shops or markets where to buy
-    4. Return the output as a valid JSON array matching the structure in your instructions
-    """
+    # Run agent with structured input
+    response = await agent.arun(input=agent_input)
 
-    response = await agent.arun(prompt)
-
-    try:
-        content = response.content
-        start_idx = content.find("[")
-        end_idx = content.rfind("]") + 1
-
-        if start_idx != -1 and end_idx > start_idx:
-            json_str = content[start_idx:end_idx]
-            result = json.loads(json_str)
-            return result
-        else:
-            return [
-                {
-                    "item_name": "Error",
-                    "description": content,
-                    "estimated_price": "N/A",
-                    "where_to_buy": "N/A",
-                }
-            ]
-    except Exception as e:
-        return [
-            {
-                "item_name": "Error",
-                "description": str(e),
-                "estimated_price": "N/A",
-                "where_to_buy": "N/A",
-            }
-        ]
+    # Response.content will be a SouvenirAgentOutput object
+    if isinstance(response.content, SouvenirAgentOutput):
+        print(f"[SouvenirAgent] ✓ Recommended {len(response.content.souvenirs)} souvenir items")
+        return response.content
+    else:
+        print(f"[SouvenirAgent] ⚠ Unexpected response type: {type(response.content)}")
+        raise ValueError(f"Expected SouvenirAgentOutput, got {type(response.content)}")

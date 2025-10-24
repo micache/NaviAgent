@@ -1,6 +1,6 @@
 """
 Budgeting Agent
-Creates detailed budget breakdowns for travel plans
+Creates detailed budget breakdowns for travel plans using Agno's structured input/output
 """
 
 import ssl
@@ -11,108 +11,51 @@ import certifi
 import httpx
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
+from agno.tools.reasoning import ReasoningTools
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import json
-
-from config import settings  # Thêm dòng này
+from config import settings
+from models.schemas import BudgetAgentInput, BudgetAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_budget_agent(model: str = "gpt-4") -> Agent:
+def create_budget_agent(model: str = "gpt-4o-mini") -> Agent:
     """
-    Creates an agent specialized in budget planning
+    Create a Budget Agent with structured input/output.
+
+    Args:
+        model: OpenAI model ID to use
+
+    Returns:
+        Agent configured with BudgetAgentInput and BudgetAgentOutput schemas
     """
-
-    if not settings.openai_api_key:
-        raise ValueError("OPENAI_API_KEY not set in environment variables")
-
+    # Create SSL context with certifi
     ssl_context = ssl.create_default_context(cafile=certifi.where())
     http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
 
-    agent = Agent(
+    return Agent(
         name="BudgetAgent",
         model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
-        tools=[search_tools],
-        description="""You are an expert travel budget analyst with deep knowledge of
-        costs in various destinations, including accommodation, food, transportation,
-        activities, and miscellaneous expenses.""",
+        tools=[ReasoningTools(add_instructions=True, add_few_shot=True)],
         instructions=[
-            "ALWAYS search for current prices in the destination before creating the budget",
-            "Research actual costs for flights, hotels, meals, attractions, and transportation",
-            "Break down the budget into clear categories",
-            "Provide detailed cost estimates based on real prices",
-            "Consider the number of travelers and trip duration",
-            "Account for seasonal price variations",
-            "Include a buffer for unexpected expenses (typically 10-15%)",
-            "Compare the estimated total against the provided budget",
-            "Provide recommendations if over or under budget",
-            "Generate a JSON structure with the following format:",
-            """
-            {
-                "categories": [
-                    {
-                        "category_name": "Accommodation",
-                        "estimated_cost": 15000000,
-                        "breakdown": [
-                            {"Hotel per night": 2000000},
-                            {"Total nights": 6}
-                        ],
-                        "notes": "Mid-range hotel in Shibuya area"
-                    },
-                    {
-                        "category_name": "Food & Dining",
-                        "estimated_cost": 8000000,
-                        "breakdown": [
-                            {"Breakfast per day": 150000},
-                            {"Lunch per day": 250000},
-                            {"Dinner per day": 400000}
-                        ],
-                        "notes": "Mix of local restaurants and street food"
-                    },
-                    {
-                        "category_name": "Transportation",
-                        "estimated_cost": 5000000,
-                        "breakdown": [
-                            {"JR Pass 7-day": 3000000},
-                            {"Local transport": 2000000}
-                        ],
-                        "notes": "Includes metro and occasional taxis"
-                    },
-                    {
-                        "category_name": "Activities & Attractions",
-                        "estimated_cost": 6000000,
-                        "breakdown": [],
-                        "notes": "Entry fees to temples, museums, entertainment"
-                    },
-                    {
-                        "category_name": "Shopping & Souvenirs",
-                        "estimated_cost": 4000000,
-                        "breakdown": [],
-                        "notes": "Gifts and personal shopping"
-                    },
-                    {
-                        "category_name": "Miscellaneous",
-                        "estimated_cost": 2000000,
-                        "breakdown": [],
-                        "notes": "Emergency buffer, tips, etc."
-                    }
-                ],
-                "total_estimated_cost": 40000000,
-                "budget_status": "Under budget by 10,000,000 VND",
-                "recommendations": [
-                    "You have room to upgrade accommodation or add activities",
-                    "Consider allocating extra budget for shopping"
-                ]
-            }
-            """,
-            "Always provide costs in the same currency as the input budget",
-            "Be realistic and base estimates on current market prices",
+            "You are a budget planning expert for travel.",
+            "CRITICAL: Use the 'think' tool to reason through complex budget calculations and trade-offs.",
+            "Use 'analyze' tool to evaluate different spending scenarios and optimization strategies.",
+            "Break down costs into categories: Accommodation, Food & Dining, Transportation, Activities & Entertainment, Shopping, Emergency Fund, etc.",
+            "Provide realistic cost estimates based on destination and travel style.",
+            "Consider the planned activities from the itinerary when estimating costs.",
+            "Compare total estimated cost against the provided budget.",
+            "Give actionable recommendations for staying within budget or how to utilize extra budget.",
+            "All costs should be in VND (Vietnamese Dong).",
         ],
+        input_schema=BudgetAgentInput,
+        output_schema=BudgetAgentOutput,
+        markdown=True,
+        debug_mode=True,
+        add_datetime_to_context=True,
+        add_location_to_context=True,
     )
-
-    return agent
 
 
 async def run_budget_agent(
@@ -121,13 +64,27 @@ async def run_budget_agent(
     duration: int,
     budget: float,
     num_travelers: int,
-    itinerary_data: dict,
-) -> dict:
+    itinerary_data: dict = None,
+) -> BudgetAgentOutput:
     """
-    Run the budget agent and extract structured output
-    """
+    Run the budget agent with structured input and output.
 
-    activities_summary = "No itinerary data available"
+    Args:
+        agent: The configured Budget Agent
+        destination: Destination location
+        duration: Number of days
+        budget: Total budget in VND
+        num_travelers: Number of travelers
+        itinerary_data: Optional dict with itinerary information
+
+    Returns:
+        BudgetAgentOutput with structured budget breakdown
+    """
+    print(f"[BudgetAgent] Creating budget breakdown for {destination}")
+    print(f"[BudgetAgent] Budget: {budget:,.0f} VND for {num_travelers} traveler(s)")
+
+    # Prepare activities summary from itinerary
+    activities_summary = ""
     if itinerary_data and "daily_schedules" in itinerary_data:
         activities_summary = "\n".join(
             [
@@ -135,48 +92,27 @@ async def run_budget_agent(
                 for day in itinerary_data["daily_schedules"]
             ]
         )
+    else:
+        activities_summary = "No detailed itinerary available yet"
 
-    prompt = f"""
-    Create a detailed budget breakdown for {destination}.
-    Duration: {duration} days
-    Budget: {budget:,.0f}
-    Number of Travelers: {num_travelers}
+    # Create structured input
+    agent_input = BudgetAgentInput(
+        destination=destination,
+        duration_days=duration,
+        num_travelers=num_travelers,
+        total_budget=budget,
+        travel_style="self_guided",  # Could be passed as parameter
+        activities_summary=activities_summary,
+    )
 
-    Planned Activities Summary:
-    {activities_summary}
+    # Run agent with structured input
+    response = await agent.arun(input=agent_input)
 
-    IMPORTANT:
-    1. Search for CURRENT prices in {destination}
-    2. Break down costs by category
-    3. Compare against the provided budget
-    4. Provide recommendations if over/under budget
-    5. Return the output as a valid JSON object matching the structure in your instructions
-    """
-
-    response = await agent.arun(prompt)
-
-    try:
-        content = response.content
-        start_idx = content.find("{")
-        end_idx = content.rfind("}") + 1
-
-        if start_idx != -1 and end_idx > start_idx:
-            json_str = content[start_idx:end_idx]
-            result = json.loads(json_str)
-            return result
-        else:
-            return {
-                "categories": [],
-                "total_estimated_cost": 0,
-                "budget_status": content,
-                "recommendations": [],
-                "raw_response": content,
-            }
-    except Exception as e:
-        return {
-            "categories": [],
-            "total_estimated_cost": 0,
-            "budget_status": f"Error: {str(e)}",
-            "recommendations": [],
-            "raw_response": response.content,
-        }
+    # Response.content will be a BudgetAgentOutput object
+    if isinstance(response.content, BudgetAgentOutput):
+        print(f"[BudgetAgent] ✓ Total estimated: {response.content.total_estimated_cost:,.0f} VND")
+        print(f"[BudgetAgent] ✓ Status: {response.content.budget_status}")
+        return response.content
+    else:
+        print(f"[BudgetAgent] ⚠ Unexpected response type: {type(response.content)}")
+        raise ValueError(f"Expected BudgetAgentOutput, got {type(response.content)}")

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from typing import List, Union
 
+import certifi
 from dotenv import load_dotenv
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,6 +14,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Load .env file explicitly
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path, override=True)
+
+# Ensure SSL/TLS uses the bundled certifi CA bundle on all platforms
+_certifi_ca_bundle = certifi.where()
+if _certifi_ca_bundle and os.path.exists(_certifi_ca_bundle):
+    os.environ.setdefault("SSL_CERT_FILE", _certifi_ca_bundle)
+    os.environ.setdefault("REQUESTS_CA_BUNDLE", _certifi_ca_bundle)
+    # Helpful debug log so we can verify the cert bundle in runtime logs
+    print(f"[Config] SSL cert bundle: {_certifi_ca_bundle}")
 
 
 class Settings(BaseSettings):
@@ -25,7 +34,7 @@ class Settings(BaseSettings):
 
     # OpenAI Settings
     openai_api_key: str = ""
-    openai_model: str = "gpt-4"
+    openai_model: str = "gpt-4o-mini"
 
     # Server Settings
     host: str = "0.0.0.0"

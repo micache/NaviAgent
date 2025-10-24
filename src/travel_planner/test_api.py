@@ -27,21 +27,23 @@ def test_plan_trip():
     print("Testing Plan Trip Endpoint")
     print("=" * 80)
 
-    # Sample request
+    # Sample request with departure_date
     request_data = {
         "departure_point": "Hanoi",
-        "destination": "Châu Âu, Pháp, Anh, Đức",
+        "destination": "Châu Âu",
+        "departure_date": "2025-12-15",  # Added departure date
         "budget": 50000000,
-        "num_travelers": 4,
+        "num_travelers": 2,
         "trip_duration": 7,
         "travel_style": "self_guided",
-        "customer_notes": "Thích quẩy, thích bar, thích ăn chơi nhảy múa",
+        "customer_notes": "Thích địa điểm đẹp, chụp ảnh sống.",
     }
 
     print("\nRequest Data:")
     pprint(request_data)
 
     print("\nSending request (this may take 2-5 minutes)...")
+    print("Weather Agent will search for seasonal events and weather forecast...")
     print("Please wait...")
 
     try:

@@ -3,14 +3,18 @@ Travel Planner API - FastAPI Application
 Multi-agent travel planning system using Agno-AGI
 """
 
-from datetime import datetime
+import json
+from datetime import date, datetime
+from pathlib import Path
 
 import uvicorn
-from agents import OrchestratorAgent  # Import từ agents/__init__.py
+from agents import OrchestratorAgent
 from config import settings
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
+# Import API schemas
 from schemas import TravelPlan, TravelRequest
 
 # Create FastAPI app
@@ -160,6 +164,7 @@ async def plan_trip(request: TravelRequest):
         # Log request
         print(f"\n[API] New travel plan request received")
         print(f"  - Destination: {request.destination}")
+        print(f"  - Departure Date: {request.departure_date}")
         print(f"  - Duration: {request.trip_duration} days")
         print(f"  - Budget: {request.budget:,.0f}")
         print(f"  - Travelers: {request.num_travelers}")
@@ -257,7 +262,6 @@ def run():
     """Run the application"""
     import sys
 
-    # Thêm flag để tránh multiprocessing issues trên Windows
     if sys.platform == "win32":
         import multiprocessing
 
@@ -268,9 +272,36 @@ def run():
         host=settings.host,
         port=settings.port,
         reload=settings.reload,
-        reload_delay=0.5,  # Thêm delay để tránh reload quá nhanh
+        reload_delay=0.5,
     )
+
+
+def main():
+    """Main function."""
+
+    # Create structured travel request
+    travel_request = TravelRequest(
+        destination="Châu Âu, Pháp, Anh, Đức",
+        departure_point="Hanoi",
+        departure_date=date(2024, 6, 1),
+        trip_duration=7,
+        budget=50_000_000,
+        num_travelers=4,
+        travel_style="self_guided",
+        customer_notes="Thích quẩy, thích bar, thích ăn chơi nhảy múa",
+    )
+
+    # Plan trip with structured input
+    travel_plan = orchestrator.plan_trip(travel_request)
+
+    # Save structured output
+    output_file = Path("travel_plan_output.json")
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(travel_plan.model_dump(), f, ensure_ascii=False, indent=2, default=str)
+
+    print(f"\n✅ Travel plan saved to: {output_file}")
 
 
 if __name__ == "__main__":
     run()
+    # main()

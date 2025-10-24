@@ -1,6 +1,6 @@
 """
 Itinerary Agent
-Generates detailed day-by-day travel itineraries
+Generates detailed day-by-day travel itineraries using Agno's structured input/output
 """
 
 import ssl
@@ -11,130 +11,105 @@ import certifi
 import httpx
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
+from agno.tools.reasoning import ReasoningTools
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import json
-
-from config import settings  # Thêm dòng này
+from config import settings
+from models.schemas import ItineraryAgentInput, ItineraryAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_itinerary_agent(model: str = "gpt-4") -> Agent:
+def create_itinerary_agent(model: str = "gpt-4o-mini") -> Agent:
     """
-    Creates an agent specialized in travel itinerary planning
+    Create an Itinerary Agent with structured input/output.
 
     Args:
-        model: OpenAI model to use (default: gpt-4)
+        model: OpenAI model ID to use
 
     Returns:
-        Configured Agent instance
+        Agent configured with ItineraryAgentInput and ItineraryAgentOutput schemas
     """
-
-    # Kiểm tra API key
-    if not settings.openai_api_key:
-        raise ValueError("OPENAI_API_KEY not set in environment variables")
-
-    # Tăng timeout lên 120 giây (2 phút)
+    # Create SSL context with certifi
     ssl_context = ssl.create_default_context(cafile=certifi.where())
     http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
 
-    agent = Agent(
+    return Agent(
         name="ItineraryAgent",
         model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
-        tools=[search_tools],
-        description="""You are a world-class travel itinerary planner with extensive knowledge
-        of tourist destinations, local attractions, and optimal travel routes.""",
+        tools=[ReasoningTools(add_instructions=True, add_few_shot=True), search_tools],
         instructions=[
-            "ALWAYS search for current information about the destination before creating the itinerary",
-            "Create a HIGHLY DETAILED timeline with SPECIFIC times for each activity",
-            "Include FULL NAMES and ADDRESSES of locations whenever possible",
-            "Consider realistic travel times between locations",
-            "Account for opening hours, rush hours, and meal times",
-            "Include a mix of must-see attractions, hidden gems, and rest periods",
-            "Suggest optimal routes to minimize travel time",
-            "Add operational notes (booking requirements, tips, etc.)",
-            "Generate a JSON structure with the following format:",
-            """
-            {
-                "daily_schedules": [
-                    {
-                        "day_number": 1,
-                        "date": "Optional",
-                        "title": "Day 1: Exploring Historic Tokyo",
-                        "activities": [
-                            {
-                                "time": "08:00 - 10:00",
-                                "location_name": "Senso-ji Temple",
-                                "address": "2-3-1 Asakusa, Taito City, Tokyo",
-                                "activity_type": "sightseeing",
-                                "description": "Visit Tokyo's oldest Buddhist temple, explore Nakamise shopping street",
-                                "estimated_cost": 0,
-                                "notes": "Arrive early to avoid crowds. Free admission."
-                            }
-                        ]
-                    }
-                ],
-                "location_list": ["Senso-ji Temple", "Tokyo Tower", "Shibuya Crossing"],
-                "summary": "A comprehensive 7-day itinerary covering Tokyo's highlights"
-            }
-            """,
-            "The location_list must contain ONLY the main attraction names (no addresses)",
-            "Be specific with timing - use exact hours (e.g., '09:00 - 11:30')",
-            "Include buffer time for meals and rest",
+            "You are a travel itinerary planner specializing in creating detailed day-by-day schedules.",
+            "CRITICAL: Use the 'think' tool to reason through complex scheduling decisions and optimize the itinerary.",
+            "Use 'analyze' tool to evaluate different routing options and activity combinations.",
+            "CRITICAL: Use search tools to find current information about festivals, events, and special occasions during the travel dates.",
+            "Search for '{destination} festivals {month} {year}' and '{destination} events {specific dates}'.",
+            "Consider the weather information provided and plan indoor/outdoor activities accordingly.",
+            "If special events or festivals are found during the travel period, incorporate them into the itinerary.",
+            "Create comprehensive daily schedules with activities, locations, and timing.",
+            "For each activity, include: time slot, location name, full address, activity type, detailed description, estimated cost per person, and helpful notes.",
+            "Provide practical tips and notes for each location.",
+            "Organize activities logically by time and location to minimize travel time.",
+            "Include a variety of activity types: sightseeing, dining, shopping, entertainment, festivals/events, etc.",
+            "Match activities to weather conditions (e.g., indoor activities for rainy days, outdoor for sunny days).",
         ],
+        input_schema=ItineraryAgentInput,
+        output_schema=ItineraryAgentOutput,
+        markdown=True,
+        debug_mode=True,
+        add_datetime_to_context=True,
+        add_location_to_context=True,
     )
-
-    return agent
 
 
 async def run_itinerary_agent(
     agent: Agent,
     destination: str,
+    departure_date,
     duration: int,
     travel_style: str,
-    customer_notes: str,
-) -> dict:
+    customer_notes: str = "",
+    weather_info: str = "",
+) -> ItineraryAgentOutput:
     """
-    Run the itinerary agent and extract structured output
+    Run the itinerary agent with structured input and output.
+
+    Args:
+        agent: The configured Itinerary Agent
+        destination: Destination location(s)
+        departure_date: Departure date
+        duration: Number of days
+        travel_style: Travel style (self_guided, tour, etc.)
+        customer_notes: Customer preferences and notes
+        weather_info: Weather and seasonal information from Weather Agent
+
+    Returns:
+        ItineraryAgentOutput with structured itinerary data
     """
+    print(f"[ItineraryAgent] Creating {duration}-day itinerary for {destination}")
+    print(f"[ItineraryAgent] Travel style: {travel_style}")
+    print(f"[ItineraryAgent] Departure: {departure_date}")
 
-    # Đơn giản hóa prompt nếu cần
-    prompt = f"""
-    Create a {duration}-day itinerary for {destination}.
-    Travel Style: {travel_style}
-    Notes: {customer_notes}
+    # Create structured input
+    agent_input = ItineraryAgentInput(
+        destination=destination,
+        departure_date=departure_date,
+        duration_days=duration,
+        travel_style=travel_style,
+        preferences=customer_notes,
+        weather_info=weather_info,
+    )
 
-    Important:
-    1. Create day-by-day schedule
-    2. Include specific activities with time slots
-    3. Return as valid JSON
-    4. Keep it concise and practical
-    """
+    # Run agent with structured input
+    response = await agent.arun(input=agent_input)
 
-    response = await agent.arun(prompt)
-
-    try:
-        content = response.content
-        start_idx = content.find("{")
-        end_idx = content.rfind("}") + 1
-
-        if start_idx != -1 and end_idx > start_idx:
-            json_str = content[start_idx:end_idx]
-            result = json.loads(json_str)
-            return result
-        else:
-            return {
-                "daily_schedules": [],
-                "location_list": [],
-                "summary": content,
-                "raw_response": content,
-            }
-    except Exception as e:
-        return {
-            "daily_schedules": [],
-            "location_list": [],
-            "summary": f"Error: {str(e)}",
-            "raw_response": response.content,
-        }
+    # Response.content will be a ItineraryAgentOutput object
+    if isinstance(response.content, ItineraryAgentOutput):
+        print(f"[ItineraryAgent] ✓ Generated {len(response.content.daily_schedules)} days")
+        print(f"[ItineraryAgent] ✓ Identified {len(response.content.location_list)} locations")
+        return response.content
+    else:
+        # Fallback if structured output fails
+        print(f"[ItineraryAgent] ⚠ Unexpected response type: {type(response.content)}")
+        raise ValueError(f"Expected ItineraryAgentOutput, got {type(response.content)}")
