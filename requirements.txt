@@ -1,0 +1,21 @@
+# Travel Planner API - Requirements
+
+# Core Framework
+fastapi==0.115.0
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# Agno-AGI Framework
+agno==2.1.6
+
+# OpenAI
+openai==1.59.7
+
+# Google Search (for SearchTools)
+googlesearch-python==1.2.5
+pycountry==24.6.1
+
+# Additional utilities
+python-dotenv==1.0.1
+python-multipart==0.0.20

@@ -1,5 +1,6 @@
-import certifi
 import ssl
+
+import certifi
 import httpx
 
 print("Testing SSL configuration...")

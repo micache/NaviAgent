@@ -2,44 +2,42 @@
 Souvenir Agent
 Suggests souvenirs and where to buy them
 """
-from agno.agent import Agent
-from agno.models.openai import OpenAIChat
+
+import ssl
 import sys
 from pathlib import Path
+
 import certifi
-import ssl
 import httpx
+from agno.agent import Agent
+from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from tools.search_tool import search_tools
-from config import settings  # Thêm dòng này
 import json
+
+from config import settings  # Thêm dòng này
+from tools.search_tool import search_tools
 
 
 def create_souvenir_agent(model: str = "gpt-4") -> Agent:
     """
     Creates an agent specialized in souvenir recommendations
     """
-    
+
     if not settings.openai_api_key:
         raise ValueError("OPENAI_API_KEY not set in environment variables")
-    
+
     ssl_context = ssl.create_default_context(cafile=certifi.where())
     http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
-    
+
     agent = Agent(
         name="SouvenirAgent",
-        model=OpenAIChat(
-            id=model, 
-            api_key=settings.openai_api_key,
-            http_client=http_client
-        ),
+        model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
         tools=[search_tools],
-        description="""You are a souvenir and gift specialist with extensive knowledge 
-        of authentic local products, traditional crafts, and popular gift items from 
+        description="""You are a souvenir and gift specialist with extensive knowledge
+        of authentic local products, traditional crafts, and popular gift items from
         destinations around the world.""",
-        
         instructions=[
             "Search for popular and authentic souvenirs from the destination",
             "Recommend a mix of traditional items, food products, and practical gifts",
@@ -86,52 +84,53 @@ def create_souvenir_agent(model: str = "gpt-4") -> Agent:
             "Recommend at least 5-8 different souvenirs",
             "Include a range of price points",
             "Be specific about shopping locations",
-        ]
+        ],
     )
-    
+
     return agent
 
 
-async def run_souvenir_agent(
-    agent: Agent,
-    destination: str
-) -> list:
+async def run_souvenir_agent(agent: Agent, destination: str) -> list:
     """
     Run the souvenir agent and extract structured output
     """
-    
+
     prompt = f"""
     Suggest authentic souvenirs and local products from {destination}.
-    
+
     IMPORTANT:
     1. Search for POPULAR and AUTHENTIC local souvenirs
     2. Include items at various price points
     3. Provide specific shops or markets where to buy
     4. Return the output as a valid JSON array matching the structure in your instructions
     """
-    
+
     response = await agent.arun(prompt)
-    
+
     try:
         content = response.content
-        start_idx = content.find('[')
-        end_idx = content.rfind(']') + 1
-        
+        start_idx = content.find("[")
+        end_idx = content.rfind("]") + 1
+
         if start_idx != -1 and end_idx > start_idx:
             json_str = content[start_idx:end_idx]
             result = json.loads(json_str)
             return result
         else:
-            return [{
-                "item_name": "Error",
-                "description": content,
-                "estimated_price": "N/A",
-                "where_to_buy": "N/A"
-            }]
+            return [
+                {
+                    "item_name": "Error",
+                    "description": content,
+                    "estimated_price": "N/A",
+                    "where_to_buy": "N/A",
+                }
+            ]
     except Exception as e:
-        return [{
-            "item_name": "Error",
-            "description": str(e),
-            "estimated_price": "N/A",
-            "where_to_buy": "N/A"
-        }]
+        return [
+            {
+                "item_name": "Error",
+                "description": str(e),
+                "estimated_price": "N/A",
+                "where_to_buy": "N/A",
+            }
+        ]

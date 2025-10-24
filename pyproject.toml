@@ -7,7 +7,7 @@ name = "naviagent"
 version = "0.1.0"
 description = "NaviAgent - A navigation agent framework"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.12,<3.13"
 license = {text = "MIT"}
 authors = [
     {name = "NaviAgent Team"}
@@ -22,6 +22,32 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
+dependencies = [
+    "agno==2.1.6",
+    "autoflake>=2.0.0",
+    "bandit[toml]>=1.7.0",
+    "black>=23.0.0",
+    "fastapi==0.115.0",
+    "flake8>=6.0.0",
+    "flake8-bugbear>=23.0.0",
+    "flake8-comprehensions>=3.14.0",
+    "flake8-docstrings>=1.7.0",
+    "flake8-simplify>=0.21.0",
+    "googlesearch-python==1.2.5",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "openai>=1.60.0",
+    "pre-commit>=3.0.0",
+    "pycountry==24.6.1",
+    "pydantic==2.10.4",
+    "pydantic-settings==2.7.0",
+    "pydocstyle>=6.3.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "python-dotenv==1.0.1",
+    "python-multipart==0.0.20",
+    "uvicorn[standard]==0.34.0",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -34,6 +60,11 @@ dev = [
     "pre-commit>=3.0.0",
     "mypy>=1.0.0",
 ]
+
+[project.scripts]
+format = "naviagent.scripts:format_code"
+lint = "naviagent.scripts:lint_code"
+check = "naviagent.scripts:check_all"
 
 [tool.black]
 line-length = 100
@@ -120,3 +151,15 @@ exclude_dirs = [
     "dist",
 ]
 skips = ["B101", "B601"]
+
+[dependency-groups]
+dev = [
+  "black>=23.0.0",
+  "isort>=5.12.0",
+  "flake8>=6.0.0",
+  "mypy>=1.0.0",
+  "pre-commit>=3.0.0",
+]
+
+[tool.uv.workspace]
+members = []

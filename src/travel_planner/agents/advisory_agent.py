@@ -2,42 +2,41 @@
 Advisory Agent
 Provides travel advisories, warnings, and location descriptions
 """
-from agno.agent import Agent
-from agno.models.openai import OpenAIChat
+
+import ssl
 import sys
 from pathlib import Path
+
 import certifi
-import ssl
 import httpx
+from agno.agent import Agent
+from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from tools.search_tool import search_tools
-from config import settings  # Thêm dòng này
 import json
+
+from config import settings  # Thêm dòng này
+from tools.search_tool import search_tools
+
 
 def create_advisory_agent(model: str = "gpt-4") -> Agent:
     """
     Creates an agent specialized in travel advisories
     """
-    
+
     if not settings.openai_api_key:
         raise ValueError("OPENAI_API_KEY not set in environment variables")
-    
+
     ssl_context = ssl.create_default_context(cafile=certifi.where())
     http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
-    
+
     agent = Agent(
         name="AdvisoryAgent",
-        model=OpenAIChat(
-            id=model, 
-            api_key=settings.openai_api_key,
-            http_client=http_client
-        ),
+        model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
         tools=[search_tools],
-        description="""You are a travel safety and information expert who provides 
+        description="""You are a travel safety and information expert who provides
         up-to-date advisories, travel tips, and engaging location descriptions.""",
-        
         instructions=[
             "ALWAYS search for the LATEST information before providing advice",
             "Search for current travel warnings, visa requirements, and safety alerts",
@@ -88,31 +87,28 @@ def create_advisory_agent(model: str = "gpt-4") -> Agent:
             "Ensure ALL locations from the location_list have descriptions",
             "Keep descriptions concise (2-3 sentences) but informative",
             "Use search tools to verify current information, especially for visa and safety",
-        ]
+        ],
     )
-    
+
     return agent
 
 
 async def run_advisory_agent(
-    agent: Agent,
-    destination: str,
-    travel_date: str,
-    location_list: list
+    agent: Agent, destination: str, travel_date: str, location_list: list
 ) -> dict:
     """
     Run the advisory agent and extract structured output
     """
-    
+
     locations_str = ", ".join(location_list)
-    
+
     prompt = f"""
     Provide comprehensive travel advisory information for {destination}.
     Travel Date: {travel_date}
-    
+
     REQUIRED: Write descriptions for these specific locations:
     {locations_str}
-    
+
     IMPORTANT:
     1. Search for CURRENT travel advisories and visa requirements for {destination}
     2. Search for CURRENT weather conditions and forecast
@@ -121,54 +117,66 @@ async def run_advisory_agent(
     5. Return the output as a valid JSON object matching the structure in your instructions
     6. Ensure the location_descriptions array has an entry for EVERY location listed above
     """
-    
+
     response = await agent.arun(prompt)
-    
+
     try:
         content = response.content
-        start_idx = content.find('{')
-        end_idx = content.rfind('}') + 1
-        
+        start_idx = content.find("{")
+        end_idx = content.rfind("}") + 1
+
         if start_idx != -1 and end_idx > start_idx:
             json_str = content[start_idx:end_idx]
             result = json.loads(json_str)
-            
+
             # Ensure we have location descriptions for all locations
-            described_locations = {loc["location_name"] for loc in result.get("location_descriptions", [])}
+            described_locations = {
+                loc["location_name"] for loc in result.get("location_descriptions", [])
+            }
             missing_locations = set(location_list) - described_locations
-            
+
             if missing_locations:
                 for loc_name in missing_locations:
-                    result.setdefault("location_descriptions", []).append({
-                        "location_name": loc_name,
-                        "description": f"A notable destination in {destination}.",
-                        "highlights": []
-                    })
-            
+                    result.setdefault("location_descriptions", []).append(
+                        {
+                            "location_name": loc_name,
+                            "description": f"A notable destination in {destination}.",
+                            "highlights": [],
+                        }
+                    )
+
             return result
         else:
             return {
                 "warnings_and_tips": [content],
                 "location_descriptions": [
-                    {"location_name": loc, "description": "No description available", "highlights": []}
+                    {
+                        "location_name": loc,
+                        "description": "No description available",
+                        "highlights": [],
+                    }
                     for loc in location_list
                 ],
                 "visa_info": None,
                 "weather_info": None,
                 "sim_and_apps": [],
                 "safety_tips": [],
-                "raw_response": content
+                "raw_response": content,
             }
     except Exception as e:
         return {
             "warnings_and_tips": [f"Error: {str(e)}"],
             "location_descriptions": [
-                {"location_name": loc, "description": "Description unavailable", "highlights": []}
+                {
+                    "location_name": loc,
+                    "description": "Description unavailable",
+                    "highlights": [],
+                }
                 for loc in location_list
             ],
             "visa_info": None,
             "weather_info": None,
             "sim_and_apps": [],
             "safety_tips": [],
-            "raw_response": response.content
+            "raw_response": response.content,
         }

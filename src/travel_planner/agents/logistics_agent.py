@@ -2,43 +2,41 @@
 Logistics Agent
 Provides flight information and accommodation suggestions
 """
-from agno.agent import Agent
-from agno.models.openai import OpenAIChat
+
+import ssl
 import sys
 from pathlib import Path
+
 import certifi
-import ssl
 import httpx
+from agno.agent import Agent
+from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from tools.search_tool import search_tools
-from config import settings  # Thêm dòng này
 import json
+
+from config import settings  # Thêm dòng này
+from tools.search_tool import search_tools
 
 
 def create_logistics_agent(model: str = "gpt-4") -> Agent:
     """
     Creates an agent specialized in travel logistics
     """
-    
+
     if not settings.openai_api_key:
         raise ValueError("OPENAI_API_KEY not set in environment variables")
-    
+
     ssl_context = ssl.create_default_context(cafile=certifi.where())
     http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
-    
+
     agent = Agent(
         name="LogisticsAgent",
-        model=OpenAIChat(
-            id=model, 
-            api_key=settings.openai_api_key,
-            http_client=http_client
-        ),
+        model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
         tools=[search_tools],
-        description="""You are a travel logistics expert specializing in flights, 
+        description="""You are a travel logistics expert specializing in flights,
         accommodation, and transportation planning.""",
-        
         instructions=[
             "Search for current flight prices and options between the origin and destination",
             "Research accommodation options and recommend specific areas/neighborhoods",
@@ -69,39 +67,35 @@ def create_logistics_agent(model: str = "gpt-4") -> Agent:
             "Base estimates on current market prices",
             "Consider seasonal variations in flight and hotel prices",
             "Recommend neighborhoods based on budget and travel style",
-        ]
+        ],
     )
-    
+
     return agent
 
 
 async def run_logistics_agent(
-    agent: Agent,
-    departure_point: str,
-    destination: str,
-    budget: float,
-    duration: int
+    agent: Agent, departure_point: str, destination: str, budget: float, duration: int
 ) -> dict:
     """
     Run the logistics agent and extract structured output
-    
+
     Args:
         agent: The LogisticsAgent instance
         departure_point: Origin city/airport
         destination: Destination city/country
         budget: Total trip budget
         duration: Trip duration in days
-        
+
     Returns:
         Dictionary with logistics information
     """
-    
+
     prompt = f"""
     Provide comprehensive logistics information for travel from {departure_point} to {destination}.
-    
+
     Duration: {duration} days
     Total Budget: {budget:,.0f}
-    
+
     IMPORTANT:
     1. Search for CURRENT flight prices from {departure_point} to {destination}
     2. Research accommodation options and prices in {destination}
@@ -109,14 +103,14 @@ async def run_logistics_agent(
     4. Provide practical transportation tips
     5. Return the output as a valid JSON object matching the structure in your instructions
     """
-    
+
     response = await agent.arun(prompt)
-    
+
     try:
         content = response.content
-        start_idx = content.find('{')
-        end_idx = content.rfind('}') + 1
-        
+        start_idx = content.find("{")
+        end_idx = content.rfind("}") + 1
+
         if start_idx != -1 and end_idx > start_idx:
             json_str = content[start_idx:end_idx]
             result = json.loads(json_str)
@@ -127,7 +121,7 @@ async def run_logistics_agent(
                 "estimated_flight_cost": None,
                 "accommodation_suggestions": [],
                 "transportation_tips": [],
-                "raw_response": content
+                "raw_response": content,
             }
     except Exception as e:
         return {
@@ -135,5 +129,5 @@ async def run_logistics_agent(
             "estimated_flight_cost": None,
             "accommodation_suggestions": [],
             "transportation_tips": [],
-            "raw_response": response.content
+            "raw_response": response.content,
         }
