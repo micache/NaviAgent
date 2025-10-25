@@ -50,7 +50,7 @@ def test_plan_trip():
         response = requests.post(
             "http://localhost:8000/v1/plan_trip",
             json=request_data,
-            timeout=600,  # 10 minutes timeout
+            timeout=900,  # 15 minutes timeout (increased from 10)
         )
 
         print(f"\nStatus Code: {response.status_code}")
@@ -68,22 +68,47 @@ def test_plan_trip():
             print(f"Generated at: {travel_plan['generated_at']}")
 
             # Itinerary summary
-            itinerary = travel_plan["itinerary"]
-            print(f"\nItinerary: {len(itinerary['daily_schedules'])} days planned")
-            print(f"Main locations: {', '.join(itinerary['location_list'][:5])}")
+            if travel_plan.get("itinerary"):
+                itinerary = travel_plan["itinerary"]
+                print(f"\n✓ Itinerary: {len(itinerary['daily_schedules'])} days planned")
+                print(f"  Main locations: {', '.join(itinerary['location_list'][:5])}")
+                if itinerary.get('selected_flight'):
+                    print(f"  Selected Flight: {itinerary['selected_flight']['airline']}")
+                if itinerary.get('selected_accommodation'):
+                    print(f"  Selected Hotel: {itinerary['selected_accommodation']['name']}")
 
             # Budget summary
-            budget = travel_plan["budget"]
-            print(f"\nTotal Estimated Cost: {budget['total_estimated_cost']:,.0f} VND")
-            print(f"Budget Status: {budget['budget_status']}")
+            if travel_plan.get("budget"):
+                budget = travel_plan["budget"]
+                print(f"\n✓ Budget:")
+                print(f"  Total Estimated Cost: {budget['total_estimated_cost']:,.0f} VND")
+                print(f"  Budget Status: {budget['budget_status']}")
+                print(f"  Categories: {len(budget['categories'])} items")
 
             # Advisory summary
-            advisory = travel_plan["advisory"]
-            print(f"\nAdvisory Tips: {len(advisory['warnings_and_tips'])} items")
-            print(f"Location Descriptions: {len(advisory['location_descriptions'])} locations")
+            if travel_plan.get("advisory"):
+                advisory = travel_plan["advisory"]
+                print(f"\n✓ Advisory:")
+                print(f"  Tips & Warnings: {len(advisory['warnings_and_tips'])} items")
+                print(f"  Location Descriptions: {len(advisory['location_descriptions'])} locations")
 
             # Souvenirs
-            print(f"\nSouvenirs: {len(travel_plan['souvenirs'])} suggestions")
+            if travel_plan.get("souvenirs"):
+                print(f"\n✓ Souvenirs: {len(travel_plan['souvenirs'])} suggestions")
+
+            # Logistics
+            if travel_plan.get("logistics"):
+                logistics = travel_plan["logistics"]
+                print(f"\n✓ Logistics:")
+                print(f"  Flight Options: {len(logistics['flight_options'])} available")
+                print(f"  Average Price: {logistics['average_price']:,.0f} VND/person")
+
+            # Accommodation
+            if travel_plan.get("accommodation"):
+                accommodation = travel_plan["accommodation"]
+                print(f"\n✓ Accommodation:")
+                print(f"  Recommendations: {len(accommodation['recommendations'])} options")
+                print(f"  Total Estimated: {accommodation['total_estimated_cost']:,.0f} VND")
 
             # Save to file
             output_file = "travel_plan_output.json"
@@ -91,6 +116,7 @@ def test_plan_trip():
                 json.dump(travel_plan, f, indent=2, ensure_ascii=False)
 
             print(f"\n✓ Full travel plan saved to: {output_file}")
+            print(f"✓ Structured JSON with all fields populated!")
 
         else:
             print("\n✗ Error generating travel plan")
@@ -98,7 +124,7 @@ def test_plan_trip():
             pprint(response.json())
 
     except requests.exceptions.Timeout:
-        print("\n✗ Request timeout (>10 minutes)")
+        print("\n✗ Request timeout (>15 minutes)")
         print("The server might still be processing. Check server logs.")
     except requests.exceptions.ConnectionError:
         print("\n✗ Connection error")

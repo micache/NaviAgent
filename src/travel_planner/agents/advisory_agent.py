@@ -31,28 +31,23 @@ def create_advisory_agent(model: str = "gpt-4o-mini") -> Agent:
     """
     # Create SSL context with certifi
     ssl_context = ssl.create_default_context(cafile=certifi.where())
-    http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
+    http_client = httpx.AsyncClient(verify=ssl_context, timeout=180.0)
 
     return Agent(
         name="AdvisoryAgent",
         model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
         tools=[search_tools],
         instructions=[
-            "You are a travel advisory expert providing safety, visa, and cultural information.",
-            "CRITICAL: Use search tools to find current visa requirements, travel advisories, and safety information for the specific travel dates.",
-            "Search for '{destination} visa requirements {year}' and '{destination} travel advisory {month} {year}'.",
-            "Search for cultural events, holidays, and festivals during the travel period.",
-            "Provide up-to-date visa requirements and travel warnings for the destination.",
-            "Offer cultural etiquette tips and local customs that travelers should know.",
-            "Mention any public holidays or special events during the travel dates that might affect services or attractions.",
-            "Recommend useful apps, SIM card options, and connectivity information.",
-            "For each location in the location_list, write a detailed 2-3 sentence description covering its significance, what to expect, and key highlights.",
-            "Include practical safety tips and emergency information.",
+            "You are a travel advisory expert. Be efficient and practical.",
+            "Limit to 2-3 searches: visa, travel advisory, major holidays.",
+            "Provide safety tips, visa info, cultural etiquette, connectivity info.",
+            "Describe top locations briefly (2 sentences each).",
+            "Keep all recommendations actionable.",
         ],
         input_schema=AdvisoryAgentInput,
         output_schema=AdvisoryAgentOutput,
         markdown=True,
-        debug_mode=True,
+        debug_mode=False,
         add_datetime_to_context=True,
         add_location_to_context=True,
     )

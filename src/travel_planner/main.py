@@ -8,14 +8,15 @@ from datetime import date, datetime
 from pathlib import Path
 
 import uvicorn
-from agents import OrchestratorAgent
+from agents.travel_planning_team import create_travel_planning_team, run_travel_planning_team, TravelPlanningTeamInput
+from agents.response_parser import parse_team_response_to_structured
 from config import settings
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Import API schemas
-from schemas import TravelPlan, TravelRequest
+from schemas import TravelPlan, TravelPlanTeamResponse, TravelRequest
 
 # Create FastAPI app
 app = FastAPI(
@@ -32,7 +33,8 @@ app = FastAPI(
     - Logistics planning (flights & accommodation)
 
     ## Architecture
-    - 5 specialist agents coordinated by an orchestrator
+    - 7 specialist agents working as an intelligent team
+    - Team Leader with automatic task delegation
     - Parallel execution with dependency management
     - Real-time internet search capabilities
     """,
@@ -51,14 +53,14 @@ app.add_middleware(
 )
 
 
-# Global orchestrator instance
-orchestrator = None
+# Global travel planning team instance
+travel_team = None
 
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize orchestrator on startup"""
-    global orchestrator
+    """Initialize travel planning team on startup"""
+    global travel_team
 
     print(f"\n{'=' * 80}")
     print(f"Starting {settings.app_name} v{settings.app_version}")
@@ -71,9 +73,10 @@ async def startup_event():
     else:
         print(f"✓ OpenAI API Key configured")
 
-    # Initialize orchestrator
-    print(f"✓ Initializing Orchestrator with model: {settings.openai_model}")
-    orchestrator = OrchestratorAgent(model=settings.openai_model)
+    # Initialize travel planning team
+    print(f"✓ Initializing Travel Planning Team with model: {settings.openai_model}")
+    travel_team = create_travel_planning_team(model=settings.openai_model)
+    print(f"✓ Team created with 7 specialist agents + Team Leader")
 
     print(f"\n{'=' * 80}")
     print(f"API ready at: http://{settings.host}:{settings.port}{settings.api_prefix}")
@@ -105,7 +108,7 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "orchestrator_ready": orchestrator is not None,
+        "team_ready": travel_team is not None,
         "openai_configured": bool(settings.openai_api_key),
     }
 
@@ -115,18 +118,22 @@ async def health_check():
     response_model=TravelPlan,
     summary="Create Travel Plan",
     description="""
-    Generate a comprehensive travel plan using multi-agent orchestration.
+    Generate a comprehensive travel plan using intelligent team collaboration.
 
-    **Workflow:**
-    1. Phase 1: Itinerary, Logistics, and Souvenir agents run in parallel
-    2. Phase 2: Budget and Advisory agents run in parallel (depend on itinerary)
-    3. Phase 3: Results compiled into comprehensive travel plan
+    **Team Workflow:**
+    1. Team Leader analyzes request and delegates to appropriate members
+    2. Phase 1: Weather Specialist provides context
+    3. Phase 2: Flight & Accommodation Specialists provide options (parallel)
+    4. Phase 3: Itinerary Planner selects best options and creates schedule
+    5. Phase 4: Budget, Souvenir & Advisory Specialists analyze (parallel)
+    6. Phase 5: Team Leader synthesizes final plan
+    7. Phase 6: Response Parser extracts structured data
 
     **Processing Time:** Typically 2-5 minutes depending on complexity
     """,
     responses={
         200: {
-            "description": "Travel plan generated successfully",
+            "description": "Travel plan generated successfully with structured data",
             "model": TravelPlan,
         },
         400: {"description": "Invalid request parameters"},
@@ -136,15 +143,15 @@ async def health_check():
 )
 async def plan_trip(request: TravelRequest):
     """
-    Main endpoint to generate travel plans
+    Main endpoint to generate travel plans using Agno Team + Response Parser
 
     Args:
         request: TravelRequest with all planning parameters
 
     Returns:
-        TravelPlan: Comprehensive travel plan v1.0
+        TravelPlan: Comprehensive structured travel plan v2.0
     """
-    global orchestrator
+    global travel_team
 
     # Validate OpenAI API key
     if not settings.openai_api_key:
@@ -153,11 +160,11 @@ async def plan_trip(request: TravelRequest):
             detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.",
         )
 
-    # Validate orchestrator
-    if not orchestrator:
+    # Validate travel team
+    if not travel_team:
         raise HTTPException(
             status_code=503,
-            detail="Orchestrator not initialized. Please restart the server.",
+            detail="Travel Planning Team not initialized. Please restart the server.",
         )
 
     try:
@@ -170,8 +177,40 @@ async def plan_trip(request: TravelRequest):
         print(f"  - Travelers: {request.num_travelers}")
         print(f"  - Style: {request.travel_style}")
 
-        # Execute orchestration workflow
-        travel_plan = await orchestrator.plan_trip(request)
+        # Convert to team input format
+        team_input = TravelPlanningTeamInput(
+            destination=request.destination,
+            departure_point=request.departure_point,
+            departure_date=request.departure_date,
+            trip_duration=request.trip_duration,
+            budget=request.budget,
+            num_travelers=request.num_travelers,
+            travel_style=request.travel_style,
+            customer_notes=request.customer_notes,
+        )
+
+        # Execute team workflow
+        print(f"\n[API] Delegating to Travel Planning Team...")
+        team_response = await run_travel_planning_team(travel_team, team_input)
+
+        # Parse team response to structured data
+        print(f"\n[API] Parsing team response to structured format...")
+        request_data = {
+            "destination": request.destination,
+            "departure_point": request.departure_point,
+            "departure_date": str(request.departure_date),
+            "trip_duration": request.trip_duration,
+            "budget": request.budget,
+            "num_travelers": request.num_travelers,
+            "travel_style": request.travel_style,
+            "customer_notes": request.customer_notes,
+        }
+        
+        travel_plan = await parse_team_response_to_structured(
+            team_response=team_response,
+            request_data=request_data,
+            model=settings.openai_model
+        )
 
         print(f"\n[API] Travel plan generated successfully!")
         print(f"  - Version: {travel_plan.version}")
@@ -227,7 +266,8 @@ async def get_config():
         "version": settings.app_version,
         "model": settings.openai_model,
         "api_prefix": settings.api_prefix,
-        "orchestrator_status": "initialized" if orchestrator else "not initialized",
+        "team_status": "initialized" if travel_team else "not initialized",
+        "team_members": "7 specialist agents + Team Leader" if travel_team else None,
     }
 
 
@@ -276,9 +316,13 @@ def run():
     )
 
 
-def main():
-    """Main function."""
-
+async def main():
+    """Main function for testing."""
+    global travel_team
+    
+    # Initialize team
+    travel_team = create_travel_planning_team(model=settings.openai_model)
+    
     # Create structured travel request
     travel_request = TravelRequest(
         destination="Châu Âu, Pháp, Anh, Đức",
@@ -291,8 +335,34 @@ def main():
         customer_notes="Thích quẩy, thích bar, thích ăn chơi nhảy múa",
     )
 
-    # Plan trip with structured input
-    travel_plan = orchestrator.plan_trip(travel_request)
+    # Convert to team input
+    team_input = TravelPlanningTeamInput(
+        destination=travel_request.destination,
+        departure_point=travel_request.departure_point,
+        departure_date=travel_request.departure_date,
+        trip_duration=travel_request.trip_duration,
+        budget=travel_request.budget,
+        num_travelers=travel_request.num_travelers,
+        travel_style=travel_request.travel_style,
+        customer_notes=travel_request.customer_notes,
+    )
+
+    # Run team
+    team_response = await run_travel_planning_team(travel_team, team_input)
+    
+    # Create travel plan
+    travel_plan = TravelPlan(
+        version="2.0-team",
+        destination=travel_request.destination,
+        departure_point=travel_request.departure_point,
+        departure_date=travel_request.departure_date,
+        trip_duration=travel_request.trip_duration,
+        budget=travel_request.budget,
+        num_travelers=travel_request.num_travelers,
+        travel_style=travel_request.travel_style,
+        team_full_response=team_response,
+        generated_at=datetime.utcnow(),
+    )
 
     # Save structured output
     output_file = Path("travel_plan_output.json")

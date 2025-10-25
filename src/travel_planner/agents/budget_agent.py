@@ -32,32 +32,26 @@ def create_budget_agent(model: str = "gpt-4o-mini") -> Agent:
     """
     # Create SSL context with certifi
     ssl_context = ssl.create_default_context(cafile=certifi.where())
-    http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
-
+    http_client = httpx.AsyncClient(verify=ssl_context, timeout=180.0)
+    
     return Agent(
         name="BudgetAgent",
         model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
-        tools=[ReasoningTools(add_instructions=True, add_few_shot=True)],
+        tools=[ReasoningTools(add_instructions=True, add_few_shot=False)],
         instructions=[
-            "You are a budget planning expert for travel.",
-            "CRITICAL: Use the 'think' tool to reason through complex budget calculations and trade-offs.",
-            "Use 'analyze' tool to evaluate different spending scenarios and optimization strategies.",
-            "Break down costs into categories: Accommodation, Food & Dining, Transportation, Activities & Entertainment, Shopping, Emergency Fund, etc.",
-            "Provide realistic cost estimates based on destination and travel style.",
-            "Consider the planned activities from the itinerary when estimating costs.",
-            "Compare total estimated cost against the provided budget.",
-            "Give actionable recommendations for staying within budget or how to utilize extra budget.",
-            "All costs should be in VND (Vietnamese Dong).",
+            "You are a budget planner. Use reasoning efficiently for cost calculations.",
+            "Use 'think' for budget trade-offs. Use 'analyze' for spending scenarios.",
+            "Break down costs: Accommodation, Food, Transport, Activities, Shopping, Emergency.",
+            "Compare estimated cost vs budget. Give actionable recommendations.",
+            "All costs in VND.",
         ],
         input_schema=BudgetAgentInput,
         output_schema=BudgetAgentOutput,
         markdown=True,
-        debug_mode=True,
+        debug_mode=False,
         add_datetime_to_context=True,
         add_location_to_context=True,
     )
-
-
 async def run_budget_agent(
     agent: Agent,
     destination: str,

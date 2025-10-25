@@ -7,6 +7,6 @@ from agno.tools.duckduckgo import DuckDuckGoTools
 
 # Create DuckDuckGo Search tools instance with configuration
 search_tools = DuckDuckGoTools(
-    fixed_max_results=10,  # Limit results
-    timeout=10,  # 10 seconds timeout
+    fixed_max_results=5,        # Reduced from 10 to 5 for faster responses
+    timeout=10,                 # 10 seconds timeout
 )

@@ -1,6 +1,6 @@
 """
-Logistics Agent
-Provides flight information and accommodation suggestions using Agno's structured input/output
+Logistics Agent - Specialized for Flight Tickets
+Provides detailed flight information with pricing, airlines, benefits using Agno's structured input/output
 """
 
 import ssl
@@ -11,7 +11,6 @@ import certifi
 import httpx
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
-from agno.tools.reasoning import ReasoningTools
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -22,7 +21,7 @@ from tools.search_tool import search_tools
 
 def create_logistics_agent(model: str = "gpt-4o-mini") -> Agent:
     """
-    Create a Logistics Agent with structured input/output.
+    Create a Logistics Agent specialized for flight tickets with structured input/output.
 
     Args:
         model: OpenAI model ID to use
@@ -32,32 +31,34 @@ def create_logistics_agent(model: str = "gpt-4o-mini") -> Agent:
     """
     # Create SSL context with certifi
     ssl_context = ssl.create_default_context(cafile=certifi.where())
-    http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
+    http_client = httpx.AsyncClient(verify=ssl_context, timeout=180.0)
 
     return Agent(
         name="LogisticsAgent",
         model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
-        tools=[ReasoningTools(add_instructions=True, add_few_shot=True), search_tools],
+        tools=[search_tools],
         instructions=[
-            "You are a travel logistics expert specializing in flights, accommodation, and transportation planning.",
-            "CRITICAL: Use the 'think' tool to reason through cost optimization and booking strategies.",
-            "Use 'analyze' tool to compare different flight options, accommodation areas, and transportation methods.",
-            "CRITICAL: Use search tools to find current flight prices for the specific departure date.",
-            "Search for '{departure_point} to {destination} flights {date}' to get accurate pricing.",
-            "Consider the weather information when recommending accommodation (e.g., suggest hotels with pools for hot weather).",
-            "Search for accommodation options and recommend specific areas/neighborhoods based on budget and travel style.",
-            "Consider budget constraints when making recommendations.",
-            "Provide practical transportation tips for getting around the destination.",
-            "Include information about airport transfers and public transportation.",
-            "Suggest booking strategies and optimal timing for best prices.",
-            "Base all cost estimates on current market prices in VND.",
-            "Consider seasonal variations in flight and hotel prices based on the travel date.",
-            "Recommend specific neighborhoods/areas to stay with price ranges.",
+            "You are a flight ticket specialist. Focus ONLY on flight information.",
+            "Be fast and practical. Limit to 3-5 searches for flight options.",
+            "Search: '{departure} to {destination} flights {date}', 'best airlines {route}', 'flight prices {date}'.",
+            "Provide 3-5 flight options with different airlines, times, and price points.",
+            "For EACH flight option include:",
+            "  - Airline name (Vietnam Airlines, ANA, Lufthansa, etc.)",
+            "  - Flight type (direct, one-stop, multi-stop)",
+            "  - Departure/arrival times and duration",
+            "  - Price per person (round-trip) in VND",
+            "  - Cabin class (Economy, Business, etc.)",
+            "  - Benefits (baggage allowance, meals, seat selection, lounge access)",
+            "  - Booking platforms (airline website, Traveloka, Skyscanner)",
+            "Recommend the best value option.",
+            "Include booking tips: best time to book, price comparison, deals.",
+            "Add brief visa requirements if you find the information.",
+            "All prices in VND. Be specific with flight details.",
         ],
         input_schema=LogisticsAgentInput,
         output_schema=LogisticsAgentOutput,
         markdown=True,
-        debug_mode=True,
+        debug_mode=False,
         add_datetime_to_context=True,
         add_location_to_context=True,
     )
@@ -68,38 +69,42 @@ async def run_logistics_agent(
     departure_point: str,
     destination: str,
     departure_date,
-    budget: float,
-    duration: int,
-    weather_info: str = "",
+    return_date,
+    num_travelers: int,
+    budget_per_person: float,
+    preferences: str = "",
 ) -> LogisticsAgentOutput:
     """
-    Run the logistics agent with structured input and output.
+    Run the logistics agent with structured input and output - specialized for flights.
 
     Args:
         agent: The configured Logistics Agent
-        departure_point: Starting location/city
-        destination: Destination location/city
+        departure_point: Starting location/city/airport
+        destination: Destination location/city/airport
         departure_date: Departure date
-        budget: Total budget in VND
-        duration: Trip duration in days
-        weather_info: Weather information from Weather Agent
+        return_date: Return date
+        num_travelers: Number of passengers
+        budget_per_person: Budget per person for round-trip flight in VND
+        preferences: Flight preferences (direct, business class, etc.)
 
     Returns:
-        LogisticsAgentOutput with structured logistics information
+        LogisticsAgentOutput with structured flight ticket information
     """
-    print(f"[LogisticsAgent] Planning logistics from {departure_point} to {destination}")
+    print(f"[LogisticsAgent] Searching flights from {departure_point} to {destination}")
     print(
-        f"[LogisticsAgent] Departure: {departure_date}, Duration: {duration} days, Budget: {budget:,.0f} VND"
+        f"[LogisticsAgent] Departure: {departure_date}, Return: {return_date}, Travelers: {num_travelers}"
     )
+    print(f"[LogisticsAgent] Budget per person: {budget_per_person:,.0f} VND")
 
     # Create structured input
     agent_input = LogisticsAgentInput(
         departure_point=departure_point,
         destination=destination,
         departure_date=departure_date,
-        budget=budget,
-        duration_days=duration,
-        weather_info=weather_info,
+        return_date=return_date,
+        num_travelers=num_travelers,
+        budget_per_person=budget_per_person,
+        preferences=preferences,
     )
 
     # Run agent with structured input
@@ -107,12 +112,10 @@ async def run_logistics_agent(
 
     # Response.content will be a LogisticsAgentOutput object
     if isinstance(response.content, LogisticsAgentOutput):
-        print(
-            f"[LogisticsAgent] ✓ Estimated flight cost: {response.content.estimated_flight_cost:,.0f} VND"
-        )
-        print(
-            f"[LogisticsAgent] ✓ Provided {len(response.content.accommodation_suggestions)} accommodation suggestions"
-        )
+        print(f"[LogisticsAgent] ✓ Found {len(response.content.flight_options)} flight options")
+        print(f"[LogisticsAgent] ✓ Average price: {response.content.average_price:,.0f} VND/person")
+        if response.content.recommended_flight:
+            print(f"[LogisticsAgent] ✓ Recommended: {response.content.recommended_flight}")
         return response.content
     else:
         print(f"[LogisticsAgent] ⚠ Unexpected response type: {type(response.content)}")

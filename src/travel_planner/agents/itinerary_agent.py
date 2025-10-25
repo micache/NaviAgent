@@ -33,31 +33,32 @@ def create_itinerary_agent(model: str = "gpt-4o-mini") -> Agent:
     """
     # Create SSL context with certifi
     ssl_context = ssl.create_default_context(cafile=certifi.where())
-    http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
+    http_client = httpx.AsyncClient(verify=ssl_context, timeout=180.0)
 
     return Agent(
         name="ItineraryAgent",
         model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
-        tools=[ReasoningTools(add_instructions=True, add_few_shot=True), search_tools],
+        tools=[ReasoningTools(add_instructions=True, add_few_shot=False), search_tools],
         instructions=[
-            "You are a travel itinerary planner specializing in creating detailed day-by-day schedules.",
-            "CRITICAL: Use the 'think' tool to reason through complex scheduling decisions and optimize the itinerary.",
-            "Use 'analyze' tool to evaluate different routing options and activity combinations.",
-            "CRITICAL: Use search tools to find current information about festivals, events, and special occasions during the travel dates.",
-            "Search for '{destination} festivals {month} {year}' and '{destination} events {specific dates}'.",
-            "Consider the weather information provided and plan indoor/outdoor activities accordingly.",
-            "If special events or festivals are found during the travel period, incorporate them into the itinerary.",
-            "Create comprehensive daily schedules with activities, locations, and timing.",
-            "For each activity, include: time slot, location name, full address, activity type, detailed description, estimated cost per person, and helpful notes.",
-            "Provide practical tips and notes for each location.",
-            "Organize activities logically by time and location to minimize travel time.",
-            "Include a variety of activity types: sightseeing, dining, shopping, entertainment, festivals/events, etc.",
-            "Match activities to weather conditions (e.g., indoor activities for rainy days, outdoor for sunny days).",
+            "You are a travel itinerary planner with flight and hotel selection capability.",
+            "Be efficient - use reasoning wisely.",
+            "Limit searches to 3-5 key queries: major attractions, events, practical info.",
+            "Use 'think' only for complex routing. Use 'analyze' for quick comparisons.",
+            "Create day-by-day schedules: time, location, activity type, cost, notes.",
+            "Optimize for minimal travel time between activities.",
+            "",
+            "IMPORTANT - Flight & Hotel Selection:",
+            "1. Review available_flights and available_accommodations from input",
+            "2. SELECT the best flight option based on: price, timing, duration, benefits",
+            "3. SELECT the best accommodation based on: location, price, amenities, ratings",
+            "4. Fill selected_flight with: airline, outbound_flight, return_flight, total_cost",
+            "5. Fill selected_accommodation with: name, area, check_in, check_out, total_cost",
+            "6. Consider travel_style when selecting (luxury → high-end, budget → economical)",
         ],
         input_schema=ItineraryAgentInput,
         output_schema=ItineraryAgentOutput,
         markdown=True,
-        debug_mode=True,
+        debug_mode=False,
         add_datetime_to_context=True,
         add_location_to_context=True,
     )
@@ -71,6 +72,8 @@ async def run_itinerary_agent(
     travel_style: str,
     customer_notes: str = "",
     weather_info: str = "",
+    available_flights: str = "",
+    available_accommodations: str = "",
 ) -> ItineraryAgentOutput:
     """
     Run the itinerary agent with structured input and output.
@@ -83,13 +86,19 @@ async def run_itinerary_agent(
         travel_style: Travel style (self_guided, tour, etc.)
         customer_notes: Customer preferences and notes
         weather_info: Weather and seasonal information from Weather Agent
+        available_flights: Flight options from Logistics Agent (formatted string)
+        available_accommodations: Accommodation options from Accommodation Agent (formatted string)
 
     Returns:
-        ItineraryAgentOutput with structured itinerary data
+        ItineraryAgentOutput with structured itinerary data including selected flight and accommodation
     """
     print(f"[ItineraryAgent] Creating {duration}-day itinerary for {destination}")
     print(f"[ItineraryAgent] Travel style: {travel_style}")
     print(f"[ItineraryAgent] Departure: {departure_date}")
+    if available_flights:
+        print(f"[ItineraryAgent] Received flight options for selection")
+    if available_accommodations:
+        print(f"[ItineraryAgent] Received accommodation options for selection")
 
     # Create structured input
     agent_input = ItineraryAgentInput(
@@ -99,6 +108,8 @@ async def run_itinerary_agent(
         travel_style=travel_style,
         preferences=customer_notes,
         weather_info=weather_info,
+        available_flights=available_flights,
+        available_accommodations=available_accommodations,
     )
 
     # Run agent with structured input
@@ -108,6 +119,14 @@ async def run_itinerary_agent(
     if isinstance(response.content, ItineraryAgentOutput):
         print(f"[ItineraryAgent] ✓ Generated {len(response.content.daily_schedules)} days")
         print(f"[ItineraryAgent] ✓ Identified {len(response.content.location_list)} locations")
+        if response.content.selected_flight:
+            print(
+                f"[ItineraryAgent] ✓ Selected flight: {response.content.selected_flight.airline}"
+            )
+        if response.content.selected_accommodation:
+            print(
+                f"[ItineraryAgent] ✓ Selected accommodation: {response.content.selected_accommodation.name}"
+            )
         return response.content
     else:
         # Fallback if structured output fails

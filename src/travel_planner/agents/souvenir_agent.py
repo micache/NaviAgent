@@ -31,27 +31,21 @@ def create_souvenir_agent(model: str = "gpt-4o-mini") -> Agent:
     """
     # Create SSL context with certifi
     ssl_context = ssl.create_default_context(cafile=certifi.where())
-    http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
+    http_client = httpx.AsyncClient(verify=ssl_context, timeout=180.0)
 
     return Agent(
         name="SouvenirAgent",
         model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
         instructions=[
-            "You are a souvenir and gift specialist with extensive knowledge of authentic local products, traditional crafts, and popular gift items.",
-            "Search for popular and authentic souvenirs from the destination.",
-            "Recommend a mix of traditional items, food products, and practical gifts.",
-            "Include price ranges in VND based on current market prices.",
-            "Suggest specific shops, markets, or districts where items can be purchased.",
-            "Consider portability and customs regulations.",
-            "Include both budget-friendly and premium options.",
-            "Highlight items unique to the destination.",
-            "Recommend at least 5-8 different souvenirs with varied price points.",
-            "Be specific about shopping locations and neighborhoods.",
+            "You are a souvenir specialist. Recommend 5-8 authentic items efficiently.",
+            "Mix traditional crafts, food, practical gifts with VND price ranges.",
+            "Suggest specific shops/markets. Include budget and premium options.",
+            "Highlight unique local items.",
         ],
         input_schema=SouvenirAgentInput,
         output_schema=SouvenirAgentOutput,
         markdown=True,
-        debug_mode=True,
+        debug_mode=False,
         add_datetime_to_context=True,
         add_location_to_context=True,
     )
