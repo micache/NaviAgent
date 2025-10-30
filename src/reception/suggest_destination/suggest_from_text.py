@@ -5,7 +5,7 @@ from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 import re
 
-env_path = Path(__file__).resolve().parent.parent.parent.parent.parent / '.env'
+env_path = Path(__file__).resolve().parent.parent.parent.parent / '.env'
 # print(f"Loading from: {env_path}")
 load_dotenv(dotenv_path=env_path, override=True)
 

@@ -6,10 +6,10 @@ from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
-from naviagent.reception.suggest_destination.suggest_from_text import get_destination_suggestion
+from reception.suggest_destination.suggest_from_text import get_destination_suggestion
 
 # Load environment variables
-env_path = Path(__file__).resolve().parent.parent.parent.parent / '.env'
+env_path = Path(__file__).resolve().parent.parent / '.env'
 # print(f"Loading from: {env_path}")
 load_dotenv(dotenv_path=env_path, override=True)
 api_key = os.getenv("OPENAI_API_KEY")
@@ -65,7 +65,6 @@ class ReceptionistAgent(Agent):
         self.information_confirmed = False
         self.asked_preferences = False
         self.suggested_destinations = None
-        self.asked_personal_requirements = False  # Add this flag
         
     def greet(self) -> str:
         prompt = "Greet the customer warmly and ask where they are from (their departure location)."
@@ -80,16 +79,6 @@ class ReceptionistAgent(Agent):
         
         # Extract information first
         self._extract_information(user_message)
-        
-        # Check if agent just asked about personal requirements
-        last_agent_msg = ""
-        for msg in reversed(self.conversation_history):
-            if msg['role'] == 'assistant':
-                last_agent_msg = msg['content'].lower()
-                break
-        
-        if 'personal requirement' in last_agent_msg or 'special need' in last_agent_msg or 'special requirement' in last_agent_msg:
-            self.asked_personal_requirements = True
         
         # Check if we need to ask for preferences before suggesting destinations
         if self.collected_info.get("destination") is None and not self.asked_preferences:
@@ -214,6 +203,11 @@ class ReceptionistAgent(Agent):
             if json_match:
                 extracted = json.loads(json_match.group())
                 
+                # Debug: print what was extracted
+                # print(f"[DEBUG] User said: '{user_message}'")
+                # print(f"[DEBUG] Extracted: {json.dumps(extracted, ensure_ascii=False)}")
+                # print(f"[DEBUG] Before update: {json.dumps(self.collected_info, ensure_ascii=False)}")
+                
                 # Update collected info with new data ONLY
                 for key, value in extracted.items():
                     # Skip null values completely - don't touch existing data
@@ -223,8 +217,8 @@ class ReceptionistAgent(Agent):
                     current_value = self.collected_info.get(key)
                     
                     if key == "personal_requirements":
-                        # Only update if we've actually asked about it
-                        if isinstance(value, list) and current_value is None and self.asked_personal_requirements:
+                        # Only update if not already set
+                        if isinstance(value, list) and current_value is None:
                             self.collected_info[key] = value
                     elif isinstance(value, list):
                         # For list fields like interests
@@ -237,8 +231,11 @@ class ReceptionistAgent(Agent):
                     elif current_value is None:
                         # Only update scalar fields if they're still None
                         self.collected_info[key] = value
+                
+                # print(f"[DEBUG] After update: {json.dumps(self.collected_info, ensure_ascii=False)}\n")
                         
         except (json.JSONDecodeError, AttributeError) as e:
+            # print(f"[DEBUG] Extraction error: {e}")
             pass
     
     def get_suggested_destination(self, preferences: str) -> str:
@@ -247,10 +244,6 @@ class ReceptionistAgent(Agent):
     def is_information_complete(self) -> bool:
         """Check if all required information has been collected."""
         required_fields = ["departure", "destination", "length_of_stay", "number_of_guests", "budget", "interests", "personal_requirements"]
-        
-        # Check if we've asked about personal requirements
-        if not self.asked_personal_requirements:
-            return False
         
         # All fields must be filled (personal_requirements can be empty list [], but must not be None)
         return all(self.collected_info.get(field) is not None for field in required_fields)
