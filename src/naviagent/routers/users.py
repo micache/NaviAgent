@@ -2,25 +2,20 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 
-from ..core.auth import get_current_user
-from ..core.database import get_supabase_authed
+from ..core.auth import authenticate_user
 from ..models.models import User
 from ..schemas.models import UserProfile
 
-
 router = APIRouter(prefix="/users", tags=["users"])
+
 
 # localhost:8000/users/me
 @router.get("/me", response_model=UserProfile)
-def get_me(current_user: Dict[str, Any] = Depends(get_current_user)) -> UserProfile:
-    token = current_user.get("_access_token")
-    supabase = get_supabase_authed(token)
-
-    user_id = current_user.get("id") if isinstance(current_user, dict) else getattr(current_user, "id", None)
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid user in token")
+def get_me(current_user: Dict[str, Any] = Depends(authenticate_user)) -> UserProfile:
+    user_id = current_user["user_id"]
+    supabase = current_user["supabase"]
 
     # Query an toàn khi 0 rows (tránh .single() gây PGRST116)
     query = supabase.table(User.__tablename__).select("*").eq(User.user_id.key, user_id)

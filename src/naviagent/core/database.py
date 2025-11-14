@@ -6,19 +6,17 @@ mocking in tests, you can override the dependency that uses this client.
 
 from __future__ import annotations
 
-from typing import Optional, Any
-import os
+from typing import Any, Optional
 
 from fastapi import HTTPException, status
 
 try:
-    from supabase import create_client, Client  # type: ignore
+    from supabase import Client, create_client  # type: ignore
 except Exception:  # pragma: no cover - supabase optional in CI
     create_client = None  # type: ignore
     Client = object  # type: ignore
 
 from .config import settings
-
 
 _client: Optional[Any] = None
 

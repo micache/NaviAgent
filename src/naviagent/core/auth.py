@@ -1,17 +1,18 @@
-
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 import os
-import httpx
+from typing import Any, Dict, Optional
 
+import httpx
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from .database import get_supabase_authed
+
 
 async def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Security(HTTPBearer(auto_error=False)),
 ) -> Dict[str, Any]:
-    
     SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
     SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
     """Validate bearer token with Supabase GoTrue and return the user dict."""
@@ -40,3 +41,25 @@ async def get_current_user(
         raise
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Auth error: {exc}")
+
+
+def authenticate_user(
+    current_user: Dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """
+    Xác minh người dùng và trả về user_id cùng Supabase client đã được xác thực.
+    """
+    token = current_user.get("_access_token")
+    supabase = get_supabase_authed(token)
+    user_id = (
+        current_user.get("id")
+        if isinstance(current_user, dict)
+        else getattr(current_user, "id", None)
+    )
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid user in token")
+
+    auth: Dict[str, Any] = {}
+    auth["user_id"] = user_id
+    auth["supabase"] = supabase
+    return auth

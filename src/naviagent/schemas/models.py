@@ -48,7 +48,7 @@ class Trip(BaseModel):
 
 
 class ChatSession(BaseModel):
-    id: str
+    id: Optional[str] = None
     user_id: str
     title: Optional[str] = None
     created_at: Optional[datetime] = None
@@ -56,8 +56,13 @@ class ChatSession(BaseModel):
 
 
 class ChatMessage(BaseModel):
-    id: str
+    id: Optional[str] = None
     session_id: str
     role: str
     content: str
     created_at: Optional[datetime] = None
+
+
+class CreateMessageRequest(BaseModel):
+    role: str
+    content: str

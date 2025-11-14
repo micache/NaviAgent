@@ -5,7 +5,7 @@ Chỉ dùng để khai báo schema và lấy tên bảng/cột, không dùng ORM
 
 from __future__ import annotations
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Column, Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -33,7 +33,7 @@ class Trip(Base):
     user_id = Column(UUID(as_uuid=False), ForeignKey("users.user_id"), nullable=False)
     start_date = Column(DateTime(timezone=True), nullable=True)
     end_date = Column(DateTime(timezone=True), nullable=True)
-    address = Column(Text, nullable=True)
+    address = Column(JSON, nullable=True)
     status = Column(String, nullable=True)
 
 

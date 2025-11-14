@@ -4,17 +4,19 @@ from __future__ import annotations
 Auth router: register, login, logout using Supabase auth.
 """
 
-from typing import Any, Dict, Optional
-import re, os
+import os
+import re
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from ..core.auth import get_current_user
+from ..core.auth import authenticate_user
 from ..core.database import get_supabase, get_supabase_service
 from ..models.models import User
 from ..schemas.models import LoginRequest, LogoutResponse, RegisterRequest, UserProfile
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
 
 # localhost:8000/auth/register
 @router.post("/register", response_model=UserProfile)
@@ -24,7 +26,13 @@ def register(payload: RegisterRequest) -> UserProfile:
     # 1) Create auth user
     try:
         redirect_url = os.getenv("EMAIL_REDIRECT_TO", "http://localhost:3000")
-        auth_res = supabase.auth.sign_up({"email": payload.email, "password": payload.password, "options": {"email_redirect_to": redirect_url}})
+        auth_res = supabase.auth.sign_up(
+            {
+                "email": payload.email,
+                "password": payload.password,
+                "options": {"email_redirect_to": redirect_url},
+            }
+        )
         auth_user = getattr(auth_res, "user", None) or getattr(auth_res, "data", None)
         if not auth_user:
             raise HTTPException(status_code=400, detail="Failed to create auth user")
@@ -43,7 +51,9 @@ def register(payload: RegisterRequest) -> UserProfile:
             )
         # Common duplicate/exists cases
         if "already registered" in msg or "duplicate" in msg.lower():
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Email already registered"
+            )
         raise HTTPException(status_code=400, detail=f"Auth sign up failed: {exc}")
 
     # 2) Insert profile into public.users table (id from auth.users)
@@ -59,22 +69,29 @@ def register(payload: RegisterRequest) -> UserProfile:
         # Use service-role key to bypass RLS for initial profile creation
         srv = get_supabase_service()
         # Use upsert to avoid duplicate errors if profile already exists
-        data = srv.table(User.__tablename__).upsert(insert_data, on_conflict=User.user_id.key).execute()
+        data = (
+            srv.table(User.__tablename__)
+            .upsert(insert_data, on_conflict=User.user_id.key)
+            .execute()
+        )
         row = (data.data or [None])[0]
         return UserProfile(**row)
     except Exception as exc:
         # Best-effort cleanup: if profile creation fails, consider deleting the auth user
         raise HTTPException(status_code=400, detail=f"Create user profile failed: {exc}")
 
+
 # localhost:8000/auth/login
 @router.post("/login")
 def login(payload: LoginRequest) -> Dict[str, Any]:
     supabase = get_supabase()
     try:
-        res = supabase.auth.sign_in_with_password({
-            "email": payload.email,
-            "password": payload.password,
-        })
+        res = supabase.auth.sign_in_with_password(
+            {
+                "email": payload.email,
+                "password": payload.password,
+            }
+        )
         # supabase-py returns session and user
         session = getattr(res, "session", None) or getattr(res, "data", None)
         user = getattr(res, "user", None)
@@ -100,8 +117,8 @@ def login(payload: LoginRequest) -> Dict[str, Any]:
 
 
 @router.post("/logout", response_model=LogoutResponse)
-def logout(current_user: Dict[str, Any] = Depends(get_current_user)) -> LogoutResponse:  # noqa: ARG001
-    supabase = get_supabase()
+def logout(auth: Dict[str, Any] = Depends(authenticate_user)) -> LogoutResponse:  # noqa: ARG001
+    supabase = auth["supabase"]
     try:
         supabase.auth.sign_out()
         return LogoutResponse(success=True)
