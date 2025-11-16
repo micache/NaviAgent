@@ -10,23 +10,33 @@ from pathlib import Path
 import certifi
 import httpx
 from agno.agent import Agent
+from agno.db import PostgresDb
+from agno.memory import MemoryManager
 from agno.models.openai import OpenAIChat
 from agno.tools.reasoning import ReasoningTools
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings, model_settings
+from config import model_settings, settings
 from models.schemas import ItineraryAgentInput, ItineraryAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
+def create_itinerary_agent(
+    agent_name: str = "itinerary",
+    db: PostgresDb = None,
+    user_id: str = None,
+    enable_memory: bool = True,
+) -> Agent:
     """
-    Create an Itinerary Agent with structured input/output.
+    Create an Itinerary Agent with structured input/output and database support.
 
     Args:
         agent_name: Name of agent for model configuration (default: "itinerary")
+        db: PostgreSQL database instance for session/memory storage
+        user_id: Optional default user ID for memory management
+        enable_memory: Enable user memory management (default: True)
 
     Returns:
         Agent configured with ItineraryAgentInput and ItineraryAgentOutput schemas
@@ -34,10 +44,29 @@ def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
     # Create model from centralized configuration
     model = model_settings.create_model_for_agno(agent_name)
 
+    # Create memory manager with cheaper model if database is provided
+    memory_manager = None
+    if db and enable_memory:
+        memory_manager = MemoryManager(
+            db=db,
+            model=model_settings.create_model_for_agno("memory"),
+        )
+
     return Agent(
         name="ItineraryAgent",
         model=model,
+        db=db,
+        user_id=user_id,
+        memory_manager=memory_manager,
+        add_history_to_context=True if db else False,
+        num_history_runs=5,
+        read_chat_history=True if db else False,
+        enable_user_memories=enable_memory if db else False,
+        enable_session_summaries=True if db else False,
+        store_media=False,
         tools=[ReasoningTools(add_instructions=True, add_few_shot=False), search_tools],
+        add_datetime_to_context=True,
+        add_location_to_context=True,
         instructions=[
             "You are the Itinerary Planner & Selector - the CORE of the travel planning pipeline.",
             "",
@@ -196,8 +225,6 @@ def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
         output_schema=ItineraryAgentOutput,
         markdown=True,
         debug_mode=False,
-        add_datetime_to_context=True,
-        add_location_to_context=True,
     )
 
 
@@ -257,9 +284,7 @@ async def run_itinerary_agent(
         print(f"[ItineraryAgent] ✓ Generated {len(response.content.daily_schedules)} days")
         print(f"[ItineraryAgent] ✓ Identified {len(response.content.location_list)} locations")
         if response.content.selected_flight:
-            print(
-                f"[ItineraryAgent] ✓ Selected flight: {response.content.selected_flight.airline}"
-            )
+            print(f"[ItineraryAgent] ✓ Selected flight: {response.content.selected_flight.airline}")
         if response.content.selected_accommodation:
             print(
                 f"[ItineraryAgent] ✓ Selected accommodation: {response.content.selected_accommodation.name}"

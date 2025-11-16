@@ -11,21 +11,31 @@ from pathlib import Path
 import certifi
 import httpx
 from agno.agent import Agent
+from agno.db import PostgresDb
+from agno.memory import MemoryManager
 from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings, model_settings
+from config import model_settings, settings
 from models.schemas import WeatherAgentInput, WeatherAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_weather_agent(agent_name: str = "weather") -> Agent:
+def create_weather_agent(
+    agent_name: str = "weather",
+    db: PostgresDb = None,
+    user_id: str = None,
+    enable_memory: bool = True,
+) -> Agent:
     """
-    Create a Weather Agent with structured input/output and search tools.
+    Create a Weather Agent with structured input/output, search tools, and database support.
 
     Args:
         agent_name: Name of agent for model configuration (default: "weather")
+        db: PostgreSQL database instance for session/memory storage
+        user_id: Optional default user ID for memory management
+        enable_memory: Enable user memory management (default: True)
 
     Returns:
         Agent configured with WeatherAgentInput and WeatherAgentOutput schemas
@@ -33,10 +43,28 @@ def create_weather_agent(agent_name: str = "weather") -> Agent:
     # Create model from centralized configuration
     model = model_settings.create_model_for_agno(agent_name)
 
+    # Create memory manager with cheaper model if database is provided
+    memory_manager = None
+    if db and enable_memory:
+        memory_manager = MemoryManager(
+            db=db,
+            model=model_settings.create_model_for_agno("memory"),
+        )
+
     return Agent(
         name="WeatherAgent",
         model=model,
+        db=db,
+        user_id=user_id,
+        memory_manager=memory_manager,
+        add_history_to_context=True if db else False,
+        num_history_runs=5,
+        read_chat_history=True if db else False,
+        enable_user_memories=enable_memory if db else False,
+        enable_session_summaries=True if db else False,
+        store_media=False,
         tools=[search_tools],
+        add_datetime_to_context=True,
         instructions=[
             "You are the Weather Context Specialist for a travel planning pipeline.",
             "",
@@ -79,9 +107,7 @@ def create_weather_agent(agent_name: str = "weather") -> Agent:
         input_schema=WeatherAgentInput,
         output_schema=WeatherAgentOutput,
         markdown=True,
-        debug_mode=False,  # Disabled for performance
-        add_datetime_to_context=True,
-        add_location_to_context=True,
+        debug_mode=False,
     )
 
 

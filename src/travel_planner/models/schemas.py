@@ -7,16 +7,18 @@ from pydantic import BaseModel, Field
 
 # Import shared schemas from public API
 from schemas.response import (
-    Activity,
-    DaySchedule as DailySchedule,  # Map to internal naming
-    SelectedFlightInfo,
-    SelectedAccommodationInfo,
-    BudgetCategory,
-    LocationDescription,
-    SouvenirSuggestion as Souvenir,
-    FlightOption,
     AccommodationOption,
+    Activity,
+    BudgetCategory,
 )
+from schemas.response import DaySchedule as DailySchedule  # Map to internal naming
+from schemas.response import (
+    FlightOption,
+    LocationDescription,
+    SelectedAccommodationInfo,
+    SelectedFlightInfo,
+)
+from schemas.response import SouvenirSuggestion as Souvenir
 
 # ============ AGENT INPUT SCHEMAS (for Agno structured input) ============
 
@@ -27,6 +29,7 @@ class WeatherAgentInput(BaseModel):
     destination: str = Field(..., description="Destination location/city")
     departure_date: date = Field(..., description="Departure date (YYYY-MM-DD)")
     duration_days: int = Field(..., description="Number of days for the trip", gt=0)
+
 
 class ItineraryAgentInput(BaseModel):
     """Structured input for Itinerary Agent."""
@@ -52,6 +55,7 @@ class ItineraryAgentInput(BaseModel):
         None, description="Available accommodation options from Accommodation Agent"
     )
 
+
 class BudgetAgentInput(BaseModel):
     """Structured input for Budget Agent."""
 
@@ -61,7 +65,9 @@ class BudgetAgentInput(BaseModel):
     total_budget: float = Field(..., description="Total budget in VND", gt=0)
     itinerary: Optional[dict] = Field(None, description="Itinerary output from Itinerary Agent")
     selected_flight_cost: float = Field(0, description="Cost of selected flight from itinerary")
-    selected_accommodation_cost: float = Field(0, description="Cost of selected accommodation from itinerary")
+    selected_accommodation_cost: float = Field(
+        0, description="Cost of selected accommodation from itinerary"
+    )
 
 
 class AdvisoryAgentInput(BaseModel):
@@ -104,9 +110,7 @@ class AccommodationAgentInput(BaseModel):
     destination: str = Field(..., description="Destination location/city")
     departure_date: date = Field(..., description="Check-in date (YYYY-MM-DD)")
     duration_nights: int = Field(..., description="Number of nights to stay", gt=0)
-    budget_per_night: float = Field(
-        ..., description="Budget per night per room in VND", gt=0
-    )
+    budget_per_night: float = Field(..., description="Budget per night per room in VND", gt=0)
     num_travelers: int = Field(..., description="Number of travelers", gt=0)
     travel_style: str = Field(
         ..., description="Travel style: self_guided, tour, luxury, budget, adventure"

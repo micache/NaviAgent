@@ -4,12 +4,13 @@ Multi-agent travel planning system using Agno-AGI
 """
 
 import json
+import uuid
 from datetime import date, datetime
 from pathlib import Path
 
 import uvicorn
 from agents.orchestrator_agent import OrchestratorAgent
-from config import settings, model_settings, ModelProvider
+from config import ModelProvider, model_settings, settings
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -69,34 +70,38 @@ async def startup_event():
     # ============================================================================
     # Default: Uses OpenAI (configured in model_settings)
     # To switch provider, uncomment one of these:
-    
+
     # model_settings.default_provider = ModelProvider.GOOGLE  # Switch to Gemini
     model_settings.default_provider = ModelProvider.DEEPSEEK  # Switch to DeepSeek
     # model_settings.default_provider = ModelProvider.ANTHROPIC  # Switch to Claude
-    
+
     # ============================================================================
-    
+
     # Validate API keys
     keys = model_settings.validate_api_keys()
     configured_providers = [k for k, v in keys.items() if v]
-    
+
     if not configured_providers:
         print("\n⚠️  WARNING: No AI provider API keys found!")
         print("   Please add at least one API key to your .env file")
         print("   Example: OPENAI_API_KEY=sk-proj-xxx\n")
         raise ValueError("No AI provider API keys configured")
-    
+
     print(f"✓ Configured providers: {', '.join(configured_providers)}")
-    
+
     # Print model configuration
     print(f"\n🤖 Model Configuration:")
     print(f"   Provider: {model_settings.default_provider.value}")
     print(f"   Model: {model_settings.model_mappings[model_settings.default_provider]}")
+    print(
+        f"   Memory Model: {model_settings.memory_model_mappings[model_settings.default_provider]}"
+    )
     print(f"   Temperature: {model_settings.default_temperature}")
-    
-    # Initialize orchestrator with centralized model config
-    orchestrator = OrchestratorAgent()
-    print(f"\n✓ Orchestrator initialized with 7 specialist agents")
+
+    # Initialize orchestrator with centralized model config and database support
+    # Note: user_id and session_id will be extracted from request in plan_trip endpoint
+    orchestrator = OrchestratorAgent(user_id=None, session_id=None, enable_memory=True)
+    print(f"\n✓ Orchestrator initialized with 7 specialist agents + Database")
 
     print(f"\n{'=' * 80}")
     print(f"API ready at: http://{settings.host}:{settings.port}{settings.api_prefix}")
@@ -146,6 +151,12 @@ async def health_check():
     4. Phase 4: Budget, Souvenir & Advisory Specialists analyze
     5. Phase 5: Build comprehensive TravelPlan with all structured data
 
+    **Database Integration:**
+    - All agent conversations are automatically saved to PostgreSQL
+    - Session history tracked for context awareness
+    - User preferences stored in memory for personalization
+    - Send user_id in request body to enable user-specific memory
+
     **Processing Time:** Typically 2-5 minutes depending on complexity
     """,
     responses={
@@ -163,10 +174,10 @@ async def plan_trip(request: TravelRequest):
     Main endpoint to generate travel plans using structured orchestration
 
     Args:
-        request: TravelRequest with all planning parameters
+        request: TravelRequest with all planning parameters (including optional user_id and session_id)
 
     Returns:
-        TravelPlan: Comprehensive structured travel plan v2.0
+        TravelPlan: Comprehensive structured travel plan v3.0 with database integration
     """
 
     # Validate OpenAI API key
@@ -177,6 +188,17 @@ async def plan_trip(request: TravelRequest):
         )
 
     try:
+        # Extract user_id from request
+        user_id = request.user_id
+
+        # Auto-generate session_id for this request
+        # Session ID stores chat history between agents internally
+        # Pattern: {user_id or 'guest'}_{timestamp}_{unique_id}
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        unique_id = uuid.uuid4().hex[:8]
+        user_prefix = user_id if user_id else "guest"
+        session_id = f"{user_prefix}_{timestamp}_{unique_id}"
+
         # Log request
         print(f"\n[API] New travel plan request received")
         print(f"  - Destination: {request.destination}")
@@ -185,13 +207,34 @@ async def plan_trip(request: TravelRequest):
         print(f"  - Budget: {request.budget:,.0f}")
         print(f"  - Travelers: {request.num_travelers}")
         print(f"  - Style: {request.travel_style}")
+        if user_id:
+            print(f"  - User ID: {user_id}")
+        print(f"  - Session ID (auto-generated): {session_id}")
 
-        # Execute structured orchestration
-        travel_plan = await orchestrator.plan_trip(request)
+        # Update orchestrator with user_id if provided
+        if user_id and user_id != orchestrator.user_id:
+            print(f"[API] Updating orchestrator with user_id: {user_id}")
+            orchestrator.user_id = user_id
+            # Update all agents with new user_id
+            for agent in [
+                orchestrator.weather_agent,
+                orchestrator.logistics_agent,
+                orchestrator.accommodation_agent,
+                orchestrator.itinerary_agent,
+                orchestrator.budget_agent,
+                orchestrator.souvenir_agent,
+                orchestrator.advisory_agent,
+            ]:
+                agent.user_id = user_id
+
+        # Execute structured orchestration with session_id
+        travel_plan = await orchestrator.plan_trip(request, session_id=session_id)
 
         print(f"\n[API] Travel plan generated successfully!")
         print(f"  - Version: {travel_plan.version}")
         print(f"  - Generated at: {travel_plan.generated_at}")
+        if user_id:
+            print(f"  - Session saved to database for user: {user_id}")
 
         return travel_plan
 
@@ -296,10 +339,10 @@ def run():
 async def main():
     """Main function for testing."""
     global travel_team
-    
+
     # Initialize team
     travel_team = create_travel_planning_team(model=settings.openai_model)
-    
+
     # Create structured travel request
     travel_request = TravelRequest(
         destination="Châu Âu, Pháp, Anh, Đức",
@@ -326,7 +369,7 @@ async def main():
 
     # Run team
     team_response = await run_travel_planning_team(travel_team, team_input)
-    
+
     # Create travel plan
     travel_plan = TravelPlan(
         version="2.0-team",

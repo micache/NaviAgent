@@ -7,7 +7,7 @@ name = "naviagent"
 version = "0.1.0"
 description = "NaviAgent - A navigation agent framework"
 readme = "README.md"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "NaviAgent Team"}
@@ -27,6 +27,7 @@ dependencies = [
     "autoflake>=2.0.0",
     "bandit[toml]>=1.7.0",
     "black>=23.0.0",
+    "ddgs>=9.6.1",
     "fastapi==0.115.0",
     "flake8>=6.0.0",
     "flake8-bugbear>=23.0.0",
