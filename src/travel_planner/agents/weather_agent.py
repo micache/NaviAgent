@@ -15,34 +15,66 @@ from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings
+from config import settings, model_settings
 from models.schemas import WeatherAgentInput, WeatherAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_weather_agent(model: str = "gpt-4o-mini") -> Agent:
+def create_weather_agent(agent_name: str = "weather") -> Agent:
     """
     Create a Weather Agent with structured input/output and search tools.
 
     Args:
-        model: OpenAI model ID to use
+        agent_name: Name of agent for model configuration (default: "weather")
 
     Returns:
         Agent configured with WeatherAgentInput and WeatherAgentOutput schemas
     """
-    # Create SSL context with certifi
-    ssl_context = ssl.create_default_context(cafile=certifi.where())
-    http_client = httpx.AsyncClient(verify=ssl_context, timeout=180.0)
+    # Create model from centralized configuration
+    model = model_settings.create_model_for_agno(agent_name)
 
     return Agent(
         name="WeatherAgent",
-        model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
+        model=model,
         tools=[search_tools],
         instructions=[
-            "You are a weather specialist. Be FAST and concise.",
-            "Limit to 2-3 search queries maximum: 1) Weather forecast, 2) Major events only.",
-            "Provide brief weather summary (2 sentences) and top 3-5 events.",
-            "Focus on essentials only - temperature range, season, major festivals.",
+            "You are the Weather Context Specialist for a travel planning pipeline.",
+            "",
+            "**Role**: Provide highly accurate weather, season, and event context that all other agents will use for planning.",
+            "",
+            "**Input Context**: You will receive the following structured input:",
+            "  - destination: str",
+            "  - departure_date: date (YYYY-MM-DD)",
+            "  - duration_days: int",
+            "",
+            "**Internal Reasoning Steps (Your first actions)**:",
+            "1. Calculate the 'end_date' (departure_date + duration_days).",
+            "2. Compare the 'departure_date' to today's date to determine data type (Forecast vs. Historical).",
+            "",
+            "**Search & Accuracy Strategy (2-3 searches maximum)**:",
+            "Your search strategy DEPENDS on the 'departure_date':",
+            "",
+            "1. **Analyze Departure Date (CRITICAL)**:",
+            "   - **If 'departure_date' is within the next 10-14 days**: Execute a search for a specific '10-day weather forecast {destination} {departure_date}'. This is a short-term FORECAST.",
+            "   - **If 'departure_date' is far in the future (15+ days away)**: Execute a search for 'average weather in {destination} in {month}' OR 'historical weather {destination} {month}'. This is a long-term AVERAGE.",
+            "",
+            "2. **Search for Events**:",
+            "   - Search for '{destination} major festivals or events between {departure_date} and {end_date}'.",
+            "",
+            "**Output Requirements**:",
+            "   - temperature_range: Specific range. MUST note data type. e.g., '25-32°C (Forecast)' or 'Avg. 15-20°C (Historical)'.",
+            "   - season: e.g., 'Summer', 'Monsoon', 'Winter', 'Dry season', 'Peak Tourist Season', 'Shoulder Season'.",
+            "   - weather_conditions: 2-3 sentences describing conditions for the *entire duration* (e.g., 'Expect sunny mornings with high chance of afternoon thunderstorms. Humidity is very high.' or 'Typically cool and overcast, with occasional light rain.')",
+            "   - packing_recommendations: 5-6 specific items based *directly* on the weather (e.g., 'Light rain jacket', 'Breathable cotton shirts', 'Umbrella', 'Sunscreen SPF 50+').",
+            "   - seasonal_events: Top 3-5 major festivals/events *during the travel dates*. If none, state 'No major seasonal events found'.",
+            "   - weather_impact_summary: 2-3 sentences on how this weather impacts travel (e.g., 'Good for beach activities, but plan indoor options for rainy afternoons. This is peak season, so expect crowds.')",
+            "",
+            "**Downstream Agent Dependencies**:",
+            "   - **Itinerary Agent**: Needs season/weather (rainy/sunny) to plan outdoor vs. indoor activities.",
+            "   - **Advisory Agent**: Needs *specific* warnings (e.g., 'Monsoon season', 'Heatwave warning', 'Typhoon risk') for safety tips.",
+            "   - **Budget Agent**: Needs 'season' (peak/off-peak/shoulder) as it directly affects hotel/flight prices.",
+            "",
+            "Focus on ACTIONABLE, specific info. Skip all generic advice.",
         ],
         input_schema=WeatherAgentInput,
         output_schema=WeatherAgentOutput,

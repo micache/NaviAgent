@@ -1,5 +1,5 @@
 """
-Tools package for Travel Planner API
+Tools package for Travel Planner agents
 """
 
 from .search_tool import search_tools

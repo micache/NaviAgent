@@ -30,13 +30,13 @@ def test_plan_trip():
     # Sample request with departure_date
     request_data = {
         "departure_point": "Hanoi",
-        "destination": "Châu Âu",
+        "destination": "Nhật Bản",
         "departure_date": "2025-12-15",  # Added departure date
-        "budget": 50000000,
+        "budget": 20000000,
         "num_travelers": 2,
-        "trip_duration": 7,
+        "trip_duration": 5,
         "travel_style": "self_guided",
-        "customer_notes": "Thích địa điểm đẹp, chụp ảnh sống.",
+        "customer_notes": "Thích địa điểm đẹp, chụp ảnh sống ảo.",
     }
 
     print("\nRequest Data:")

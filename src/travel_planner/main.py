@@ -8,15 +8,17 @@ from datetime import date, datetime
 from pathlib import Path
 
 import uvicorn
-from agents.travel_planning_team import create_travel_planning_team, run_travel_planning_team, TravelPlanningTeamInput
-from agents.response_parser import parse_team_response_to_structured
-from config import settings
+from agents.orchestrator_agent import OrchestratorAgent
+from config import settings, model_settings, ModelProvider
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Import API schemas
-from schemas import TravelPlan, TravelPlanTeamResponse, TravelRequest
+from schemas import TravelPlan, TravelRequest
+
+# Global orchestrator instance
+orchestrator = None
 
 # Create FastAPI app
 app = FastAPI(
@@ -53,30 +55,48 @@ app.add_middleware(
 )
 
 
-# Global travel planning team instance
-travel_team = None
-
-
 @app.on_event("startup")
 async def startup_event():
-    """Initialize travel planning team on startup"""
-    global travel_team
+    """Initialize on startup"""
+    global orchestrator
 
     print(f"\n{'=' * 80}")
     print(f"Starting {settings.app_name} v{settings.app_version}")
     print(f"{'=' * 80}")
 
-    # Check for OpenAI API key
-    if not settings.openai_api_key:
-        print("\n⚠️  WARNING: OPENAI_API_KEY not found in environment variables!")
-        print("   Please set OPENAI_API_KEY to use the API.\n")
-    else:
-        print(f"✓ OpenAI API Key configured")
-
-    # Initialize travel planning team
-    print(f"✓ Initializing Travel Planning Team with model: {settings.openai_model}")
-    travel_team = create_travel_planning_team(model=settings.openai_model)
-    print(f"✓ Team created with 7 specialist agents + Team Leader")
+    # ============================================================================
+    # 🔥 MODEL CONFIGURATION - Change provider here if needed
+    # ============================================================================
+    # Default: Uses OpenAI (configured in model_settings)
+    # To switch provider, uncomment one of these:
+    
+    # model_settings.default_provider = ModelProvider.GOOGLE  # Switch to Gemini
+    model_settings.default_provider = ModelProvider.DEEPSEEK  # Switch to DeepSeek
+    # model_settings.default_provider = ModelProvider.ANTHROPIC  # Switch to Claude
+    
+    # ============================================================================
+    
+    # Validate API keys
+    keys = model_settings.validate_api_keys()
+    configured_providers = [k for k, v in keys.items() if v]
+    
+    if not configured_providers:
+        print("\n⚠️  WARNING: No AI provider API keys found!")
+        print("   Please add at least one API key to your .env file")
+        print("   Example: OPENAI_API_KEY=sk-proj-xxx\n")
+        raise ValueError("No AI provider API keys configured")
+    
+    print(f"✓ Configured providers: {', '.join(configured_providers)}")
+    
+    # Print model configuration
+    print(f"\n🤖 Model Configuration:")
+    print(f"   Provider: {model_settings.default_provider.value}")
+    print(f"   Model: {model_settings.model_mappings[model_settings.default_provider]}")
+    print(f"   Temperature: {model_settings.default_temperature}")
+    
+    # Initialize orchestrator with centralized model config
+    orchestrator = OrchestratorAgent()
+    print(f"\n✓ Orchestrator initialized with 7 specialist agents")
 
     print(f"\n{'=' * 80}")
     print(f"API ready at: http://{settings.host}:{settings.port}{settings.api_prefix}")
@@ -108,7 +128,6 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "team_ready": travel_team is not None,
         "openai_configured": bool(settings.openai_api_key),
     }
 
@@ -118,16 +137,14 @@ async def health_check():
     response_model=TravelPlan,
     summary="Create Travel Plan",
     description="""
-    Generate a comprehensive travel plan using intelligent team collaboration.
+    Generate a comprehensive travel plan using structured agent orchestration.
 
-    **Team Workflow:**
-    1. Team Leader analyzes request and delegates to appropriate members
-    2. Phase 1: Weather Specialist provides context
-    3. Phase 2: Flight & Accommodation Specialists provide options (parallel)
-    4. Phase 3: Itinerary Planner selects best options and creates schedule
-    5. Phase 4: Budget, Souvenir & Advisory Specialists analyze (parallel)
-    6. Phase 5: Team Leader synthesizes final plan
-    7. Phase 6: Response Parser extracts structured data
+    **Sequential Workflow with Structured I/O:**
+    1. Phase 1: Weather Specialist provides forecast and seasonal events
+    2. Phase 2: Flight & Accommodation Specialists find options
+    3. Phase 3: Itinerary Planner selects best options and creates schedule
+    4. Phase 4: Budget, Souvenir & Advisory Specialists analyze
+    5. Phase 5: Build comprehensive TravelPlan with all structured data
 
     **Processing Time:** Typically 2-5 minutes depending on complexity
     """,
@@ -143,7 +160,7 @@ async def health_check():
 )
 async def plan_trip(request: TravelRequest):
     """
-    Main endpoint to generate travel plans using Agno Team + Response Parser
+    Main endpoint to generate travel plans using structured orchestration
 
     Args:
         request: TravelRequest with all planning parameters
@@ -151,20 +168,12 @@ async def plan_trip(request: TravelRequest):
     Returns:
         TravelPlan: Comprehensive structured travel plan v2.0
     """
-    global travel_team
 
     # Validate OpenAI API key
     if not settings.openai_api_key:
         raise HTTPException(
             status_code=503,
             detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.",
-        )
-
-    # Validate travel team
-    if not travel_team:
-        raise HTTPException(
-            status_code=503,
-            detail="Travel Planning Team not initialized. Please restart the server.",
         )
 
     try:
@@ -177,40 +186,8 @@ async def plan_trip(request: TravelRequest):
         print(f"  - Travelers: {request.num_travelers}")
         print(f"  - Style: {request.travel_style}")
 
-        # Convert to team input format
-        team_input = TravelPlanningTeamInput(
-            destination=request.destination,
-            departure_point=request.departure_point,
-            departure_date=request.departure_date,
-            trip_duration=request.trip_duration,
-            budget=request.budget,
-            num_travelers=request.num_travelers,
-            travel_style=request.travel_style,
-            customer_notes=request.customer_notes,
-        )
-
-        # Execute team workflow
-        print(f"\n[API] Delegating to Travel Planning Team...")
-        team_response = await run_travel_planning_team(travel_team, team_input)
-
-        # Parse team response to structured data
-        print(f"\n[API] Parsing team response to structured format...")
-        request_data = {
-            "destination": request.destination,
-            "departure_point": request.departure_point,
-            "departure_date": str(request.departure_date),
-            "trip_duration": request.trip_duration,
-            "budget": request.budget,
-            "num_travelers": request.num_travelers,
-            "travel_style": request.travel_style,
-            "customer_notes": request.customer_notes,
-        }
-        
-        travel_plan = await parse_team_response_to_structured(
-            team_response=team_response,
-            request_data=request_data,
-            model=settings.openai_model
-        )
+        # Execute structured orchestration
+        travel_plan = await orchestrator.plan_trip(request)
 
         print(f"\n[API] Travel plan generated successfully!")
         print(f"  - Version: {travel_plan.version}")
@@ -266,8 +243,8 @@ async def get_config():
         "version": settings.app_version,
         "model": settings.openai_model,
         "api_prefix": settings.api_prefix,
-        "team_status": "initialized" if travel_team else "not initialized",
-        "team_members": "7 specialist agents + Team Leader" if travel_team else None,
+        "orchestrator_status": "initialized" if orchestrator else "not initialized",
+        "agents": "7 specialist agents (Weather, Logistics, Accommodation, Itinerary, Budget, Souvenir, Advisory)",
     }
 
 

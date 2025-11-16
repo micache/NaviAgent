@@ -11,6 +11,18 @@ from dotenv import load_dotenv
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Import model configuration
+from .model_config import (
+    ModelProvider,
+    ModelConfig,
+    AgentModelSettings,
+    model_settings,
+    create_default_config,
+    create_gemini_config,
+    create_deepseek_config,
+    create_hybrid_config,
+)
+
 # Load .env file explicitly
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path, override=True)
@@ -74,6 +86,20 @@ def debug_print_settings():
     if settings.openai_api_key:
         print(f"[Config] API Key starts with: {settings.openai_api_key[:10]}...")
 
+
+# Export all configuration components
+__all__ = [
+    "settings",
+    "Settings",
+    "model_settings",
+    "ModelProvider",
+    "ModelConfig", 
+    "AgentModelSettings",
+    "create_default_config",
+    "create_gemini_config",
+    "create_deepseek_config",
+    "create_hybrid_config",
+]
 
 # Only run debug prints if this module is the entry point
 if __name__ == "__main__":

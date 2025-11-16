@@ -5,6 +5,19 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
+# Import shared schemas from public API
+from schemas.response import (
+    Activity,
+    DaySchedule as DailySchedule,  # Map to internal naming
+    SelectedFlightInfo,
+    SelectedAccommodationInfo,
+    BudgetCategory,
+    LocationDescription,
+    SouvenirSuggestion as Souvenir,
+    FlightOption,
+    AccommodationOption,
+)
+
 # ============ AGENT INPUT SCHEMAS (for Agno structured input) ============
 
 
@@ -15,59 +28,57 @@ class WeatherAgentInput(BaseModel):
     departure_date: date = Field(..., description="Departure date (YYYY-MM-DD)")
     duration_days: int = Field(..., description="Number of days for the trip", gt=0)
 
-
 class ItineraryAgentInput(BaseModel):
     """Structured input for Itinerary Agent."""
 
     destination: str = Field(..., description="Destination location(s) for the trip")
     departure_date: date = Field(..., description="Departure date (YYYY-MM-DD)")
     duration_days: int = Field(..., description="Number of days for the trip", gt=0)
+    num_travelers: int = Field(..., description="Number of travelers", gt=0)
+    total_budget: float = Field(..., description="Total budget for the trip in VND", gt=0)
     travel_style: str = Field(
         ..., description="Travel style: self_guided, tour, luxury, budget, adventure"
     )
     preferences: str = Field(
         default="", description="Customer preferences, special requests, interests"
     )
-    weather_info: str = Field(
-        default="", description="Weather forecast and seasonal information from Weather Agent"
+    weather_info: Optional[dict] = Field(
+        None, description="Weather forecast and seasonal information from Weather Agent"
     )
-    # NEW: Add flight and accommodation context
-    available_flights: str = Field(
-        default="", description="Available flight options from Logistics Agent"
+    available_flights: Optional[List[dict]] = Field(
+        None, description="Available flight options from Logistics Agent"
     )
-    available_accommodations: str = Field(
-        default="", description="Available accommodation options from Accommodation Agent"
+    available_accommodations: Optional[List[dict]] = Field(
+        None, description="Available accommodation options from Accommodation Agent"
     )
-
 
 class BudgetAgentInput(BaseModel):
     """Structured input for Budget Agent."""
 
     destination: str = Field(..., description="Destination location")
-    duration_days: int = Field(..., description="Number of days for the trip", gt=0)
+    trip_duration: int = Field(..., description="Number of days for the trip", gt=0)
     num_travelers: int = Field(..., description="Number of travelers", gt=0)
     total_budget: float = Field(..., description="Total budget in VND", gt=0)
-    travel_style: str = Field(..., description="Travel style")
-    activities_summary: str = Field(
-        default="", description="Summary of planned activities from itinerary"
-    )
+    itinerary: Optional[dict] = Field(None, description="Itinerary output from Itinerary Agent")
+    selected_flight_cost: float = Field(0, description="Cost of selected flight from itinerary")
+    selected_accommodation_cost: float = Field(0, description="Cost of selected accommodation from itinerary")
 
 
 class AdvisoryAgentInput(BaseModel):
     """Structured input for Advisory Agent."""
 
     destination: str = Field(..., description="Destination location")
-    departure_date: date = Field(..., description="Departure date (YYYY-MM-DD)")
-    duration_days: int = Field(..., description="Number of days for the trip", gt=0)
-    location_list: Optional[List[str]] = Field(
-        None, description="List of specific locations to describe from the itinerary"
-    )
+    trip_duration: int = Field(..., description="Number of days for the trip", gt=0)
+    travel_style: str = Field(..., description="Travel style")
+    itinerary: Optional[dict] = Field(None, description="Itinerary output with location_list")
 
 
 class SouvenirAgentInput(BaseModel):
     """Structured input for Souvenir Agent."""
 
     destination: str = Field(..., description="Destination location for souvenir recommendations")
+    budget: float = Field(..., description="Budget allocated for souvenirs in VND", gt=0)
+    travel_style: str = Field(..., description="Travel style to match souvenir recommendations")
 
 
 class LogisticsAgentInput(BaseModel):
@@ -146,50 +157,6 @@ class WeatherAgentOutput(BaseModel):
     )
 
 
-class Activity(BaseModel):
-    """Single activity in the itinerary."""
-
-    time: str = Field(..., description="Time range for the activity (e.g., '08:00 - 10:00')")
-    location_name: str = Field(..., description="Name of the location")
-    address: str = Field(..., description="Full address of the location")
-    activity_type: str = Field(
-        ..., description="Type: sightseeing, food, shopping, nightlife, etc."
-    )
-    description: str = Field(..., description="Detailed description of the activity")
-    estimated_cost: float = Field(..., description="Estimated cost per person in VND")
-    notes: Optional[str] = Field(None, description="Additional notes, tips, or warnings")
-
-
-class DailySchedule(BaseModel):
-    """Schedule for one day."""
-
-    day_number: int = Field(..., description="Day number in the trip (1, 2, 3, ...)")
-    date: Optional[str] = Field(None, description="Date in format YYYY-MM-DD if known")
-    title: str = Field(
-        ..., description="Title or theme for the day (e.g., 'Explore Historic Tokyo')"
-    )
-    activities: List[Activity] = Field(..., description="List of activities for this day")
-
-
-class SelectedFlightInfo(BaseModel):
-    """Selected flight information for the trip."""
-
-    airline: str = Field(..., description="Selected airline name")
-    outbound_flight: str = Field(..., description="Outbound flight details (e.g., 'VN404 - 08:00 AM')")
-    return_flight: str = Field(..., description="Return flight details (e.g., 'VN405 - 14:00 PM')")
-    total_cost: float = Field(..., description="Total flight cost for all travelers in VND")
-
-
-class SelectedAccommodationInfo(BaseModel):
-    """Selected accommodation information for the trip."""
-
-    name: str = Field(..., description="Selected hotel/accommodation name")
-    area: str = Field(..., description="Area/district location")
-    check_in: str = Field(..., description="Check-in date (YYYY-MM-DD)")
-    check_out: str = Field(..., description="Check-out date (YYYY-MM-DD)")
-    total_cost: float = Field(..., description="Total accommodation cost for entire stay in VND")
-
-
 class ItineraryAgentOutput(BaseModel):
     """Complete itinerary output from Itinerary Agent."""
 
@@ -209,20 +176,6 @@ class ItineraryAgentOutput(BaseModel):
     )
 
 
-class BudgetCategory(BaseModel):
-    """Budget breakdown by category."""
-
-    category_name: str = Field(
-        ...,
-        description="Category name: Accommodation, Food, Transportation, Activities, Shopping, etc.",
-    )
-    estimated_cost: float = Field(..., description="Total estimated cost for this category in VND")
-    breakdown: Optional[List[Dict[str, float]]] = Field(
-        None, description="Optional detailed breakdown within the category"
-    )
-    notes: Optional[str] = Field(None, description="Additional notes about this category")
-
-
 class BudgetAgentOutput(BaseModel):
     """Complete budget breakdown from Budget Agent."""
 
@@ -239,17 +192,6 @@ class BudgetAgentOutput(BaseModel):
     recommendations: Optional[List[str]] = Field(
         None, description="Cost-saving recommendations or spending suggestions"
     )
-
-
-class LocationDescription(BaseModel):
-    """Description of a specific location."""
-
-    location_name: str = Field(..., description="Name of the location")
-    description: str = Field(
-        ...,
-        description="Brief description (2-3 sentences) about the location, its significance, and what to expect",
-    )
-    highlights: Optional[List[str]] = Field(None, description="Key highlights or must-see features")
 
 
 class AdvisoryAgentOutput(BaseModel):
@@ -271,54 +213,12 @@ class AdvisoryAgentOutput(BaseModel):
     )
 
 
-class Souvenir(BaseModel):
-    """Souvenir recommendation."""
-
-    item_name: str = Field(..., description="Name of the souvenir item")
-    description: str = Field(
-        ...,
-        description="Description of the item, its cultural significance, and why it makes a good souvenir",
-    )
-    estimated_price: str = Field(
-        ..., description="Estimated price range (e.g., '100,000 - 500,000 VND')"
-    )
-    where_to_buy: str = Field(..., description="Recommended places or areas to purchase this item")
-
-
 class SouvenirAgentOutput(BaseModel):
     """Souvenir recommendations from Souvenir Agent."""
 
     souvenirs: List[Souvenir] = Field(
         ..., description="List of recommended souvenir items (5-10 items)"
     )
-
-
-class FlightOption(BaseModel):
-    """Single flight ticket option."""
-
-    airline: str = Field(..., description="Airline name (e.g., 'Vietnam Airlines', 'ANA', 'Lufthansa')")
-    flight_type: str = Field(
-        ..., description="Flight type: 'direct', 'one-stop', 'multi-stop'"
-    )
-    departure_time: str = Field(
-        ..., description="Departure time (e.g., '08:00 AM', 'Morning', 'Evening')"
-    )
-    arrival_time: Optional[str] = Field(
-        None, description="Arrival time if available"
-    )
-    duration: str = Field(..., description="Total flight duration (e.g., '12 hours 30 minutes')")
-    price_per_person: float = Field(..., description="Price per person (round-trip) in VND")
-    cabin_class: str = Field(
-        ..., description="Cabin class: 'Economy', 'Premium Economy', 'Business', 'First Class'"
-    )
-    benefits: List[str] = Field(
-        ...,
-        description="Flight benefits (e.g., '23kg baggage', 'Meals included', 'Seat selection', 'Lounge access')",
-    )
-    booking_platforms: List[str] = Field(
-        ..., description="Where to book (e.g., 'Airline website', 'Traveloka', 'Skyscanner')"
-    )
-    notes: Optional[str] = Field(None, description="Additional notes or recommendations")
 
 
 class LogisticsAgentOutput(BaseModel):
@@ -341,28 +241,6 @@ class LogisticsAgentOutput(BaseModel):
     )
 
 
-class AccommodationOption(BaseModel):
-    """Single accommodation recommendation."""
-
-    name: str = Field(..., description="Name of the hotel/hostel/homestay")
-    type: str = Field(
-        ..., description="Type: hotel, hostel, homestay, apartment, resort, guesthouse"
-    )
-    area: str = Field(..., description="District/neighborhood/area location")
-    price_per_night: float = Field(..., description="Average price per night in VND")
-    rating: Optional[float] = Field(None, description="Rating out of 5.0 if available")
-    amenities: List[str] = Field(
-        ..., description="Key amenities (e.g., 'WiFi', 'Pool', 'Gym', 'Breakfast included')"
-    )
-    distance_to_center: Optional[str] = Field(
-        None, description="Distance to city center or main attractions (e.g., '2.5 km from Old Quarter')"
-    )
-    booking_platforms: List[str] = Field(
-        ..., description="Where to book (e.g., 'Booking.com', 'Agoda', 'Airbnb')"
-    )
-    notes: Optional[str] = Field(None, description="Additional notes or highlights")
-
-
 class AccommodationAgentOutput(BaseModel):
     """Accommodation recommendations from Accommodation Agent."""
 
@@ -383,69 +261,6 @@ class AccommodationAgentOutput(BaseModel):
     )
 
 
-# ============ LEGACY SCHEMAS (for backward compatibility) ============
-# These are kept for any existing code that might use them
-
-
-class TravelRequest(BaseModel):
-    """Structured travel planning request."""
-
-    destination: str = Field(..., description="Destination location(s)")
-    departure_point: str = Field(..., description="Starting location")
-    start_date: Optional[date] = Field(None, description="Trip start date")
-    duration_days: int = Field(..., description="Number of days for the trip", gt=0)
-    budget: float = Field(..., description="Total budget in VND", gt=0)
-    num_travelers: int = Field(..., description="Number of travelers", gt=0)
-    travel_style: str = Field(
-        default="self_guided", description="Travel style: self_guided, luxury, budget, adventure"
-    )
-    preferences: Optional[str] = Field(None, description="Additional preferences and notes")
-
-
-class ItineraryRequest(BaseModel):
-    """Request for itinerary creation."""
-
-    destination: str
-    duration_days: int
-    travel_style: str
-    preferences: Optional[str] = None
-
-
-class BudgetRequest(BaseModel):
-    """Request for budget planning."""
-
-    destination: str
-    duration_days: int
-    num_travelers: int
-    total_budget: float
-    travel_style: str
-
-
-class AdvisoryRequest(BaseModel):
-    """Request for travel advisory."""
-
-    destination: str
-    travel_month: Optional[int] = None
-
-
-# Re-export output schemas with old names for backward compatibility
-ItineraryOutput = ItineraryAgentOutput
-BudgetOutput = BudgetAgentOutput
-AdvisoryOutput = AdvisoryAgentOutput
-LogisticsOutput = LogisticsAgentOutput
-
-
-# ============ COMPLETE TRAVEL PLAN OUTPUT ============
-
-
-class TravelPlanOutput(BaseModel):
-    """Complete travel plan output."""
-
-    version: str = "1.0"
-    request_summary: dict
-    itinerary: ItineraryOutput
-    budget: BudgetOutput
-    advisory: AdvisoryOutput
-    souvenirs: List[Souvenir]
-    logistics: LogisticsOutput
-    generated_at: str
+# ============ NOTE ============
+# For public API schemas (TravelRequest, TravelPlan), see schemas/request.py and schemas/response.py
+# This file contains only internal agent I/O schemas for the Agno framework

@@ -14,46 +14,104 @@ from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings
+from config import settings, model_settings
 from models.schemas import LogisticsAgentInput, LogisticsAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_logistics_agent(model: str = "gpt-4o-mini") -> Agent:
+def create_logistics_agent(agent_name: str = "logistics") -> Agent:
     """
     Create a Logistics Agent specialized for flight tickets with structured input/output.
 
     Args:
-        model: OpenAI model ID to use
+        agent_name: Name of agent for model configuration (default: "logistics")
 
     Returns:
         Agent configured with LogisticsAgentInput and LogisticsAgentOutput schemas
     """
-    # Create SSL context with certifi
-    ssl_context = ssl.create_default_context(cafile=certifi.where())
-    http_client = httpx.AsyncClient(verify=ssl_context, timeout=180.0)
+    # Create model from centralized configuration
+    model = model_settings.create_model_for_agno(agent_name)
 
     return Agent(
         name="LogisticsAgent",
-        model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
+        model=model,
         tools=[search_tools],
         instructions=[
-            "You are a flight ticket specialist. Focus ONLY on flight information.",
-            "Be fast and practical. Limit to 3-5 searches for flight options.",
-            "Search: '{departure} to {destination} flights {date}', 'best airlines {route}', 'flight prices {date}'.",
-            "Provide 3-5 flight options with different airlines, times, and price points.",
-            "For EACH flight option include:",
-            "  - Airline name (Vietnam Airlines, ANA, Lufthansa, etc.)",
-            "  - Flight type (direct, one-stop, multi-stop)",
-            "  - Departure/arrival times and duration",
-            "  - Price per person (round-trip) in VND",
-            "  - Cabin class (Economy, Business, etc.)",
-            "  - Benefits (baggage allowance, meals, seat selection, lounge access)",
-            "  - Booking platforms (airline website, Traveloka, Skyscanner)",
-            "Recommend the best value option.",
-            "Include booking tips: best time to book, price comparison, deals.",
-            "Add brief visa requirements if you find the information.",
-            "All prices in VND. Be specific with flight details.",
+            "You are the Flight Logistics Specialist for a travel planning pipeline.",
+            "",
+            "**Role**: Provide 3-5 diverse, realistic flight options for the Itinerary Agent to select from.",
+            "",
+            "**Input Context**: You will receive:",
+            "  - departure_point: str (e.g., 'Hanoi', 'Ho Chi Minh City')",
+            "  - destination: str (e.g., 'Tokyo', 'Bangkok')",
+            "  - departure_date: date (YYYY-MM-DD)",
+            "  - return_date: date (YYYY-MM-DD)",
+            "  - num_travelers: int",
+            "  - budget_per_person: float (allocated budget per person for round-trip)",
+            "  - preferences: str (customer notes)",
+            "",
+            "🔴 IMPORTANT: Search tools may fail. Use your GENERAL KNOWLEDGE about typical flight routes.",
+            "",
+            "**Search Strategy (OPTIONAL - Only if search works, max 2-3 searches)**:",
+            "   1. '{departure_point} to {destination} flights typical prices'",
+            "   2. 'Airlines operating {departure_point} {destination} route'",
+            "",
+            "⚠️ If search fails, USE GENERAL KNOWLEDGE to provide realistic options based on:",
+            "   - Known airlines operating this route",
+            "   - Typical flight durations for the distance",
+            "   - Standard pricing ranges for the route and season",
+            "   - Common flight patterns (direct vs. connecting)",
+            "",
+            "**Flight Option Guidelines by Route**:",
+            "",
+            "**Hanoi/HCMC → Tokyo/Osaka (Japan)**:",
+            "  • Budget: Vietjet, VietJet Air, Jetstar (5-7M VND, 1 stop)",
+            "  • Mid-range: Vietnam Airlines, ANA (8-12M VND, direct ~5-6h)",
+            "  • Premium: JAL, Singapore Airlines (12-18M VND, direct, better service)",
+            "",
+            "**Vietnam → Bangkok/Phuket (Thailand)**:",
+            "  • Budget: VietJet, Air Asia (2-4M VND, direct ~1-2h)",
+            "  • Mid-range: Thai Airways, Vietnam Airlines (4-6M VND, direct)",
+            "  • Premium: Bangkok Airways (6-8M VND, premium service)",
+            "",
+            "**Vietnam → Seoul (Korea)**:",
+            "  • Budget: T'way, Jin Air (6-8M VND, direct ~4-5h)",
+            "  • Mid-range: Korean Air, Asiana, Vietnam Airlines (8-12M VND, direct)",
+            "  • Premium: Korean Air business (15-20M VND)",
+            "",
+            "**Vietnam → Singapore**:",
+            "  • Budget: Jetstar, Scoot (3-5M VND, direct ~2h)",
+            "  • Mid-range: Singapore Airlines, Vietnam Airlines (5-7M VND)",
+            "",
+            "**Output Requirements**: Provide 3-5 diverse flight options.",
+            "   Mix different: Airlines, Prices (budget/mid/premium), Flight types (direct/1-stop)",
+            "",
+            "   **Each flight MUST include**:",
+            "   • airline: Airline name (e.g., 'Vietnam Airlines', 'Vietjet Air')",
+            "   • flight_type: 'direct', '1 stop', '2+ stops'",
+            "   • departure_time: Realistic time (e.g., '08:30 AM', 'Early morning', 'Afternoon')",
+            "   • arrival_time: Based on flight duration",
+            "   • duration: Total flight time (e.g., '5h 30m direct', '8h 45m with 1 stop in Bangkok')",
+            "   • price_per_person: Round-trip price in VND (realistic for route)",
+            "   • cabin_class: 'Economy', 'Premium Economy', 'Business'",
+            "   • benefits: ['20kg checked baggage', 'Meals included', 'Seat selection']",
+            "   • booking_platforms: ['Airline website', 'Traveloka', 'Skyscanner', 'Trip.com']",
+            "   • notes: Highlight (e.g., 'Fastest direct option', 'Best value', 'Most comfortable')",
+            "",
+            "   **Summary fields**:",
+            "   - flight_options: List of 3-5 options above",
+            "   - recommended_flight: Suggest best option based on travel_style",
+            "   - average_price: Average price_per_person",
+            "   - booking_tips: ['Book 2-3 months ahead for best prices', 'Check airline websites for promotions']",
+            "   - visa_requirements: Brief note if applicable (e.g., 'Visa on arrival for tourism')",
+            "",
+            "**Price Adjustment Rules**:",
+            "   • Peak season (Dec-Feb, Jul-Aug): +20-30% to base prices",
+            "   • Off-peak (Mar-May, Sep-Nov): -10-20% from base prices",
+            "   • Weekend departures: +10-15%",
+            "   • Red-eye flights: -10-15%",
+            "",
+            "Be realistic with prices and times. Don't over-rely on search - use aviation knowledge!",
         ],
         input_schema=LogisticsAgentInput,
         output_schema=LogisticsAgentOutput,
