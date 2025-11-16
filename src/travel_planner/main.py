@@ -8,14 +8,17 @@ from datetime import date, datetime
 from pathlib import Path
 
 import uvicorn
-from agents import OrchestratorAgent
-from config import settings
+from agents.orchestrator_agent import OrchestratorAgent
+from config import settings, model_settings, ModelProvider
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Import API schemas
 from schemas import TravelPlan, TravelRequest
+
+# Global orchestrator instance
+orchestrator = None
 
 # Create FastAPI app
 app = FastAPI(
@@ -32,7 +35,8 @@ app = FastAPI(
     - Logistics planning (flights & accommodation)
 
     ## Architecture
-    - 5 specialist agents coordinated by an orchestrator
+    - 7 specialist agents working as an intelligent team
+    - Team Leader with automatic task delegation
     - Parallel execution with dependency management
     - Real-time internet search capabilities
     """,
@@ -51,29 +55,48 @@ app.add_middleware(
 )
 
 
-# Global orchestrator instance
-orchestrator = None
-
-
 @app.on_event("startup")
 async def startup_event():
-    """Initialize orchestrator on startup"""
+    """Initialize on startup"""
     global orchestrator
 
     print(f"\n{'=' * 80}")
     print(f"Starting {settings.app_name} v{settings.app_version}")
     print(f"{'=' * 80}")
 
-    # Check for OpenAI API key
-    if not settings.openai_api_key:
-        print("\n⚠️  WARNING: OPENAI_API_KEY not found in environment variables!")
-        print("   Please set OPENAI_API_KEY to use the API.\n")
-    else:
-        print(f"✓ OpenAI API Key configured")
-
-    # Initialize orchestrator
-    print(f"✓ Initializing Orchestrator with model: {settings.openai_model}")
-    orchestrator = OrchestratorAgent(model=settings.openai_model)
+    # ============================================================================
+    # 🔥 MODEL CONFIGURATION - Change provider here if needed
+    # ============================================================================
+    # Default: Uses OpenAI (configured in model_settings)
+    # To switch provider, uncomment one of these:
+    
+    # model_settings.default_provider = ModelProvider.GOOGLE  # Switch to Gemini
+    model_settings.default_provider = ModelProvider.DEEPSEEK  # Switch to DeepSeek
+    # model_settings.default_provider = ModelProvider.ANTHROPIC  # Switch to Claude
+    
+    # ============================================================================
+    
+    # Validate API keys
+    keys = model_settings.validate_api_keys()
+    configured_providers = [k for k, v in keys.items() if v]
+    
+    if not configured_providers:
+        print("\n⚠️  WARNING: No AI provider API keys found!")
+        print("   Please add at least one API key to your .env file")
+        print("   Example: OPENAI_API_KEY=sk-proj-xxx\n")
+        raise ValueError("No AI provider API keys configured")
+    
+    print(f"✓ Configured providers: {', '.join(configured_providers)}")
+    
+    # Print model configuration
+    print(f"\n🤖 Model Configuration:")
+    print(f"   Provider: {model_settings.default_provider.value}")
+    print(f"   Model: {model_settings.model_mappings[model_settings.default_provider]}")
+    print(f"   Temperature: {model_settings.default_temperature}")
+    
+    # Initialize orchestrator with centralized model config
+    orchestrator = OrchestratorAgent()
+    print(f"\n✓ Orchestrator initialized with 7 specialist agents")
 
     print(f"\n{'=' * 80}")
     print(f"API ready at: http://{settings.host}:{settings.port}{settings.api_prefix}")
@@ -105,7 +128,6 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "orchestrator_ready": orchestrator is not None,
         "openai_configured": bool(settings.openai_api_key),
     }
 
@@ -115,18 +137,20 @@ async def health_check():
     response_model=TravelPlan,
     summary="Create Travel Plan",
     description="""
-    Generate a comprehensive travel plan using multi-agent orchestration.
+    Generate a comprehensive travel plan using structured agent orchestration.
 
-    **Workflow:**
-    1. Phase 1: Itinerary, Logistics, and Souvenir agents run in parallel
-    2. Phase 2: Budget and Advisory agents run in parallel (depend on itinerary)
-    3. Phase 3: Results compiled into comprehensive travel plan
+    **Sequential Workflow with Structured I/O:**
+    1. Phase 1: Weather Specialist provides forecast and seasonal events
+    2. Phase 2: Flight & Accommodation Specialists find options
+    3. Phase 3: Itinerary Planner selects best options and creates schedule
+    4. Phase 4: Budget, Souvenir & Advisory Specialists analyze
+    5. Phase 5: Build comprehensive TravelPlan with all structured data
 
     **Processing Time:** Typically 2-5 minutes depending on complexity
     """,
     responses={
         200: {
-            "description": "Travel plan generated successfully",
+            "description": "Travel plan generated successfully with structured data",
             "model": TravelPlan,
         },
         400: {"description": "Invalid request parameters"},
@@ -136,28 +160,20 @@ async def health_check():
 )
 async def plan_trip(request: TravelRequest):
     """
-    Main endpoint to generate travel plans
+    Main endpoint to generate travel plans using structured orchestration
 
     Args:
         request: TravelRequest with all planning parameters
 
     Returns:
-        TravelPlan: Comprehensive travel plan v1.0
+        TravelPlan: Comprehensive structured travel plan v2.0
     """
-    global orchestrator
 
     # Validate OpenAI API key
     if not settings.openai_api_key:
         raise HTTPException(
             status_code=503,
             detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable.",
-        )
-
-    # Validate orchestrator
-    if not orchestrator:
-        raise HTTPException(
-            status_code=503,
-            detail="Orchestrator not initialized. Please restart the server.",
         )
 
     try:
@@ -170,7 +186,7 @@ async def plan_trip(request: TravelRequest):
         print(f"  - Travelers: {request.num_travelers}")
         print(f"  - Style: {request.travel_style}")
 
-        # Execute orchestration workflow
+        # Execute structured orchestration
         travel_plan = await orchestrator.plan_trip(request)
 
         print(f"\n[API] Travel plan generated successfully!")
@@ -228,6 +244,7 @@ async def get_config():
         "model": settings.openai_model,
         "api_prefix": settings.api_prefix,
         "orchestrator_status": "initialized" if orchestrator else "not initialized",
+        "agents": "7 specialist agents (Weather, Logistics, Accommodation, Itinerary, Budget, Souvenir, Advisory)",
     }
 
 
@@ -276,9 +293,13 @@ def run():
     )
 
 
-def main():
-    """Main function."""
-
+async def main():
+    """Main function for testing."""
+    global travel_team
+    
+    # Initialize team
+    travel_team = create_travel_planning_team(model=settings.openai_model)
+    
     # Create structured travel request
     travel_request = TravelRequest(
         destination="Châu Âu, Pháp, Anh, Đức",
@@ -291,8 +312,34 @@ def main():
         customer_notes="Thích quẩy, thích bar, thích ăn chơi nhảy múa",
     )
 
-    # Plan trip with structured input
-    travel_plan = orchestrator.plan_trip(travel_request)
+    # Convert to team input
+    team_input = TravelPlanningTeamInput(
+        destination=travel_request.destination,
+        departure_point=travel_request.departure_point,
+        departure_date=travel_request.departure_date,
+        trip_duration=travel_request.trip_duration,
+        budget=travel_request.budget,
+        num_travelers=travel_request.num_travelers,
+        travel_style=travel_request.travel_style,
+        customer_notes=travel_request.customer_notes,
+    )
+
+    # Run team
+    team_response = await run_travel_planning_team(travel_team, team_input)
+    
+    # Create travel plan
+    travel_plan = TravelPlan(
+        version="2.0-team",
+        destination=travel_request.destination,
+        departure_point=travel_request.departure_point,
+        departure_date=travel_request.departure_date,
+        trip_duration=travel_request.trip_duration,
+        budget=travel_request.budget,
+        num_travelers=travel_request.num_travelers,
+        travel_style=travel_request.travel_style,
+        team_full_response=team_response,
+        generated_at=datetime.utcnow(),
+    )
 
     # Save structured output
     output_file = Path("travel_plan_output.json")

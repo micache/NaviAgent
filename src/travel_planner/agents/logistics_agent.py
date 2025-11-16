@@ -1,6 +1,6 @@
 """
-Logistics Agent
-Provides flight information and accommodation suggestions using Agno's structured input/output
+Logistics Agent - Specialized for Flight Tickets
+Provides detailed flight information with pricing, airlines, benefits using Agno's structured input/output
 """
 
 import ssl
@@ -11,53 +11,112 @@ import certifi
 import httpx
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
-from agno.tools.reasoning import ReasoningTools
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings
+from config import settings, model_settings
 from models.schemas import LogisticsAgentInput, LogisticsAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_logistics_agent(model: str = "gpt-4o-mini") -> Agent:
+def create_logistics_agent(agent_name: str = "logistics") -> Agent:
     """
-    Create a Logistics Agent with structured input/output.
+    Create a Logistics Agent specialized for flight tickets with structured input/output.
 
     Args:
-        model: OpenAI model ID to use
+        agent_name: Name of agent for model configuration (default: "logistics")
 
     Returns:
         Agent configured with LogisticsAgentInput and LogisticsAgentOutput schemas
     """
-    # Create SSL context with certifi
-    ssl_context = ssl.create_default_context(cafile=certifi.where())
-    http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
+    # Create model from centralized configuration
+    model = model_settings.create_model_for_agno(agent_name)
 
     return Agent(
         name="LogisticsAgent",
-        model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
-        tools=[ReasoningTools(add_instructions=True, add_few_shot=True), search_tools],
+        model=model,
+        tools=[search_tools],
         instructions=[
-            "You are a travel logistics expert specializing in flights, accommodation, and transportation planning.",
-            "CRITICAL: Use the 'think' tool to reason through cost optimization and booking strategies.",
-            "Use 'analyze' tool to compare different flight options, accommodation areas, and transportation methods.",
-            "CRITICAL: Use search tools to find current flight prices for the specific departure date.",
-            "Search for '{departure_point} to {destination} flights {date}' to get accurate pricing.",
-            "Consider the weather information when recommending accommodation (e.g., suggest hotels with pools for hot weather).",
-            "Search for accommodation options and recommend specific areas/neighborhoods based on budget and travel style.",
-            "Consider budget constraints when making recommendations.",
-            "Provide practical transportation tips for getting around the destination.",
-            "Include information about airport transfers and public transportation.",
-            "Suggest booking strategies and optimal timing for best prices.",
-            "Base all cost estimates on current market prices in VND.",
-            "Consider seasonal variations in flight and hotel prices based on the travel date.",
-            "Recommend specific neighborhoods/areas to stay with price ranges.",
+            "You are the Flight Logistics Specialist for a travel planning pipeline.",
+            "",
+            "**Role**: Provide 3-5 diverse, realistic flight options for the Itinerary Agent to select from.",
+            "",
+            "**Input Context**: You will receive:",
+            "  - departure_point: str (e.g., 'Hanoi', 'Ho Chi Minh City')",
+            "  - destination: str (e.g., 'Tokyo', 'Bangkok')",
+            "  - departure_date: date (YYYY-MM-DD)",
+            "  - return_date: date (YYYY-MM-DD)",
+            "  - num_travelers: int",
+            "  - budget_per_person: float (allocated budget per person for round-trip)",
+            "  - preferences: str (customer notes)",
+            "",
+            "🔴 IMPORTANT: Search tools may fail. Use your GENERAL KNOWLEDGE about typical flight routes.",
+            "",
+            "**Search Strategy (OPTIONAL - Only if search works, max 2-3 searches)**:",
+            "   1. '{departure_point} to {destination} flights typical prices'",
+            "   2. 'Airlines operating {departure_point} {destination} route'",
+            "",
+            "⚠️ If search fails, USE GENERAL KNOWLEDGE to provide realistic options based on:",
+            "   - Known airlines operating this route",
+            "   - Typical flight durations for the distance",
+            "   - Standard pricing ranges for the route and season",
+            "   - Common flight patterns (direct vs. connecting)",
+            "",
+            "**Flight Option Guidelines by Route**:",
+            "",
+            "**Hanoi/HCMC → Tokyo/Osaka (Japan)**:",
+            "  • Budget: Vietjet, VietJet Air, Jetstar (5-7M VND, 1 stop)",
+            "  • Mid-range: Vietnam Airlines, ANA (8-12M VND, direct ~5-6h)",
+            "  • Premium: JAL, Singapore Airlines (12-18M VND, direct, better service)",
+            "",
+            "**Vietnam → Bangkok/Phuket (Thailand)**:",
+            "  • Budget: VietJet, Air Asia (2-4M VND, direct ~1-2h)",
+            "  • Mid-range: Thai Airways, Vietnam Airlines (4-6M VND, direct)",
+            "  • Premium: Bangkok Airways (6-8M VND, premium service)",
+            "",
+            "**Vietnam → Seoul (Korea)**:",
+            "  • Budget: T'way, Jin Air (6-8M VND, direct ~4-5h)",
+            "  • Mid-range: Korean Air, Asiana, Vietnam Airlines (8-12M VND, direct)",
+            "  • Premium: Korean Air business (15-20M VND)",
+            "",
+            "**Vietnam → Singapore**:",
+            "  • Budget: Jetstar, Scoot (3-5M VND, direct ~2h)",
+            "  • Mid-range: Singapore Airlines, Vietnam Airlines (5-7M VND)",
+            "",
+            "**Output Requirements**: Provide 3-5 diverse flight options.",
+            "   Mix different: Airlines, Prices (budget/mid/premium), Flight types (direct/1-stop)",
+            "",
+            "   **Each flight MUST include**:",
+            "   • airline: Airline name (e.g., 'Vietnam Airlines', 'Vietjet Air')",
+            "   • flight_type: 'direct', '1 stop', '2+ stops'",
+            "   • departure_time: Realistic time (e.g., '08:30 AM', 'Early morning', 'Afternoon')",
+            "   • arrival_time: Based on flight duration",
+            "   • duration: Total flight time (e.g., '5h 30m direct', '8h 45m with 1 stop in Bangkok')",
+            "   • price_per_person: Round-trip price in VND (realistic for route)",
+            "   • cabin_class: 'Economy', 'Premium Economy', 'Business'",
+            "   • benefits: ['20kg checked baggage', 'Meals included', 'Seat selection']",
+            "   • booking_platforms: ['Airline website', 'Traveloka', 'Skyscanner', 'Trip.com']",
+            "   • notes: Highlight (e.g., 'Fastest direct option', 'Best value', 'Most comfortable')",
+            "",
+            "   **Summary fields**:",
+            "   - flight_options: List of 3-5 options above",
+            "   - recommended_flight: Suggest best option based on travel_style",
+            "   - average_price: Average price_per_person",
+            "   - booking_tips: ['Book 2-3 months ahead for best prices', 'Check airline websites for promotions']",
+            "   - visa_requirements: Brief note if applicable (e.g., 'Visa on arrival for tourism')",
+            "",
+            "**Price Adjustment Rules**:",
+            "   • Peak season (Dec-Feb, Jul-Aug): +20-30% to base prices",
+            "   • Off-peak (Mar-May, Sep-Nov): -10-20% from base prices",
+            "   • Weekend departures: +10-15%",
+            "   • Red-eye flights: -10-15%",
+            "",
+            "Be realistic with prices and times. Don't over-rely on search - use aviation knowledge!",
         ],
         input_schema=LogisticsAgentInput,
         output_schema=LogisticsAgentOutput,
         markdown=True,
-        debug_mode=True,
+        debug_mode=False,
         add_datetime_to_context=True,
         add_location_to_context=True,
     )
@@ -68,38 +127,42 @@ async def run_logistics_agent(
     departure_point: str,
     destination: str,
     departure_date,
-    budget: float,
-    duration: int,
-    weather_info: str = "",
+    return_date,
+    num_travelers: int,
+    budget_per_person: float,
+    preferences: str = "",
 ) -> LogisticsAgentOutput:
     """
-    Run the logistics agent with structured input and output.
+    Run the logistics agent with structured input and output - specialized for flights.
 
     Args:
         agent: The configured Logistics Agent
-        departure_point: Starting location/city
-        destination: Destination location/city
+        departure_point: Starting location/city/airport
+        destination: Destination location/city/airport
         departure_date: Departure date
-        budget: Total budget in VND
-        duration: Trip duration in days
-        weather_info: Weather information from Weather Agent
+        return_date: Return date
+        num_travelers: Number of passengers
+        budget_per_person: Budget per person for round-trip flight in VND
+        preferences: Flight preferences (direct, business class, etc.)
 
     Returns:
-        LogisticsAgentOutput with structured logistics information
+        LogisticsAgentOutput with structured flight ticket information
     """
-    print(f"[LogisticsAgent] Planning logistics from {departure_point} to {destination}")
+    print(f"[LogisticsAgent] Searching flights from {departure_point} to {destination}")
     print(
-        f"[LogisticsAgent] Departure: {departure_date}, Duration: {duration} days, Budget: {budget:,.0f} VND"
+        f"[LogisticsAgent] Departure: {departure_date}, Return: {return_date}, Travelers: {num_travelers}"
     )
+    print(f"[LogisticsAgent] Budget per person: {budget_per_person:,.0f} VND")
 
     # Create structured input
     agent_input = LogisticsAgentInput(
         departure_point=departure_point,
         destination=destination,
         departure_date=departure_date,
-        budget=budget,
-        duration_days=duration,
-        weather_info=weather_info,
+        return_date=return_date,
+        num_travelers=num_travelers,
+        budget_per_person=budget_per_person,
+        preferences=preferences,
     )
 
     # Run agent with structured input
@@ -107,12 +170,10 @@ async def run_logistics_agent(
 
     # Response.content will be a LogisticsAgentOutput object
     if isinstance(response.content, LogisticsAgentOutput):
-        print(
-            f"[LogisticsAgent] ✓ Estimated flight cost: {response.content.estimated_flight_cost:,.0f} VND"
-        )
-        print(
-            f"[LogisticsAgent] ✓ Provided {len(response.content.accommodation_suggestions)} accommodation suggestions"
-        )
+        print(f"[LogisticsAgent] ✓ Found {len(response.content.flight_options)} flight options")
+        print(f"[LogisticsAgent] ✓ Average price: {response.content.average_price:,.0f} VND/person")
+        if response.content.recommended_flight:
+            print(f"[LogisticsAgent] ✓ Recommended: {response.content.recommended_flight}")
         return response.content
     else:
         print(f"[LogisticsAgent] ⚠ Unexpected response type: {type(response.content)}")

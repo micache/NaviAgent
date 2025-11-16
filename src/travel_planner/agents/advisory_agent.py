@@ -11,48 +11,85 @@ import certifi
 import httpx
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
-from models.schemas import AdvisoryAgentInput, AdvisoryAgentOutput
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings
+from config import settings, model_settings
+from models.schemas import AdvisoryAgentInput, AdvisoryAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_advisory_agent(model: str = "gpt-4o-mini") -> Agent:
+def create_advisory_agent(agent_name: str = "advisory") -> Agent:
     """
     Create an Advisory Agent with structured input/output.
 
     Args:
-        model: OpenAI model ID to use
+        agent_name: Name of agent for model configuration (default: "advisory")
 
     Returns:
         Agent configured with AdvisoryAgentInput and AdvisoryAgentOutput schemas
     """
-    # Create SSL context with certifi
-    ssl_context = ssl.create_default_context(cafile=certifi.where())
-    http_client = httpx.AsyncClient(verify=ssl_context, timeout=120.0)
+    # Create model from centralized configuration
+    model = model_settings.create_model_for_agno(agent_name)
 
     return Agent(
         name="AdvisoryAgent",
-        model=OpenAIChat(id=model, api_key=settings.openai_api_key, http_client=http_client),
+        model=model,
         tools=[search_tools],
         instructions=[
-            "You are a travel advisory expert providing safety, visa, and cultural information.",
-            "CRITICAL: Use search tools to find current visa requirements, travel advisories, and safety information for the specific travel dates.",
-            "Search for '{destination} visa requirements {year}' and '{destination} travel advisory {month} {year}'.",
-            "Search for cultural events, holidays, and festivals during the travel period.",
-            "Provide up-to-date visa requirements and travel warnings for the destination.",
-            "Offer cultural etiquette tips and local customs that travelers should know.",
-            "Mention any public holidays or special events during the travel dates that might affect services or attractions.",
-            "Recommend useful apps, SIM card options, and connectivity information.",
-            "For each location in the location_list, write a detailed 2-3 sentence description covering its significance, what to expect, and key highlights.",
-            "Include practical safety tips and emergency information.",
+            "You are the Travel Advisory Specialist - provide safety info and location context.",
+            "",
+            "**Your Job**: Deliver essential safety, visa, and cultural information.",
+            "",
+            "**Input Context**:",
+            "  • itinerary: Contains location_list (from Itinerary Agent)",
+            "  • Need to describe each location in location_list",
+            "",
+            "**Search Strategy (2-4 searches max)**:",
+            "  1. '{destination} travel advisory visa requirements {year}'",
+            "  2. '{destination} safety tips warnings tourists'",
+            "  3. '{destination} SIM card mobile internet tourists' (if needed)",
+            "",
+            "**Output Requirements**:",
+            "",
+            "1. warnings_and_tips (5-10 tips):",
+            "     • Safety warnings (scams, pickpockets, areas to avoid)",
+            "     • Health tips (vaccinations, water safety, altitude)",
+            "     • Cultural etiquette (dress code, tipping, customs)",
+            "     • Practical tips (currency, language, emergency numbers)",
+            "     • Travel insurance recommendation",
+            "",
+            "2. location_descriptions (for each location in location_list):",
+            "     • name: Location name (e.g., 'Tokyo Tower', 'Ben Thanh Market')",
+            "     • description: What it is, why visit, what to see (2-3 sentences)",
+            "     • tips: Specific tips for this location (best time, entry fee, etc.)",
+            "",
+            "3. visa_info:",
+            "     • Clear visa requirements for Vietnamese travelers",
+            "     • e.g., 'Visa on arrival available', 'Visa-free for 30 days', 'eVisa required'",
+            "     • Include application process if visa needed",
+            "",
+            "4. weather_info:",
+            "     • Brief summary from Weather Agent context (if provided)",
+            "     • Focus on travel implications (pack warm clothes, bring umbrella, etc.)",
+            "",
+            "5. sim_and_apps (3-5 items):",
+            "     • SIM card options (Tourist SIM, operator names, where to buy, price)",
+            "     • Essential apps (Google Maps, Grab, translation app, etc.)",
+            "     • Connectivity tips (free WiFi spots, pocket WiFi rental)",
+            "",
+            "6. safety_tips (3-5 specific tips):",
+            "     • Most important safety advice",
+            "     • Emergency contacts (police, ambulance, embassy)",
+            "     • Common tourist scams to avoid",
+            "",
+            "**Priority**: Safety and practical info over generic tourist info.",
+            "Be SPECIFIC - mention actual SIM providers, real app names, specific scams.",
         ],
         input_schema=AdvisoryAgentInput,
         output_schema=AdvisoryAgentOutput,
         markdown=True,
-        debug_mode=True,
+        debug_mode=False,
         add_datetime_to_context=True,
         add_location_to_context=True,
     )
