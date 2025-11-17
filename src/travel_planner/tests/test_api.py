@@ -37,7 +37,8 @@ def test_plan_trip(user_id: str = None):
 
     # Generate user_id if not provided
     if not user_id:
-        user_id = f"test_user_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        # Use your actual user_id here
+        user_id = "6986c9c3-947d-4978-88c2-0a2797fdc86c"
 
     print(f"\n📋 User Information:")
     print(f"   User ID: {user_id}")
@@ -47,13 +48,13 @@ def test_plan_trip(user_id: str = None):
     # Sample request with only user_id (session_id is auto-generated internally)
     request_data = {
         "departure_point": "Hanoi",
-        "destination": "Nhật Bản",
+        "destination": "Thái Lan",
         "departure_date": "2025-12-15",
         "budget": 20000000,
         "num_travelers": 2,
         "trip_duration": 5,
         "travel_style": "self_guided",
-        "customer_notes": "Thích địa điểm đẹp, chụp ảnh sống ảo.",
+        "customer_notes": "Thích địa khám phá ẩm thực. Muốn tham quan các địa điểm nổi tiếng và mua sắm.",
         "user_id": user_id,  # Only user_id needed
     }
 
@@ -168,8 +169,8 @@ def test_multi_turn_conversation():
     print("Testing Agent Session History (Auto-Generated Sessions)")
     print("=" * 80)
 
-    # Generate unique user ID for this test
-    user_id = f"test_user_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    # Use your actual user_id
+    user_id = "6986c9c3-947d-4978-88c2-0a2797fdc86c"
     destination = "Tokyo, Japan"
 
     print(f"\n📋 Test Setup:")

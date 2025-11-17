@@ -157,6 +157,10 @@ class OrchestratorAgent:
         print(f"{'=' * 80}\n")
 
         return_date = request.departure_date + timedelta(days=request.trip_duration)
+        
+        # Convert date objects to strings for JSON serialization in Agno session storage
+        departure_date_str = request.departure_date.isoformat()
+        return_date_str = return_date.isoformat()
 
         # =====================================================================
         # PHASE 1: WEATHER CONTEXT
@@ -167,7 +171,7 @@ class OrchestratorAgent:
         weather_response = await self.weather_agent.arun(
             WeatherAgentInput(
                 destination=request.destination,
-                departure_date=request.departure_date,
+                departure_date=departure_date_str,
                 duration_days=request.trip_duration,
             ),
             session_id=active_session_id,
@@ -197,8 +201,8 @@ class OrchestratorAgent:
                 LogisticsAgentInput(
                     destination=request.destination,
                     departure_point=request.departure_point,
-                    departure_date=request.departure_date,
-                    return_date=return_date,
+                    departure_date=departure_date_str,
+                    return_date=return_date_str,
                     num_travelers=request.num_travelers,
                     budget_per_person=flight_budget_per_person,
                     preferences=request.customer_notes or "",
@@ -208,7 +212,7 @@ class OrchestratorAgent:
             self.accommodation_agent.arun(
                 AccommodationAgentInput(
                     destination=request.destination,
-                    departure_date=request.departure_date,
+                    departure_date=departure_date_str,
                     duration_nights=request.trip_duration,
                     budget_per_night=accommodation_budget_per_night,
                     num_travelers=request.num_travelers,
@@ -239,7 +243,7 @@ class OrchestratorAgent:
         itinerary_response = await self.itinerary_agent.arun(
             ItineraryAgentInput(
                 destination=request.destination,
-                departure_date=request.departure_date,
+                departure_date=departure_date_str,
                 duration_days=request.trip_duration,
                 num_travelers=request.num_travelers,
                 total_budget=request.budget,

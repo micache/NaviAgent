@@ -1,7 +1,7 @@
 """Pydantic models for structured input and output - Agent schemas for Agno."""
 
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -27,7 +27,7 @@ class WeatherAgentInput(BaseModel):
     """Structured input for Weather Agent."""
 
     destination: str = Field(..., description="Destination location/city")
-    departure_date: date = Field(..., description="Departure date (YYYY-MM-DD)")
+    departure_date: Union[str, date] = Field(..., description="Departure date (YYYY-MM-DD)")
     duration_days: int = Field(..., description="Number of days for the trip", gt=0)
 
 
@@ -35,7 +35,7 @@ class ItineraryAgentInput(BaseModel):
     """Structured input for Itinerary Agent."""
 
     destination: str = Field(..., description="Destination location(s) for the trip")
-    departure_date: date = Field(..., description="Departure date (YYYY-MM-DD)")
+    departure_date: Union[str, date] = Field(..., description="Departure date (YYYY-MM-DD)")
     duration_days: int = Field(..., description="Number of days for the trip", gt=0)
     num_travelers: int = Field(..., description="Number of travelers", gt=0)
     total_budget: float = Field(..., description="Total budget for the trip in VND", gt=0)
@@ -92,8 +92,8 @@ class LogisticsAgentInput(BaseModel):
 
     departure_point: str = Field(..., description="Starting location/city/airport")
     destination: str = Field(..., description="Destination location/city/airport")
-    departure_date: date = Field(..., description="Departure date (YYYY-MM-DD)")
-    return_date: date = Field(..., description="Return date (YYYY-MM-DD)")
+    departure_date: Union[str, date] = Field(..., description="Departure date (YYYY-MM-DD)")
+    return_date: Union[str, date] = Field(..., description="Return date (YYYY-MM-DD)")
     num_travelers: int = Field(..., description="Number of travelers/passengers", gt=0)
     budget_per_person: float = Field(
         ..., description="Budget per person for round-trip flight in VND", gt=0
@@ -108,7 +108,7 @@ class AccommodationAgentInput(BaseModel):
     """Structured input for Accommodation Agent."""
 
     destination: str = Field(..., description="Destination location/city")
-    departure_date: date = Field(..., description="Check-in date (YYYY-MM-DD)")
+    departure_date: Union[str, date] = Field(..., description="Check-in date (YYYY-MM-DD)")
     duration_nights: int = Field(..., description="Number of nights to stay", gt=0)
     budget_per_night: float = Field(..., description="Budget per night per room in VND", gt=0)
     num_travelers: int = Field(..., description="Number of travelers", gt=0)
