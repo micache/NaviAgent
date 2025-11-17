@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import model_settings, settings
 from models.schemas import AccommodationAgentInput, AccommodationAgentOutput
+from tools.external_api_tools import create_hotel_tools
 from tools.search_tool import search_tools
 
 
@@ -51,6 +52,9 @@ def create_accommodation_agent(
             model=model_settings.create_model_for_agno("memory"),
         )
 
+    # Create hotel tools
+    hotel_tools = create_hotel_tools()
+    
     return Agent(
         name="AccommodationAgent",
         model=model,
@@ -63,7 +67,7 @@ def create_accommodation_agent(
         enable_user_memories=enable_memory if db else False,
         enable_session_summaries=True if db else False,
         store_media=False,
-        tools=[search_tools],
+        tools=[hotel_tools, search_tools],  # Hotel API first, then fallback to search
         add_datetime_to_context=True,
         instructions=[
             "You are the Accommodation Specialist for the travel planning pipeline.",
@@ -79,16 +83,48 @@ def create_accommodation_agent(
             "  - travel_style: str ('budget', 'luxury', 'self_guided', 'adventure')",
             "  - preferences: str (customer notes)",
             "",
-            "🔴 IMPORTANT: Search tools may fail. Use your GENERAL KNOWLEDGE about accommodations.",
+            "**Available Tools (CALL ONCE ONLY)**:",
+            "1. **Hotel API Tools (TRY FIRST)**:",
+            "   • search_hotels(location, check_in, check_out, adults, max_results)",
+            "     - Returns: Real hotel data with prices, ratings, reviews",
+            "     - Can use city name directly (auto-converts to location ID)",
+            "     - ⚠️ IMPORTANT: Call ONCE with max_results=15-20. DO NOT call multiple times!",
             "",
-            "**Search Strategy (OPTIONAL - Only if search works, max 2 searches)**:",
-            "   1. '{destination} popular hotels neighborhoods'",
-            "   2. '{destination} {travel_style} accommodation typical prices'",
+            "2. **Search Tool (FALLBACK if API fails)**:",
+            "   • duckduckgo_search(query, max_results): Web search",
+            "     - Use ONLY if API returns 'No hotels found' or error",
+            "     - Call ONCE and use the result",
+            "     - Query: '{destination} hotels {travel_style} prices'",
             "",
-            "⚠️ If search fails, USE GENERAL KNOWLEDGE to provide realistic options based on:",
-            "   - Well-known hotel chains and local hotels in destination",
-            "   - Typical neighborhoods for tourists",
-            "   - Standard pricing ranges by accommodation type and location",
+            "**Tool Selection Logic**:",
+            "",
+            "📅 **Step 1: Calculate Dates**",
+            "   - check_in = departure_date",
+            "   - check_out = departure_date + duration_nights",
+            "   - Format: YYYY-MM-DD",
+            "",
+            "🏨 **Step 2: Search Hotels (CALL ONCE)**",
+            "   → Call ONCE: search_hotels(location=destination, check_in=check_in, check_out=check_out,",
+            "                               adults=num_travelers, max_results=20)",
+            "   → API returns 15-20 hotels with prices, ratings, locations",
+            "   → From these results, select 4-6 diverse options:",
+            "     • Mix of price ranges (budget, mid-range, luxury)",
+            "     • Different locations/neighborhoods",
+            "     • Various hotel types (boutique, chain, hostel, resort)",
+            "   → DO NOT call search_hotels again!",
+            "",
+            "⚠️ **CRITICAL: ONE TOOL CALL**",
+            "   - search_hotels() → Called ONCE with max_results=20",
+            "   - Use the results to create 4-6 diverse options",
+            "   - DO NOT call the tool multiple times",
+            "   - If API fails → Use duckduckgo_search() ONCE",
+            "",
+            "🔄 **Step 3: Fallback Strategy (If API Fails)**",
+            "   If search_hotels() returns 'No hotels found' or error:",
+            "   → Use duckduckgo_search() ONCE + general knowledge:",
+            "     - '{destination} best hotels for {travel_style}'",
+            "     - '{destination} popular hotel neighborhoods'",
+            "     - Use your knowledge of hotel chains and typical prices",
             "",
             "**Output Requirements**: Provide 4-6 diverse accommodation options.",
             "   Mix different: Types (hostel/hotel/guesthouse), Areas, Price ranges",

@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import model_settings, settings
 from models.schemas import LogisticsAgentInput, LogisticsAgentOutput
+from tools.external_api_tools import create_flight_tools
 from tools.search_tool import search_tools
 
 
@@ -50,6 +51,9 @@ def create_logistics_agent(
             model=model_settings.create_model_for_agno("memory"),
         )
 
+    # Create flight tools
+    flight_tools = create_flight_tools()
+    
     return Agent(
         name="LogisticsAgent",
         model=model,
@@ -62,7 +66,7 @@ def create_logistics_agent(
         enable_user_memories=enable_memory if db else False,
         enable_session_summaries=True if db else False,
         store_media=False,
-        tools=[search_tools],
+        tools=[flight_tools, search_tools],  # Flight API first, then fallback to search
         add_datetime_to_context=True,
         instructions=[
             "You are the Flight Logistics Specialist for a travel planning pipeline.",
@@ -78,17 +82,46 @@ def create_logistics_agent(
             "  - budget_per_person: float (allocated budget per person for round-trip)",
             "  - preferences: str (customer notes)",
             "",
-            "🔴 IMPORTANT: Search tools may fail. Use your GENERAL KNOWLEDGE about typical flight routes.",
+            "**Available Tools (CALL EACH ONCE ONLY)**:",
+            "1. **Flight API Tools (TRY FIRST)**:",
+            "   • search_flights(origin, destination, departure_date, num_adults, cabin_class, max_results)",
+            "     - Returns: Real flight data with prices, times, airlines",
+            "     - Use city names or 3-letter codes: HAN, SGN, BKK, NRT, ICN, SIN",
+            "     - ⚠️ IMPORTANT: Call ONCE per direction (outbound/return). DO NOT call multiple times!",
             "",
-            "**Search Strategy (OPTIONAL - Only if search works, max 10 searches)**:",
-            "   1. '{departure_point} to {destination} flights typical prices'",
-            "   2. 'Airlines operating {departure_point} {destination} route'",
+            "2. **Search Tool (FALLBACK if API fails)**:",
+            "   • duckduckgo_search(query, max_results): Web search",
+            "     - Use ONLY if API returns 'No flights found' or error",
+            "     - Call ONCE and use the result",
+            "     - Query: '{departure_point} to {destination} flights prices'",
             "",
-            "⚠️ If search fails, USE GENERAL KNOWLEDGE to provide realistic options based on:",
-            "   - Known airlines operating this route",
-            "   - Typical flight durations for the distance",
-            "   - Standard pricing ranges for the route and season",
-            "   - Common flight patterns (direct vs. connecting)",
+            "**Tool Selection Logic**:",
+            "",
+            "✈️ **Step 1: Search Outbound Flights (CALL ONCE)**",
+            "   → Call ONCE: search_flights(origin=departure_point, destination=destination, ",
+            "                                departure_date=departure_date, num_adults=num_travelers, max_results=10)",
+            "   → API will auto-convert city names to airport codes",
+            "   → Use returned data to create 3-5 diverse options (different times/prices)",
+            "   → DO NOT call search_flights again for outbound!",
+            "",
+            "🔄 **Step 2: Search Return Flights (CALL ONCE)**",
+            "   → Call ONCE: search_flights(origin=destination, destination=departure_point, ",
+            "                                departure_date=return_date, num_adults=num_travelers, max_results=10)",
+            "   → Use returned data to create 3-5 diverse options",
+            "   → DO NOT call search_flights again for return!",
+            "",
+            "⚠️ **CRITICAL: TWO TOOL CALLS TOTAL**",
+            "   - search_flights() for OUTBOUND → Called ONCE",
+            "   - search_flights() for RETURN → Called ONCE",
+            "   - Total: 2 API calls maximum",
+            "   - If API fails → Use duckduckgo_search() ONCE per direction",
+            "",
+            "🔄 **Step 3: Fallback Strategy (If API Fails)**",
+            "   If search_flights() returns error:",
+            "   → Use duckduckgo_search() ONCE + general knowledge for:",
+            "     - Known airlines on this route",
+            "     - Typical flight durations for distance",
+            "     - Standard pricing for season/route",
             "",
             "**Flight Option Guidelines by Route**:",
             "",

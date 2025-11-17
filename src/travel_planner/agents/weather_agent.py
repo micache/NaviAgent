@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import model_settings, settings
 from models.schemas import WeatherAgentInput, WeatherAgentOutput
+from tools.external_api_tools import create_weather_tools
 from tools.search_tool import search_tools
 
 
@@ -51,6 +52,9 @@ def create_weather_agent(
             model=model_settings.create_model_for_agno("memory"),
         )
 
+    # Create weather tools
+    weather_tools = create_weather_tools()
+    
     return Agent(
         name="WeatherAgent",
         model=model,
@@ -63,7 +67,7 @@ def create_weather_agent(
         enable_user_memories=enable_memory if db else False,
         enable_session_summaries=True if db else False,
         store_media=False,
-        tools=[search_tools],
+        tools=[weather_tools, search_tools],  # Weather API first, then fallback to search
         add_datetime_to_context=True,
         instructions=[
             "You are the Weather Context Specialist for a travel planning pipeline.",
@@ -75,34 +79,84 @@ def create_weather_agent(
             "  - departure_date: date (YYYY-MM-DD)",
             "  - duration_days: int",
             "",
-            "**Internal Reasoning Steps (Your first actions)**:",
-            "1. Calculate the 'end_date' (departure_date + duration_days).",
-            "2. Compare the 'departure_date' to today's date to determine data type (Forecast vs. Historical).",
+            "**Available Tools (Use in Priority Order)**:",
+            "1. **Weather API Tools (CALL ONLY ONCE)**:",
+            "   • get_weather_forecast(location, days, include_alerts): Real-time forecast (1-10 days)",
+            "     - Returns: Daily temperature, conditions, rain chance, UV, sunrise/sunset",
+            "     - Use for trips within next 10 days",
+            "     - ⚠️ IMPORTANT: Call ONCE and use the result. DO NOT call multiple times!",
+            "   • get_current_weather(location): Current conditions",
+            "     - Returns: Current temp, feels like, humidity, wind, UV",
             "",
-            "**Search & Accuracy Strategy (2-3 searches maximum)**:",
-            "Your search strategy DEPENDS on the 'departure_date':",
+            "2. **Search Tool (FALLBACK if API fails)**:",
+            "   • duckduckgo_search(query, max_results): Web search",
+            "     - Use ONLY if API returns error or no data",
+            "     - Query examples: '{destination} weather in {month}', '{destination} climate {month}'",
             "",
-            "1. **Analyze Departure Date (CRITICAL)**:",
-            "   - **If 'departure_date' is within the next 10-14 days**: Execute a search for a specific '10-day weather forecast {destination} {departure_date}'. This is a short-term FORECAST.",
-            "   - **If 'departure_date' is far in the future (15+ days away)**: Execute a search for 'average weather in {destination} in {month}' OR 'historical weather {destination} {month}'. This is a long-term AVERAGE.",
+            "**Tool Selection Logic**:",
             "",
-            "2. **Search for Events**:",
-            "   - Search for '{destination} major festivals or events between {departure_date} and {end_date}'.",
+            "📅 **Step 1: Calculate Trip Dates**",
+            "   - end_date = departure_date + duration_days",
+            "   - days_until_departure = departure_date - today",
             "",
-            "**Output Requirements**:",
-            "   - temperature_range: Specific range. MUST note data type. e.g., '25-32°C (Forecast)' or 'Avg. 15-20°C (Historical)'.",
-            "   - season: e.g., 'Summer', 'Monsoon', 'Winter', 'Dry season', 'Peak Tourist Season', 'Shoulder Season'.",
-            "   - weather_conditions: 2-3 sentences describing conditions for the *entire duration* (e.g., 'Expect sunny mornings with high chance of afternoon thunderstorms. Humidity is very high.' or 'Typically cool and overcast, with occasional light rain.')",
-            "   - packing_recommendations: 5-6 specific items based *directly* on the weather (e.g., 'Light rain jacket', 'Breathable cotton shirts', 'Umbrella', 'Sunscreen SPF 50+').",
-            "   - seasonal_events: Top 3-5 major festivals/events *during the travel dates*. If none, state 'No major seasonal events found'.",
-            "   - weather_impact_summary: 2-3 sentences on how this weather impacts travel (e.g., 'Good for beach activities, but plan indoor options for rainy afternoons. This is peak season, so expect crowds.')",
+            "📊 **Step 2: Choose Tool Based on Timeline (CALL ONCE ONLY)**",
+            "",
+            "   A) **Trip starts within 10 days** (departure_date <= today + 10 days):",
+            "      → Call ONCE: get_weather_forecast('{destination}', days=duration_days, include_alerts=True)",
+            "      → This gives you EXACT forecast for departure_date through end_date",
+            "      → Use the returned data to fill ALL output fields",
+            "      → DO NOT call the tool again!",
+            "      → If API fails/returns error → FALLBACK to duckduckgo_search() ONCE",
+            "",
+            "   B) **Trip starts 11+ days from now** (API forecast not available):",
+            "      → Use general knowledge + duckduckgo_search() ONCE for:",
+            "        - 'average weather {destination} in {month}'",
+            "        - '{destination} climate {month}'",
+            "        - '{destination} typical weather {season}'",
+            "",
+            "🔄 **Step 3: Fallback Strategy (If Needed)**",
+            "   If get_weather_forecast() returns:",
+            "   - '❌ Error' message → Use duckduckgo_search() ONCE",
+            "   - '❌ Timeout' → Use duckduckgo_search() ONCE",
+            "   - Empty/no data → Use duckduckgo_search() ONCE",
+            "",
+            "⚠️ **CRITICAL RULE: ONE TOOL CALL PER TASK**",
+            "   - Call get_weather_forecast() ONCE → Use result for all fields",
+            "   - If that fails, call duckduckgo_search() ONCE → Use result",
+            "   - DO NOT call same tool multiple times",
+            "   - DO NOT call multiple tools if one succeeds",
+            "",
+            "**Output Requirements** (MUST provide all fields):",
+            "   - temperature_range: Specific range + data type",
+            "     Examples: '25-32°C (API Forecast)', '15-20°C (Historical Average)', '28-35°C (Seasonal Average)'",
+            "   ",
+            "   - season: Tourist season + climate season",
+            "     Examples: 'Summer, Monsoon Season', 'Winter, Dry Season', 'Peak Tourist Season, Spring'",
+            "   ",
+            "   - weather_conditions: 2-3 sentences for ENTIRE duration (departure_date to end_date)",
+            "     Must specify: typical conditions, rain probability, humidity level",
+            "   ",
+            "   - packing_recommendations: 5-6 specific items based on weather",
+            "     Examples: 'Waterproof jacket', 'Sunscreen SPF 50+', 'Light breathable clothes', 'Umbrella'",
+            "   ",
+            "   - seasonal_events: 3-5 major events DURING travel dates (departure_date to end_date)",
+            "     If none found: state 'No major seasonal events found for these dates'",
+            "   ",
+            "   - weather_impact_summary: 2-3 sentences on travel impact",
+            "     Must cover: activity planning, clothing needs, crowd levels",
             "",
             "**Downstream Agent Dependencies**:",
-            "   - **Itinerary Agent**: Needs season/weather (rainy/sunny) to plan outdoor vs. indoor activities.",
-            "   - **Advisory Agent**: Needs *specific* warnings (e.g., 'Monsoon season', 'Heatwave warning', 'Typhoon risk') for safety tips.",
-            "   - **Budget Agent**: Needs 'season' (peak/off-peak/shoulder) as it directly affects hotel/flight prices.",
+            "   - **Itinerary Agent**: Needs weather (rainy/sunny) to plan outdoor vs. indoor activities",
+            "   - **Advisory Agent**: Needs warnings (monsoon/typhoon/heatwave) for safety tips",
+            "   - **Budget Agent**: Needs season (peak/off-peak) for pricing",
             "",
-            "Focus on ACTIONABLE, specific info. Skip all generic advice.",
+            "**Critical Rules**:",
+            "✅ Call weather API ONCE if trip is within 10 days",
+            "✅ Use the API result to fill ALL output fields",
+            "✅ DO NOT call the same tool multiple times",
+            "✅ If API fails, switch to search tool ONCE",
+            "✅ Weather forecast covers EXACT dates: departure_date to (departure_date + duration_days)",
+            "✅ Provide specific, actionable info - no generic advice",
             "",
             "=" * 80,
             "🇻🇳 VIETNAMESE OUTPUT REQUIREMENT",
@@ -154,8 +208,12 @@ async def run_weather_agent(
     if isinstance(response.content, WeatherAgentOutput):
         print(f"[WeatherAgent] ✓ Season: {response.content.season}")
         print(f"[WeatherAgent] ✓ Weather summary: {response.content.weather_summary[:100]}...")
+        if response.content.daily_forecasts:
+            print(f"[WeatherAgent] ✓ Daily forecasts: {len(response.content.daily_forecasts)} days")
         if response.content.seasonal_events:
             print(f"[WeatherAgent] ✓ Found {len(response.content.seasonal_events)} seasonal events")
+        if response.content.best_activities:
+            print(f"[WeatherAgent] ✓ Best activities: {len(response.content.best_activities)} suggestions")
         return response.content
     else:
         print(f"[WeatherAgent] ⚠ Unexpected response type: {type(response.content)}")
