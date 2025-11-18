@@ -48,13 +48,13 @@ def test_plan_trip(user_id: str = None):
     # Sample request with only user_id (session_id is auto-generated internally)
     request_data = {
         "departure_point": "Hanoi",
-        "destination": "Thái Lan",
-        "departure_date": "2025-12-15",
-        "budget": 20000000,
+        "destination": "Seoul, South Korea",
+        "departure_date": "2026-02-14",
+        "budget": 30000000,
         "num_travelers": 2,
-        "trip_duration": 5,
+        "trip_duration": 4,
         "travel_style": "self_guided",
-        "customer_notes": "Thích địa khám phá ẩm thực. Muốn tham quan các địa điểm nổi tiếng và mua sắm.",
+        "customer_notes": "Thích ẩm thực Hàn Quốc, Kpop và mua sắm",
         "user_id": user_id,  # Only user_id needed
     }
 

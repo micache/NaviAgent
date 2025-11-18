@@ -88,22 +88,22 @@ def test_hotel_tools():
     hotel_tools = create_hotel_tools()
     
     # Test 1: Search hotel locations
-    print("\n📍 Test 1: Search Hotel Locations in Bangkok")
+    print("\n📍 Test 1: Search Hotel Locations in Seoul, South Korea")
     print("-" * 80)
-    result = hotel_tools.search_hotel_location("Bangkok")
+    result = hotel_tools.search_hotel_location("Seoul, South Korea")
     print(result)
     
     # Test 2: Search hotels
-    print("\n\n🏨 Test 2: Search Hotels in Bangkok")
+    print("\n\n🏨 Test 2: Search Hotels in Seoul, South Korea")
     print("-" * 80)
     check_in = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
     check_out = (datetime.now() + timedelta(days=35)).strftime("%Y-%m-%d")
     
     result = hotel_tools.search_hotels(
-        location="Bangkok",
+        location="Seoul, South Korea",
         check_in=check_in,
         check_out=check_out,
-        adults=2,
+        adults=1,
         max_results=3
     )
     print(result)
@@ -124,10 +124,10 @@ def main():
         #test_weather_tools()
         
         # Test flight tools
-        test_flight_tools()
+        # test_flight_tools()
         
         # Test hotel tools
-        # test_hotel_tools()
+        test_hotel_tools()
         
         print("\n\n" + "=" * 80)
         print("🎉 ALL TESTS COMPLETE!")
