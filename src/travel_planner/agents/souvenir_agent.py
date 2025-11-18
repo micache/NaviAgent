@@ -10,21 +10,31 @@ from pathlib import Path
 import certifi
 import httpx
 from agno.agent import Agent
+from agno.db import PostgresDb
+from agno.memory import MemoryManager
 from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings, model_settings
+from config import model_settings, settings
 from models.schemas import SouvenirAgentInput, SouvenirAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_souvenir_agent(agent_name: str = "souvenir") -> Agent:
+def create_souvenir_agent(
+    agent_name: str = "souvenir",
+    db: PostgresDb = None,
+    user_id: str = None,
+    enable_memory: bool = True,
+) -> Agent:
     """
-    Create a Souvenir Agent with structured input/output.
+    Create a Souvenir Agent with structured input/output and database support.
 
     Args:
         agent_name: Name of agent for model configuration (default: "souvenir")
+        db: PostgreSQL database instance for session/memory storage
+        user_id: Optional default user ID for memory management
+        enable_memory: Enable user memory management (default: True)
 
     Returns:
         Agent configured with SouvenirAgentInput and SouvenirAgentOutput schemas
@@ -32,9 +42,26 @@ def create_souvenir_agent(agent_name: str = "souvenir") -> Agent:
     # Create model from centralized configuration
     model = model_settings.create_model_for_agno(agent_name)
 
+    # Create memory manager with cheaper model if database is provided
+    memory_manager = None
+    if db and enable_memory:
+        memory_manager = MemoryManager(
+            db=db,
+            model=model_settings.create_model_for_agno("memory"),
+        )
+
     return Agent(
         name="SouvenirAgent",
         model=model,
+        db=db,
+        user_id=user_id,
+        memory_manager=memory_manager,
+        add_history_to_context=True if db else False,
+        num_history_runs=5,
+        read_chat_history=True if db else False,
+        enable_user_memories=enable_memory if db else False,
+        enable_session_summaries=True if db else False,
+        store_media=False,
         tools=[search_tools],
         instructions=[
             "You are a Souvenir Specialist - recommend authentic local gifts within budget.",
@@ -69,13 +96,21 @@ def create_souvenir_agent(agent_name: str = "souvenir") -> Agent:
             "  • self_guided/adventure → practical, unique local items",
             "",
             "Focus on AUTHENTIC local items, not generic tourist traps!",
+            "",
+            "=" * 80,
+            "🇻🇳 VIETNAMESE OUTPUT REQUIREMENT",
+            "=" * 80,
+            "ALL text in your output MUST be in VIETNAMESE:",
+            "  • name: Tiếng Việt (souvenir name)",
+            "  • description: Tiếng Việt (detailed description why it's special)",
+            "  • where_to_buy: Tiếng Việt (specific locations/markets)",
+            "  • category: Tiếng Việt (e.g., 'Đồ ăn', 'Thủ công mỹ nghệ', 'Trang sức')",
+            "=" * 80,
         ],
         input_schema=SouvenirAgentInput,
         output_schema=SouvenirAgentOutput,
         markdown=True,
         debug_mode=False,
-        add_datetime_to_context=True,
-        add_location_to_context=True,
     )
 
 

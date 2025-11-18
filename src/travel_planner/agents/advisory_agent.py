@@ -10,21 +10,31 @@ from pathlib import Path
 import certifi
 import httpx
 from agno.agent import Agent
+from agno.db import PostgresDb
+from agno.memory import MemoryManager
 from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings, model_settings
+from config import model_settings, settings
 from models.schemas import AdvisoryAgentInput, AdvisoryAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_advisory_agent(agent_name: str = "advisory") -> Agent:
+def create_advisory_agent(
+    agent_name: str = "advisory",
+    db: PostgresDb = None,
+    user_id: str = None,
+    enable_memory: bool = True,
+) -> Agent:
     """
-    Create an Advisory Agent with structured input/output.
+    Create an Advisory Agent with structured input/output and database support.
 
     Args:
         agent_name: Name of agent for model configuration (default: "advisory")
+        db: PostgreSQL database instance for session/memory storage
+        user_id: Optional default user ID for memory management
+        enable_memory: Enable user memory management (default: True)
 
     Returns:
         Agent configured with AdvisoryAgentInput and AdvisoryAgentOutput schemas
@@ -32,10 +42,29 @@ def create_advisory_agent(agent_name: str = "advisory") -> Agent:
     # Create model from centralized configuration
     model = model_settings.create_model_for_agno(agent_name)
 
+    # Create memory manager with cheaper model if database is provided
+    memory_manager = None
+    if db and enable_memory:
+        memory_manager = MemoryManager(
+            db=db,
+            model=model_settings.create_model_for_agno("memory"),
+        )
+
     return Agent(
         name="AdvisoryAgent",
         model=model,
+        db=db,
+        user_id=user_id,
+        memory_manager=memory_manager,
+        add_history_to_context=True if db else False,
+        num_history_runs=5,
+        read_chat_history=True if db else False,
+        enable_user_memories=enable_memory if db else False,
+        enable_session_summaries=True if db else False,
+        store_media=False,
         tools=[search_tools],
+        add_datetime_to_context=True,
+        add_location_to_context=True,
         instructions=[
             "You are the Travel Advisory Specialist - provide safety info and location context.",
             "",
@@ -45,7 +74,7 @@ def create_advisory_agent(agent_name: str = "advisory") -> Agent:
             "  • itinerary: Contains location_list (from Itinerary Agent)",
             "  • Need to describe each location in location_list",
             "",
-            "**Search Strategy (2-4 searches max)**:",
+            "**Search Strategy (10 searches max)**:",
             "  1. '{destination} travel advisory visa requirements {year}'",
             "  2. '{destination} safety tips warnings tourists'",
             "  3. '{destination} SIM card mobile internet tourists' (if needed)",
@@ -85,13 +114,23 @@ def create_advisory_agent(agent_name: str = "advisory") -> Agent:
             "",
             "**Priority**: Safety and practical info over generic tourist info.",
             "Be SPECIFIC - mention actual SIM providers, real app names, specific scams.",
+            "",
+            "=" * 80,
+            "🇻🇳 VIETNAMESE OUTPUT REQUIREMENT",
+            "=" * 80,
+            "ALL text in your output MUST be in VIETNAMESE:",
+            "  • warnings_and_tips: Tiếng Việt (safety warnings in Vietnamese)",
+            "  • location_descriptions: Tiếng Việt descriptions (keep location names as is)",
+            "  • visa_info: Tiếng Việt (visa requirements in Vietnamese)",
+            "  • weather_info: Tiếng Việt",
+            "  • sim_and_apps: Tiếng Việt (keep SIM/app names in English, describe in Vietnamese)",
+            "  • safety_tips: Tiếng Việt",
+            "=" * 80,
         ],
         input_schema=AdvisoryAgentInput,
         output_schema=AdvisoryAgentOutput,
         markdown=True,
         debug_mode=False,
-        add_datetime_to_context=True,
-        add_location_to_context=True,
     )
 
 

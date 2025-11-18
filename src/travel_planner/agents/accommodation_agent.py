@@ -11,21 +11,32 @@ from pathlib import Path
 import certifi
 import httpx
 from agno.agent import Agent
+from agno.db import PostgresDb
+from agno.memory import MemoryManager
 from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings, model_settings
+from config import model_settings, settings
 from models.schemas import AccommodationAgentInput, AccommodationAgentOutput
+from tools.external_api_tools import create_hotel_tools
 from tools.search_tool import search_tools
 
 
-def create_accommodation_agent(agent_name: str = "accommodation") -> Agent:
+def create_accommodation_agent(
+    agent_name: str = "accommodation",
+    db: PostgresDb = None,
+    user_id: str = None,
+    enable_memory: bool = True,
+) -> Agent:
     """
-    Create an Accommodation Agent with structured input/output.
+    Create an Accommodation Agent with structured input/output and database support.
 
     Args:
         agent_name: Name of agent for model configuration (default: "accommodation")
+        db: PostgreSQL database instance for session/memory storage
+        user_id: Optional default user ID for memory management
+        enable_memory: Enable user memory management (default: True)
 
     Returns:
         Agent configured with AccommodationAgentInput and AccommodationAgentOutput schemas
@@ -33,10 +44,31 @@ def create_accommodation_agent(agent_name: str = "accommodation") -> Agent:
     # Create model from centralized configuration
     model = model_settings.create_model_for_agno(agent_name)
 
+    # Create memory manager with cheaper model if database is provided
+    memory_manager = None
+    if db and enable_memory:
+        memory_manager = MemoryManager(
+            db=db,
+            model=model_settings.create_model_for_agno("memory"),
+        )
+
+    # Create hotel tools
+    hotel_tools = create_hotel_tools()
+    
     return Agent(
         name="AccommodationAgent",
         model=model,
-        tools=[search_tools],
+        db=db,
+        user_id=user_id,
+        memory_manager=memory_manager,
+        add_history_to_context=True if db else False,
+        num_history_runs=5,
+        read_chat_history=True if db else False,
+        enable_user_memories=enable_memory if db else False,
+        enable_session_summaries=True if db else False,
+        store_media=False,
+        tools=[hotel_tools, search_tools],  # Hotel API first, then fallback to search
+        add_datetime_to_context=True,
         instructions=[
             "You are the Accommodation Specialist for the travel planning pipeline.",
             "",
@@ -51,41 +83,48 @@ def create_accommodation_agent(agent_name: str = "accommodation") -> Agent:
             "  - travel_style: str ('budget', 'luxury', 'self_guided', 'adventure')",
             "  - preferences: str (customer notes)",
             "",
-            "🔴 IMPORTANT: Search tools may fail. Use your GENERAL KNOWLEDGE about accommodations.",
+            "**Available Tools (CALL ONCE ONLY)**:",
+            "1. **Hotel API Tools (TRY FIRST)**:",
+            "   • search_hotels(location, check_in, check_out, adults, max_results)",
+            "     - Returns: Real hotel data with prices, ratings, reviews",
+            "     - Can use city name directly (auto-converts to location ID)",
+            "     - ⚠️ IMPORTANT: Call ONCE with max_results=15-20. DO NOT call multiple times!",
             "",
-            "**Search Strategy (OPTIONAL - Only if search works, max 2 searches)**:",
-            "   1. '{destination} popular hotels neighborhoods'",
-            "   2. '{destination} {travel_style} accommodation typical prices'",
+            "2. **Search Tool (FALLBACK if API fails)**:",
+            "   • duckduckgo_search(query, max_results): Web search",
+            "     - Use ONLY if API returns 'No hotels found' or error",
+            "     - Call ONCE and use the result",
+            "     - Query: '{destination} hotels {travel_style} prices'",
             "",
-            "⚠️ If search fails, USE GENERAL KNOWLEDGE to provide realistic options based on:",
-            "   - Well-known hotel chains and local hotels in destination",
-            "   - Typical neighborhoods for tourists",
-            "   - Standard pricing ranges by accommodation type and location",
+            "**Tool Selection Logic**:",
             "",
-            "**Accommodation Guidelines by Destination**:",
+            "📅 **Step 1: Calculate Dates**",
+            "   - check_in = departure_date",
+            "   - check_out = departure_date + duration_nights",
+            "   - Format: YYYY-MM-DD",
             "",
-            "**Tokyo, Japan**:",
-            "  • Budget: Hostels/Capsule hotels in Asakusa/Ueno (500k-800k/night)",
-            "  • Mid-range: 3-star hotels in Shinjuku/Shibuya (1.2M-2M/night)",
-            "  • Premium: 4-5 star in Ginza/Roppongi (2.5M-4M/night)",
-            "  • Best areas: Shinjuku (transport hub), Asakusa (traditional), Shibuya (trendy)",
+            "🏨 **Step 2: Search Hotels (CALL ONCE)**",
+            "   → Call ONCE: search_hotels(location=destination, check_in=check_in, check_out=check_out,",
+            "                               adults=num_travelers, max_results=20)",
+            "   → API returns 15-20 hotels with prices, ratings, locations",
+            "   → From these results, select 4-6 diverse options:",
+            "     • Mix of price ranges (budget, mid-range, luxury)",
+            "     • Different locations/neighborhoods",
+            "     • Various hotel types (boutique, chain, hostel, resort)",
+            "   → DO NOT call search_hotels again!",
             "",
-            "**Bangkok, Thailand**:",
-            "  • Budget: Hostels in Khao San Road (200k-400k/night)",
-            "  • Mid-range: Hotels in Sukhumvit/Silom (600k-1.2M/night)",
-            "  • Premium: 5-star near Chao Phraya (1.5M-3M/night)",
-            "  • Best areas: Sukhumvit (BTS access), Silom (business), Old Town (cultural)",
+            "⚠️ **CRITICAL: ONE TOOL CALL**",
+            "   - search_hotels() → Called ONCE with max_results=20",
+            "   - Use the results to create 4-6 diverse options",
+            "   - DO NOT call the tool multiple times",
+            "   - If API fails → Use duckduckgo_search() ONCE",
             "",
-            "**Seoul, Korea**:",
-            "  • Budget: Guesthouses in Hongdae/Insadong (600k-900k/night)",
-            "  • Mid-range: Hotels in Myeongdong/Gangnam (1M-2M/night)",
-            "  • Premium: 5-star in Gangnam (2.5M-4M/night)",
-            "  • Best areas: Myeongdong (shopping), Hongdae (youth culture), Gangnam (luxury)",
-            "",
-            "**Singapore**:",
-            "  • Budget: Hostels in Chinatown/Little India (600k-1M/night)",
-            "  • Mid-range: Hotels in Bugis/Clarke Quay (1.5M-2.5M/night)",
-            "  • Premium: Marina Bay Sands area (3M-5M/night)",
+            "🔄 **Step 3: Fallback Strategy (If API Fails)**",
+            "   If search_hotels() returns 'No hotels found' or error:",
+            "   → Use duckduckgo_search() ONCE + general knowledge:",
+            "     - '{destination} best hotels for {travel_style}'",
+            "     - '{destination} popular hotel neighborhoods'",
+            "     - Use your knowledge of hotel chains and typical prices",
             "",
             "**Output Requirements**: Provide 4-6 diverse accommodation options.",
             "   Mix different: Types (hostel/hotel/guesthouse), Areas, Price ranges",
@@ -121,13 +160,23 @@ def create_accommodation_agent(agent_name: str = "accommodation") -> Agent:
             "   • Central locations: +20-30% vs. suburbs",
             "",
             "Be realistic with prices and locations. Provide VARIETY so Itinerary Agent can choose!",
+            "",
+            "=" * 80,
+            "🇻🇳 VIETNAMESE OUTPUT REQUIREMENT",
+            "=" * 80,
+            "ALL text in your output MUST be in VIETNAMESE:",
+            "  • name: Keep hotel names (e.g., 'Sheraton Hotel', 'Khách sạn ABC')",
+            "  • area: Tiếng Việt (e.g., 'Trung tâm thành phố', 'Gần sân bay')",
+            "  • description: Tiếng Việt (detailed hotel description)",
+            "  • amenities: Tiếng Việt (e.g., 'Hồ bơi', 'Phòng gym', 'Wi-Fi miễn phí')",
+            "  • best_areas: Tiếng Việt (neighborhood recommendations)",
+            "  • booking_tips: Tiếng Việt",
+            "=" * 80,
         ],
         input_schema=AccommodationAgentInput,
         output_schema=AccommodationAgentOutput,
         markdown=True,
         debug_mode=False,
-        add_datetime_to_context=True,
-        add_location_to_context=True,
     )
 
 

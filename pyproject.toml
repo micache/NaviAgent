@@ -7,7 +7,7 @@ name = "naviagent"
 version = "0.1.0"
 description = "NaviAgent - A navigation agent framework"
 readme = "README.md"
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "NaviAgent Team"}
@@ -27,6 +27,7 @@ dependencies = [
     "autoflake>=2.0.0",
     "bandit[toml]>=1.7.0",
     "black>=23.0.0",
+    "ddgs>=9.6.1",
     "fastapi==0.115.0",
     "flake8>=6.0.0",
     "flake8-bugbear>=23.0.0",
@@ -38,6 +39,7 @@ dependencies = [
     "mypy>=1.0.0",
     "openai>=1.60.0",
     "pre-commit>=3.0.0",
+    "psycopg2>=2.9.11",
     "pycountry==24.6.1",
     "pydantic==2.10.4",
     "pydantic-settings==2.7.0",
@@ -46,6 +48,8 @@ dependencies = [
     "pytest-cov>=4.0.0",
     "python-dotenv==1.0.1",
     "python-multipart==0.0.20",
+    "requests>=2.32.5",
+    "sqlalchemy>=2.0.44",
     "uvicorn[standard]==0.34.0",
 ]
 

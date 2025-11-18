@@ -10,23 +10,33 @@ from pathlib import Path
 import certifi
 import httpx
 from agno.agent import Agent
+from agno.db import PostgresDb
+from agno.memory import MemoryManager
 from agno.models.openai import OpenAIChat
 from agno.tools.reasoning import ReasoningTools
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings, model_settings
+from config import model_settings, settings
 from models.schemas import ItineraryAgentInput, ItineraryAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
+def create_itinerary_agent(
+    agent_name: str = "itinerary",
+    db: PostgresDb = None,
+    user_id: str = None,
+    enable_memory: bool = True,
+) -> Agent:
     """
-    Create an Itinerary Agent with structured input/output.
+    Create an Itinerary Agent with structured input/output and database support.
 
     Args:
         agent_name: Name of agent for model configuration (default: "itinerary")
+        db: PostgreSQL database instance for session/memory storage
+        user_id: Optional default user ID for memory management
+        enable_memory: Enable user memory management (default: True)
 
     Returns:
         Agent configured with ItineraryAgentInput and ItineraryAgentOutput schemas
@@ -34,10 +44,29 @@ def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
     # Create model from centralized configuration
     model = model_settings.create_model_for_agno(agent_name)
 
+    # Create memory manager with cheaper model if database is provided
+    memory_manager = None
+    if db and enable_memory:
+        memory_manager = MemoryManager(
+            db=db,
+            model=model_settings.create_model_for_agno("memory"),
+        )
+
     return Agent(
         name="ItineraryAgent",
         model=model,
+        db=db,
+        user_id=user_id,
+        memory_manager=memory_manager,
+        add_history_to_context=True if db else False,
+        num_history_runs=5,
+        read_chat_history=True if db else False,
+        enable_user_memories=enable_memory if db else False,
+        enable_session_summaries=True if db else False,
+        store_media=False,
         tools=[ReasoningTools(add_instructions=True, add_few_shot=False), search_tools],
+        add_datetime_to_context=True,
+        add_location_to_context=True,
         instructions=[
             "You are the Itinerary Planner & Selector - the CORE of the travel planning pipeline.",
             "",
@@ -52,14 +81,14 @@ def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
             "2. SELECT the single BEST accommodation from 'available_accommodations'.",
             "3. CREATE a detailed day-by-day itinerary for ALL 'duration_days', ensuring the total estimated cost is within the 'total_budget'.",
             "",
-            "🔴 CRITICAL REQUIREMENT: You MUST create a schedule for EVERY SINGLE DAY of the trip!",
+            "CRITICAL REQUIREMENT: You MUST create a schedule for EVERY SINGLE DAY of the trip!",
             "   • If duration_days = 5, create 5 daily schedules (day_number: 1, 2, 3, 4, 5).",
             "   • If duration_days = 7, create 7 daily schedules (day_number: 1, 2, 3, 4, 5, 6, 7).",
             "   • Each day_number must have a 'date' (YYYY-MM-DD) and a complete list of 'activities'.",
             "   • Do NOT skip any days - this is MANDATORY!",
-            "   • ⚠️ The length of daily_schedules array MUST EQUAL duration_days",
+            "   • The length of daily_schedules array MUST EQUAL duration_days",
             "",
-            "🔴 VALIDATION CHECK: Before finalizing output, count your daily_schedules:",
+            "VALIDATION CHECK: Before finalizing output, count your daily_schedules:",
             "   • Count = len(daily_schedules)",
             "   • Required = duration_days",
             "   • If Count ≠ Required → YOU MUST ADD MISSING DAYS!",
@@ -70,14 +99,14 @@ def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
             "**Flight Selection Criteria**:",
             "   • 1. Review 'travel_style' (luxury, budget, etc.).",
             "   • 2. Review 'total_cost' of each option.",
-            "   • 3. ⚠️ CRITICAL RULE: 'total_cost' (for all travelers) MUST be less than 40% of the 'total_budget'.",
+            "   • 3. CRITICAL RULE: 'total_cost' (for all travelers) MUST be less than 40% of the 'total_budget'.",
             "   • 4. Apply criteria: 'budget' style gets cheapest valid option; 'luxury' gets best option within 40% limit.",
             "   • 5. Prioritize reasonable arrival/departure times.",
             "",
             "**Accommodation Selection Criteria**:",
             "   • 1. Review 'travel_style' and 'area' of each option.",
             "   • 2. Review 'total_cost' of each option.",
-            "   • 3. ⚠️ CRITICAL RULE: 'total_cost' MUST be less than 30% of the 'total_budget'.",
+            "   • 3. CRITICAL RULE: 'total_cost' MUST be less than 30% of the 'total_budget'.",
             "   • 4. Apply criteria: 'budget' style gets best-rated, well-located option; 'luxury' gets 4-5 star option.",
             "   • 5. Prioritize location ('area') that minimizes travel time for the itinerary.",
             "",
@@ -90,8 +119,8 @@ def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
             "   • 2. Calculate 'daily_spending_limit' = (remaining_budget / duration_days) / num_travelers",
             "   • You MUST use this 'daily_spending_limit' to guide all 'estimated_cost' for activities and dining.",
             "",
-            "**Search Strategy (4-6 searches max)**:",
-            "   • 1. ❗️ **'average meal prices in {destination} for tourists' OR 'cost of food {destination}' (MUST DO THIS FIRST to set realistic meal budgets)**",
+            "**Search Strategy (10 searches max)**:",
+            "   • 1. **'average meal prices in {destination} for tourists' OR 'cost of food {destination}' (MUST DO THIS FIRST to set realistic meal budgets)**",
             "   • 2. 'top free things to do in {destination}' (if 'daily_spending_limit' is low)",
             "   • 3. '{destination} {duration_days} days itinerary {travel_style}'",
             "   • 4. '{destination} best local food spots' or '{destination} best restaurants'",
@@ -138,7 +167,7 @@ def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
             "   • notes: Tips, booking requirements, photo spots.",
             "",
             "---",
-            "💰 **BUDGET-CONSCIOUS PLANNING (Your Core Activity Logic)**:",
+            "**BUDGET-CONSCIOUS PLANNING (Your Core Activity Logic)**:",
             "   • You MUST use these guidelines to set the 'estimated_cost' for activities.",
             "   • Free/cheap activities: Parks, temples, street walking tours (Cost: 0 - 50k VND - This is a general guide, adjust if {destination} is expensive).",
             "   • Mid-range activities: Museum tickets, guided tours (Cost: 100k-300k VND - Adjust based on local prices).",
@@ -148,7 +177,7 @@ def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
             "      - Moderate budget (30-50M) → Mix of free, mid-range, and 1-2 premium.",
             "      - High budget (>50M) → Can include multiple premium experiences.",
             "",
-            "   • ❗️ **Meals Budget Guide (Dynamic - Destination Specific)**:",
+            "   • **Meals Budget Guide (Dynamic - Destination Specific)**:",
             "      - **DO NOT use fixed VNĐ prices.** Prices in {destination} are different from Vietnam.",
             "      - You MUST use the results from your **Search Strategy Step 1** ('average meal prices {destination}').",
             "      - When creating a 'dining' activity, set 'estimated_cost' based on your research:",
@@ -189,15 +218,27 @@ def create_itinerary_agent(agent_name: str = "itinerary") -> Agent:
             "   - **Budget Agent**: Uses selected costs + ALL estimated_costs for calculation",
             "   - **Advisory Agent**: Uses location_list for safety tips",
             "",
-            "⚠️ FINAL REMINDER: len(daily_schedules) MUST EQUAL duration_days!",
+            "FINAL REMINDER: len(daily_schedules) MUST EQUAL duration_days!",
             "BE DECISIVE. Select best options and create COMPLETE, REALISTIC, BUDGET-CONSCIOUS plan!",
+            "",
+            "=" * 80,
+            "🇻🇳 VIETNAMESE OUTPUT REQUIREMENT - CRITICAL",
+            "=" * 80,
+            "ALL text content in your output MUST be in VIETNAMESE language:",
+            "  • title: Tiếng Việt (e.g., 'Ngày Đến Nơi', 'Khám Phá Trung Tâm')",
+            "  • description: Tiếng Việt (detailed Vietnamese descriptions)",
+            "  • location_name: Keep original names but add Vietnamese translation in notes if needed",
+            "  • notes: Tiếng Việt",
+            "  • summary: Tiếng Việt",
+            "",
+            "You can use English for internal searching and reasoning, but the FINAL OUTPUT",
+            "that users see MUST be written in fluent, natural Vietnamese.",
+            "=" * 80,
         ],
         input_schema=ItineraryAgentInput,
         output_schema=ItineraryAgentOutput,
         markdown=True,
         debug_mode=False,
-        add_datetime_to_context=True,
-        add_location_to_context=True,
     )
 
 
@@ -257,9 +298,7 @@ async def run_itinerary_agent(
         print(f"[ItineraryAgent] ✓ Generated {len(response.content.daily_schedules)} days")
         print(f"[ItineraryAgent] ✓ Identified {len(response.content.location_list)} locations")
         if response.content.selected_flight:
-            print(
-                f"[ItineraryAgent] ✓ Selected flight: {response.content.selected_flight.airline}"
-            )
+            print(f"[ItineraryAgent] ✓ Selected flight: {response.content.selected_flight.airline}")
         if response.content.selected_accommodation:
             print(
                 f"[ItineraryAgent] ✓ Selected accommodation: {response.content.selected_accommodation.name}"

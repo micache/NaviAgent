@@ -10,32 +10,59 @@ from pathlib import Path
 import certifi
 import httpx
 from agno.agent import Agent
+from agno.db import PostgresDb
+from agno.memory import MemoryManager
 from agno.models.openai import OpenAIChat
 from agno.tools.reasoning import ReasoningTools
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import settings, model_settings
+from config import model_settings, settings
 from models.schemas import BudgetAgentInput, BudgetAgentOutput
 from tools.search_tool import search_tools
 
 
-def create_budget_agent(agent_name: str = "budget") -> Agent:
+def create_budget_agent(
+    agent_name: str = "budget",
+    db: PostgresDb = None,
+    user_id: str = None,
+    enable_memory: bool = True,
+) -> Agent:
     """
-    Create a Budget Agent with structured input/output.
+    Create a Budget Agent with structured input/output and database support.
 
     Args:
         agent_name: Name of agent for model configuration (default: "budget")
+        db: PostgreSQL database instance for session/memory storage
+        user_id: Optional default user ID for memory management
+        enable_memory: Enable user memory management (default: True)
 
     Returns:
         Agent configured with BudgetAgentInput and BudgetAgentOutput schemas
     """
     # Create model from centralized configuration
     model = model_settings.create_model_for_agno(agent_name)
-    
+
+    # Create memory manager with cheaper model if database is provided
+    memory_manager = None
+    if db and enable_memory:
+        memory_manager = MemoryManager(
+            db=db,
+            model=model_settings.create_model_for_agno("memory"),
+        )
+
     return Agent(
         name="BudgetAgent",
         model=model,
+        db=db,
+        user_id=user_id,
+        memory_manager=memory_manager,
+        add_history_to_context=True if db else False,
+        num_history_runs=5,
+        read_chat_history=True if db else False,
+        enable_user_memories=enable_memory if db else False,
+        enable_session_summaries=True if db else False,
+        store_media=False,
         tools=[ReasoningTools(add_instructions=True, add_few_shot=False)],
         instructions=[
             "You are the Budget Analyzer & Validator for the travel planning pipeline.",
@@ -115,15 +142,25 @@ def create_budget_agent(agent_name: str = "budget") -> Agent:
             "   - **If At Budget Limit**: 'The plan is very tight, leaving only [X] VND. This is risky. Recommend asking ItineraryAgent to cut one small activity to create a safer buffer.'",
             "   - Always include a general tip: 'Costs are estimates. Always bring extra for unexpected expenses.'",
             "",
-            "All costs must be in VND. Be SPECIFIC with numbers."
+            "All costs must be in VND. Be SPECIFIC with numbers.",
+            "",
+            "=" * 80,
+            "🇻🇳 VIETNAMESE OUTPUT REQUIREMENT",
+            "=" * 80,
+            "ALL text in your output MUST be in VIETNAMESE:",
+            "  • category_name: Tiếng Việt (e.g., 'Vé Máy Bay', 'Khách Sạn', 'Ăn Uống')",
+            "  • description: Tiếng Việt",
+            "  • budget_status: Tiếng Việt (e.g., 'Trong Ngân Sách', 'Vượt Ngân Sách X VND')",
+            "  • recommendations: Tiếng Việt (cost-saving tips in Vietnamese)",
+            "=" * 80,
         ],
         input_schema=BudgetAgentInput,
         output_schema=BudgetAgentOutput,
         markdown=True,
         debug_mode=False,
-        add_datetime_to_context=True,
-        add_location_to_context=True,
     )
+
+
 async def run_budget_agent(
     agent: Agent,
     destination: str,

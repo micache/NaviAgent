@@ -17,7 +17,7 @@ class TravelStyle(str, Enum):
 
 
 class TravelRequest(BaseModel):
-    """Schema for travel planning request"""
+    """Schema for travel planning request with database support"""
 
     departure_point: str = Field(
         ..., description="Điểm khởi hành (tên thành phố hoặc sân bay)", min_length=1
@@ -41,6 +41,10 @@ class TravelRequest(BaseModel):
         None, description="Ghi chú từ khách hàng (sở thích, yêu cầu đặc biệt, ...)"
     )
 
+    user_id: Optional[str] = Field(
+        None, description="User ID for session tracking and memory management (optional)"
+    )
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -52,5 +56,6 @@ class TravelRequest(BaseModel):
                 "trip_duration": 7,
                 "travel_style": "self_guided",
                 "customer_notes": "Thích ẩm thực đường phố, muốn tham quan đền chùa và mua sắm",
+                "user_id": "user_12345",
             }
         }
