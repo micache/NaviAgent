@@ -66,15 +66,15 @@ async def startup_event():
     print(f"{'=' * 80}")
 
     # ============================================================================
-    # 🔥 MODEL CONFIGURATION - Change provider here if needed
+    # 🔥 MODEL CONFIGURATION
     # ============================================================================
-    # Default: Uses OpenAI (configured in model_settings)
-    # To switch provider, uncomment one of these:
-
-    # model_settings.default_provider = ModelProvider.GOOGLE  # Switch to Gemini
-    model_settings.default_provider = ModelProvider.DEEPSEEK  # Switch to DeepSeek
-    # model_settings.default_provider = ModelProvider.ANTHROPIC  # Switch to Claude
-
+    # Model provider is configured in config/model_config.py
+    # Current: model_settings = create_deepseek_config()
+    # 
+    # To change provider, edit config/model_config.py line 339:
+    #   - create_default_config() → OpenAI
+    #   - create_deepseek_config() → DeepSeek (current)
+    #   - create_gemini_config() → Google Gemini
     # ============================================================================
 
     # Validate API keys
