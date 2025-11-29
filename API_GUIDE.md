@@ -280,6 +280,71 @@ curl "http://localhost:8000/sessions"
 curl "http://localhost:8000/health"
 ```
 
+## Guidebook Generation
+
+### Generate Guidebook
+```bash
+POST /v1/generate_guidebook
+Content-Type: application/json
+
+{
+  "travel_plan": {
+    "version": "1.0",
+    "request_summary": {
+      "destination": "Tokyo, Japan",
+      "duration": 7,
+      "budget": 50000000,
+      "travelers": 2
+    },
+    "itinerary": {...},
+    "budget": {...},
+    "advisory": {...}
+  },
+  "formats": ["pdf", "html", "markdown"],
+  "language": "vi"
+}
+```
+
+Response:
+```json
+{
+  "guidebook_id": "uuid-string",
+  "files": {
+    "pdf": "guidebooks/guidebook_tokyo.pdf",
+    "html": "guidebooks/guidebook_tokyo.html",
+    "markdown": "guidebooks/guidebook_tokyo.md"
+  },
+  "generated_at": "2024-06-01T10:30:00+00:00",
+  "language": "vi",
+  "output_dir": "guidebooks"
+}
+```
+
+### Get Guidebook Info
+```bash
+GET /v1/guidebook/{guidebook_id}
+```
+
+### Download Guidebook
+```bash
+GET /v1/guidebook/{guidebook_id}/download?format=pdf
+```
+
+Supported formats: `pdf`, `html`, `markdown`
+
+### cURL Example
+```bash
+# Generate guidebook
+curl -X POST "http://localhost:8000/v1/generate_guidebook" \
+  -H "Content-Type: application/json" \
+  -d '{"travel_plan": {...}, "formats": ["pdf"], "language": "vi"}'
+
+# Download PDF
+curl "http://localhost:8000/v1/guidebook/{id}/download?format=pdf" --output guidebook.pdf
+```
+
+For detailed guidebook documentation, see [docs/GUIDEBOOK_GUIDE.md](docs/GUIDEBOOK_GUIDE.md).
+
 ## Features
 
 - **Session Management**: Multiple concurrent user sessions
@@ -288,6 +353,7 @@ curl "http://localhost:8000/health"
 - **CORS Enabled**: Ready for frontend integration
 - **Error Handling**: Proper HTTP error codes and messages
 - **Interactive Docs**: Auto-generated API documentation
+- **Guidebook Generation**: Generate PDF, HTML, and Markdown guidebooks
 
 ## Error Handling
 
