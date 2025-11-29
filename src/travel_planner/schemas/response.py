@@ -275,3 +275,42 @@ class TravelPlanTeamResponse(BaseModel):
                 "generated_at": "2025-10-24T00:00:00",
             }
         }
+
+
+class GuidebookOptions(BaseModel):
+    """Schema for guidebook generation options."""
+
+    include_maps: bool = Field(default=False, description="Include maps in guidebook (future)")
+    include_qr_codes: bool = Field(default=False, description="Include QR codes (future)")
+    language: str = Field(default="vi", description="Language for guidebook content (vi or en)")
+    template: str = Field(default="default", description="Template name (default)")
+
+
+class GuidebookRequest(BaseModel):
+    """Schema for guidebook generation request."""
+
+    travel_plan: Optional[TravelPlan] = Field(
+        None, description="TravelPlan object for guidebook generation"
+    )
+    travel_plan_path: Optional[str] = Field(None, description="Path to travel plan JSON file")
+    formats: List[str] = Field(
+        default=["pdf", "html", "markdown"],
+        description="List of formats to generate: pdf, html, markdown",
+    )
+    options: Optional[GuidebookOptions] = Field(
+        default_factory=GuidebookOptions,
+        description="Guidebook generation options",
+    )
+
+
+class GuidebookResponse(BaseModel):
+    """Schema for guidebook generation response."""
+
+    guidebook_id: str = Field(..., description="Unique identifier for this guidebook")
+    files: Dict[str, str] = Field(..., description="Dictionary mapping format names to file paths")
+    generated_at: str = Field(
+        default_factory=lambda: datetime.utcnow().isoformat(),
+        description="Generation timestamp",
+    )
+    language: str = Field(default="vi", description="Language used")
+    output_dir: str = Field(..., description="Output directory path")
