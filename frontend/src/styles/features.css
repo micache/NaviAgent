@@ -1,0 +1,67 @@
+.features-section {
+  width: 100%;
+  padding: 80px 120px;
+  box-sizing: border-box;
+}
+
+.features-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 60px;
+  color: var(--foreground);
+}
+
+/* Bố cục từng hàng */
+.feature-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 120px;
+  gap: 60px;
+}
+
+/* Đảo vị trí ảnh và chữ */
+.feature-row.reverse {
+  flex-direction: row-reverse;
+}
+
+.feature-image img {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+}
+
+.feature-text {
+  flex: 1;
+}
+
+.feature-text h3 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--primary);
+}
+
+.feature-text p {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--foreground);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .feature-row,
+  .feature-row.reverse {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .feature-image {
+    margin-bottom: 24px;
+  }
+
+  .features-section {
+    padding: 60px 24px;
+  }
+}

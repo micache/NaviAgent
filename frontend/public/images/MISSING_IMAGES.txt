@@ -1,0 +1,6 @@
+Missing images that need to be added:
+- aitrip.png (AI Trip Planner feature)
+- destination.png (Destination Finder feature)
+- proplanning.png (Professional Planning feature)
+
+Please add these images to this folder to fix the 404 errors.

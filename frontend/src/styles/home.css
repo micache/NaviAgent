@@ -1,0 +1,77 @@
+/* Trang chủ tổng thể */
+.home-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* HERO SECTION */
+.hero {
+  position: relative;
+  height: 70vh;
+  width: 100%;
+  background: url("/images/phongcanhngang.jpg") center/cover no-repeat; /* bạn thay link ảnh ở đây */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: white;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70px; /* kéo dài vùng fade */
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.15) 15%,
+    rgba(255, 255, 255, 0.45) 35%,
+    rgba(255, 255, 255, 0.8) 65%,
+    rgba(255, 255, 255, 0.95) 85%,
+    #ffffff 100%
+  );
+  filter: blur(0px); /* mờ đều, không chói */
+  opacity: 1;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hero-overlay {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  padding: 0 20px;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  opacity: 0.9;
+  margin-bottom: 2rem;
+}
+
+.hero-btn {
+  display: inline-block;
+  background: var(--primary-light);
+  color: var(--background);
+  padding: 14px 32px;
+  border-radius: 30px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.hero-btn:hover {
+  background: var(--primary);
+  transform: translateY(-2px);
+}

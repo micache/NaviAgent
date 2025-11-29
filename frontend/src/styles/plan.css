@@ -1,0 +1,155 @@
+.plan-layout {
+  margin-top: 70px;
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background: var(--background);
+  color: var(--foreground);
+  box-sizing: border-box;
+  height: calc(100vh - 70px);
+  width: 100%;
+}
+
+/* ===== LEFT CONTENT ===== */
+.plan-left {
+  flex: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.plan-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.plan-subtext {
+  color: #666;
+  margin: 10px 0 20px;
+}
+
+/* Bảng kế hoạch */
+.plan-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: #fff;
+}
+
+.plan-table th {
+  background: var(--primary);
+  color: white;
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 1rem;
+}
+
+.plan-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.plan-table tr:hover td {
+  background: #f8f9fa;
+}
+
+/* ===== RIGHT CHATBOT ===== */
+.plan-right {
+  flex: 3;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.plan-right h2 {
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+}
+
+.plan-right p {
+  margin-bottom: 16px;
+  color: #444;
+}
+
+/* Chat box */
+.chat-box {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 12px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.chat-message {
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  max-width: 80%;
+  font-size: 0.95rem;
+}
+
+.chat-message.bot {
+  background: #f1f1f1;
+  align-self: flex-start;
+}
+
+.chat-message.user {
+  background: var(--primary);
+  color: white;
+  align-self: flex-end;
+}
+
+.chat-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.chat-input button {
+  background: var(--primary);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.chat-input button:hover {
+  background: var(--primary-dark);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .plan-layout {
+    flex-direction: column;
+  }
+
+  .plan-right {
+    order: -1;
+    width: 100%;
+  }
+
+  .plan-table {
+    font-size: 0.9rem;
+  }
+}
