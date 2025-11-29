@@ -1,0 +1,787 @@
+/* Enhanced Guidebook Styles - Magazine Quality Design */
+/* Vietnamese font support with Noto Sans */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+
+/* Page Setup */
+@page {
+    size: A4;
+    margin: 20mm 15mm;
+
+    @top-center {
+        content: "Travel Guide";
+        font-family: 'Noto Sans', sans-serif;
+        font-size: 9pt;
+        color: #666;
+    }
+
+    @bottom-right {
+        content: counter(page);
+        font-family: 'Noto Sans', sans-serif;
+        font-size: 9pt;
+        color: #666;
+    }
+}
+
+@page cover {
+    margin: 0;
+    @top-center {
+        content: none;
+    }
+    @bottom-right {
+        content: none;
+    }
+}
+
+/* Base Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', 'Noto Sans', serif;
+    color: #2d3748;
+    margin-top: 0;
+    line-height: 1.3;
+}
+
+/* Cover Page */
+.cover-page {
+    page: cover;
+    page-break-after: always;
+    height: 297mm;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-image {
+    height: 100%;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 60px;
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    max-width: 80%;
+}
+
+.cover-page h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 42pt;
+    font-weight: 700;
+    margin: 0 0 15px 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    color: white;
+    word-wrap: break-word;
+}
+
+.cover-page .subtitle {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 18pt;
+    font-weight: 400;
+    margin: 0 0 20px 0;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    opacity: 0.9;
+}
+
+.cover-page .dates {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 14pt;
+    margin: 0;
+    opacity: 0.8;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    padding-top: 15px;
+}
+
+.cover-page .travelers {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 12pt;
+    margin-top: 10px;
+    opacity: 0.7;
+}
+
+/* Section Headers with Color Coding */
+.section-header {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    margin: 30px -15mm 20px -15mm;
+    page-break-after: avoid;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 24pt;
+    font-weight: 700;
+    color: white;
+}
+
+.section-header.weather {
+    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.section-header.logistics {
+    background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.section-header.accommodation {
+    background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
+}
+
+.section-header.itinerary {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.section-header.budget {
+    background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+}
+
+.section-header.souvenirs {
+    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.section-header.advisory {
+    background: linear-gradient(90deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Two-Column Layout */
+.two-column {
+    column-count: 2;
+    column-gap: 25px;
+    column-rule: 1px solid #e2e8f0;
+}
+
+.column {
+    break-inside: avoid;
+}
+
+/* Content Sections */
+.content-section {
+    margin-bottom: 30px;
+    page-break-inside: avoid;
+}
+
+.content-section h3 {
+    font-size: 16pt;
+    color: #2d3748;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+.content-section h4 {
+    font-size: 13pt;
+    color: #4a5568;
+    margin: 15px 0 10px 0;
+}
+
+/* Activity Cards */
+.activity-card {
+    background: #f8f9fa;
+    border-left: 4px solid #667eea;
+    padding: 15px;
+    margin: 15px 0;
+    break-inside: avoid;
+    border-radius: 0 8px 8px 0;
+}
+
+.activity-card.morning {
+    border-left-color: #ffc107;
+    background: #fffdf5;
+}
+
+.activity-card.afternoon {
+    border-left-color: #17a2b8;
+    background: #f5fcfd;
+}
+
+.activity-card.evening {
+    border-left-color: #764ba2;
+    background: #faf5fc;
+}
+
+.activity-time {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 12pt;
+    margin-bottom: 5px;
+}
+
+.activity-title {
+    font-weight: 600;
+    font-size: 11pt;
+    color: #2d3748;
+    margin-bottom: 5px;
+}
+
+.activity-description {
+    font-size: 10pt;
+    color: #4a5568;
+    line-height: 1.5;
+}
+
+/* Day Cards */
+.day-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    break-inside: avoid;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.day-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+}
+
+.day-number {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18pt;
+    font-weight: 700;
+    margin-right: 15px;
+}
+
+.day-title {
+    font-size: 14pt;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.day-date {
+    font-size: 10pt;
+    color: #718096;
+}
+
+/* Info Boxes */
+.info-box {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 15px;
+    margin: 15px 0;
+    break-inside: avoid;
+    border-radius: 0 8px 8px 0;
+}
+
+.info-box h4 {
+    margin: 0 0 8px 0;
+    font-size: 12pt;
+    color: #856404;
+}
+
+.info-box p {
+    margin: 0;
+    font-size: 10pt;
+    color: #856404;
+}
+
+.warning-box {
+    background: #f8d7da;
+    border-left: 4px solid #dc3545;
+    padding: 15px;
+    margin: 15px 0;
+    break-inside: avoid;
+    border-radius: 0 8px 8px 0;
+}
+
+.warning-box h4 {
+    margin: 0 0 8px 0;
+    font-size: 12pt;
+    color: #721c24;
+}
+
+.warning-box p {
+    margin: 0;
+    font-size: 10pt;
+    color: #721c24;
+}
+
+.tip-box {
+    background: #d4edda;
+    border-left: 4px solid #28a745;
+    padding: 15px;
+    margin: 15px 0;
+    break-inside: avoid;
+    border-radius: 0 8px 8px 0;
+}
+
+.tip-box h4 {
+    margin: 0 0 8px 0;
+    font-size: 12pt;
+    color: #155724;
+}
+
+.tip-box p {
+    margin: 0;
+    font-size: 10pt;
+    color: #155724;
+}
+
+/* Map Section */
+.map-section {
+    margin: 20px 0;
+    page-break-inside: avoid;
+}
+
+.map-section img {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.map-legend {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.map-legend h4 {
+    margin: 0 0 10px 0;
+    font-size: 11pt;
+    color: #2d3748;
+}
+
+.location-markers {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.location-markers li {
+    display: flex;
+    align-items: center;
+    font-size: 10pt;
+    color: #4a5568;
+}
+
+.marker {
+    background: #667eea;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9pt;
+    font-weight: 700;
+    margin-right: 8px;
+}
+
+/* Image Styling */
+.location-image {
+    width: 100%;
+    border-radius: 8px;
+    margin: 15px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.image-grid img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.circular-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Tables */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 10pt;
+}
+
+.data-table th {
+    background: #667eea;
+    color: white;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.data-table tr:nth-child(even) {
+    background: #f8f9fa;
+}
+
+.data-table tr:hover {
+    background: #edf2f7;
+}
+
+/* Budget Section */
+.budget-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.budget-total {
+    font-size: 28pt;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.budget-label {
+    font-size: 11pt;
+    opacity: 0.9;
+}
+
+.budget-breakdown {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.budget-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.budget-item-amount {
+    font-size: 16pt;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.budget-item-label {
+    font-size: 10pt;
+    color: #718096;
+    margin-top: 5px;
+}
+
+/* Flight & Hotel Cards */
+.flight-card, .hotel-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 15px 0;
+    break-inside: avoid;
+}
+
+.flight-route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.flight-city {
+    text-align: center;
+}
+
+.flight-code {
+    font-size: 18pt;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.flight-name {
+    font-size: 9pt;
+    color: #718096;
+}
+
+.flight-arrow {
+    color: #667eea;
+    font-size: 18pt;
+}
+
+.flight-details {
+    font-size: 10pt;
+    color: #4a5568;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+.hotel-name {
+    font-size: 14pt;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 5px;
+}
+
+.hotel-stars {
+    color: #ffc107;
+    margin-bottom: 10px;
+}
+
+.hotel-details {
+    font-size: 10pt;
+    color: #4a5568;
+}
+
+.hotel-price {
+    font-size: 14pt;
+    font-weight: 700;
+    color: #667eea;
+    margin-top: 10px;
+}
+
+/* Souvenir Grid */
+.souvenir-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.souvenir-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    break-inside: avoid;
+}
+
+.souvenir-icon {
+    font-size: 28pt;
+    margin-bottom: 8px;
+}
+
+.souvenir-name {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 5px;
+}
+
+.souvenir-price {
+    font-size: 10pt;
+    color: #667eea;
+    font-weight: 600;
+}
+
+.souvenir-description {
+    font-size: 9pt;
+    color: #718096;
+    margin-top: 5px;
+}
+
+/* Advisory Section */
+.advisory-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.advisory-card {
+    padding: 15px;
+    border-radius: 8px;
+    break-inside: avoid;
+}
+
+.advisory-card.visa {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+}
+
+.advisory-card.health {
+    background: #e8f5e9;
+    border-left: 4px solid #4caf50;
+}
+
+.advisory-card.safety {
+    background: #fff3e0;
+    border-left: 4px solid #ff9800;
+}
+
+.advisory-card.customs {
+    background: #f3e5f5;
+    border-left: 4px solid #9c27b0;
+}
+
+.advisory-title {
+    font-size: 12pt;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.advisory-content {
+    font-size: 10pt;
+    color: #4a5568;
+}
+
+/* Lists */
+.styled-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.styled-list li {
+    padding: 8px 0 8px 25px;
+    position: relative;
+    font-size: 10pt;
+    color: #4a5568;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.styled-list li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #28a745;
+    font-weight: bold;
+}
+
+.styled-list li:last-child {
+    border-bottom: none;
+}
+
+/* Icons */
+.icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+/* Weather Section */
+.weather-forecast {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.weather-day {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.weather-date {
+    font-size: 10pt;
+    opacity: 0.9;
+}
+
+.weather-temp {
+    font-size: 24pt;
+    font-weight: 700;
+    margin: 8px 0;
+}
+
+.weather-condition {
+    font-size: 10pt;
+}
+
+/* Footer */
+.page-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 2px solid #e2e8f0;
+    text-align: center;
+    font-size: 9pt;
+    color: #718096;
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.mb-10 {
+    margin-bottom: 10px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.page-break {
+    page-break-before: always;
+}
+
+.no-break {
+    break-inside: avoid;
+}
+
+/* Print Optimizations */
+@media print {
+    body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .section-header {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
