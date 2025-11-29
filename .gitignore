@@ -6,6 +6,9 @@ __pycache__/
 # Generated guidebooks
 guidebooks/
 
+# Models
+.safetensors
+
 # C extensions
 *.so
 

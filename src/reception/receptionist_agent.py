@@ -3,7 +3,6 @@ import json
 import re
 from pathlib import Path
 from typing import Dict, Any, Optional
-from enum import Enum
 from dotenv import load_dotenv
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
@@ -12,6 +11,7 @@ from reception.suggest_destination.suggest_from_images import (
     GoogleVisionImagesAgent,
     DuckDuckGoImagesAgent
 )
+from reception.conversation_state import ConversationState
 
 # Load environment variables
 env_path = Path(__file__).resolve().parent.parent / '.env'
@@ -19,26 +19,6 @@ env_path = Path(__file__).resolve().parent.parent / '.env'
 load_dotenv(dotenv_path=env_path, override=True)
 api_key = os.getenv("OPENAI_API_KEY")
 model = os.getenv("OPENAI_MODEL")
-
-
-class ConversationState(Enum):
-    """Enum to track the current state of the conversation."""
-    
-    GREETING = "greeting"
-    ASK_DESTINATION = "ask_destination"
-    SUGGEST_DESTINATION = "suggest_destination"
-    CONFIRM_DESTINATION = "confirm_destination"
-    COLLECT_DEPARTURE = "collect_departure"
-    COLLECT_TRAVEL_DATE = "collect_travel_date"
-    COLLECT_LENGTH_OF_STAY = "collect_length_of_stay"
-    COLLECT_NUM_GUESTS = "collect_num_guests"
-    COLLECT_BUDGET = "collect_budget"
-    COLLECT_TRAVEL_STYLE = "collect_travel_style"
-    COLLECT_NOTES = "collect_notes"
-    CONFIRM_DETAILS = "confirm_details"
-    UPDATE_DETAILS = "update_details"
-    COMPLETED = "completed"
-
 
 class ReceptionistAgent(Agent):
     """A receptionist agent that handles customer travel inquiries.
@@ -74,18 +54,151 @@ class ReceptionistAgent(Agent):
         self.state = ConversationState.GREETING
         self.image_agent = DuckDuckGoImagesAgent()
     
+    def _generate_response(self, prompt: str) -> str:
+        """Generate response using LLM.
+        
+        Args:
+            prompt: The prompt for the LLM.
+        
+        Returns:
+            Generated response text.
+        """
+        full_prompt = (
+            "You are a friendly travel receptionist chatting with customers. "
+            "Keep responses conversational and natural - NO formal greetings like 'Dear Customer', "
+            "NO signatures like 'Best regards', and NO placeholder names like '[Your Name]'. "
+            "Just respond directly as if you're chatting with a friend.\n\n"
+            f"{prompt}"
+        )
+        response = self.run(input=full_prompt, stream=False)
+        return response.content.strip()
+    
+    def _validate_date(self, date_str: str) -> tuple[bool, Optional[str]]:
+        """Validate if the date is in the future.
+        
+        Args:
+            date_str: Date string from customer.
+        
+        Returns:
+            Tuple of (is_valid, error_message).
+        """
+        from datetime import datetime
+        import dateutil.parser
+        
+        try:
+            # Try to parse the date
+            parsed_date = dateutil.parser.parse(date_str, fuzzy=True)
+            today = datetime.now()
+            
+            if parsed_date.date() <= today.date():
+                return False, "The travel date must be in the future. Please provide a date after today."
+            
+            return True, None
+        except (ValueError, TypeError):
+            return False, "I couldn't understand that date. Please provide a valid date (e.g., 'December 25th' or '25/12/2025')."
+    
+    def _validate_number(self, num_str: str) -> tuple[bool, Optional[str], Optional[int]]:
+        """Validate if the input represents a valid number.
+        
+        Args:
+            num_str: Number string from customer (can be digit or word).
+        
+        Returns:
+            Tuple of (is_valid, error_message, parsed_number).
+        """
+        # Map word numbers to digits
+        word_to_num = {
+            'zero': 0, 'one': 1, 'two': 2, 'three': 3, 'four': 4,
+            'five': 5, 'six': 6, 'seven': 7, 'eight': 8, 'nine': 9,
+            'ten': 10, 'eleven': 11, 'twelve': 12, 'thirteen': 13,
+            'fourteen': 14, 'fifteen': 15, 'sixteen': 16, 'seventeen': 17,
+            'eighteen': 18, 'nineteen': 19, 'twenty': 20, 'thirty': 30,
+            'forty': 40, 'fifty': 50, 'một': 1, 'hai': 2, 'ba': 3,
+            'bốn': 4, 'năm': 5, 'sáu': 6, 'bảy': 7, 'tám': 8,
+            'chín': 9, 'mười': 10
+        }
+        
+        num_str_lower = num_str.lower().strip()
+        
+        # Try direct integer conversion
+        try:
+            num = int(num_str_lower)
+            if num <= 0:
+                return False, "The number of guests must be at least 1. Please provide a valid number.", None
+            if num > 100:
+                return False, "That seems like a very large group! Please provide a reasonable number (1-100).", None
+            return True, None, num
+        except ValueError:
+            pass
+        
+        # Try word conversion
+        for word, num in word_to_num.items():
+            if word in num_str_lower:
+                if num <= 0:
+                    return False, "The number of guests must be at least 1. Please provide a valid number.", None
+                return True, None, num
+        
+        # Use LLM to extract number
+        prompt = (
+            f"Extract only the number from this text: '{num_str}'. "
+            f"If there's a number (either as digit or word), return just the number. "
+            f"If there's no number, return 'INVALID'."
+        )
+        response = self._generate_response(prompt).strip()
+        
+        try:
+            num = int(response)
+            if num <= 0:
+                return False, "The number of guests must be at least 1. Please provide a valid number.", None
+            if num > 100:
+                return False, "That seems like a very large group! Please provide a reasonable number (1-100).", None
+            return True, None, num
+        except ValueError:
+            return False, "I couldn't find a valid number in your response. Please provide the number of guests (e.g., '2', 'two', or '2 people').", None
+    
+    def _validate_budget(self, budget_str: str) -> tuple[bool, Optional[str]]:
+        """Validate if the budget response contains a monetary value.
+        
+        Args:
+            budget_str: Budget string from customer.
+        
+        Returns:
+            Tuple of (is_valid, error_message).
+        """
+        budget_lower = budget_str.lower()
+        
+        # Check for currency indicators or numbers
+        currency_indicators = ['$', '€', '£', '¥', 'usd', 'eur', 'vnd', 'dollar', 'euro', 'million', 'thousand', 'triệu', 'nghìn']
+        has_currency = any(indicator in budget_lower for indicator in currency_indicators)
+        has_number = any(char.isdigit() for char in budget_str)
+        
+        if has_number or has_currency:
+            return True, None
+        
+        # Use LLM to check if it's a valid budget response
+        prompt = (
+            f"Is this a valid budget or monetary amount: '{budget_str}'? "
+            f"Answer only 'YES' if it contains a monetary value or amount, or 'NO' if it doesn't."
+        )
+        response = self._generate_response(prompt).strip().upper()
+        
+        if 'YES' in response:
+            return True, None
+        else:
+            return False, "Please provide your budget as a monetary amount (e.g., '1000 USD', '20 million VND', or '$500')."
+    
     def greet_customer(self) -> str:
         """Greet the customer and introduce the service.
         
         Returns:
             A welcoming greeting message.
         """
-        greeting = (
-            "Hello! Welcome to NaviAgent Travel Service. "
-            "I'm here to help you plan your perfect trip. "
-            "Let's start by finding your ideal destination. "
-            "Do you already have a destination in mind?"
+        prompt = (
+            "You are a friendly travel receptionist. Greet the customer warmly and introduce "
+            "NaviAgent Travel Service. Let them know you'll help plan their perfect trip. "
+            "Ask if they already have a destination in mind. Keep it conversational and friendly."
         )
+        greeting = self._generate_response(prompt)
         self.state = ConversationState.ASK_DESTINATION
         return greeting
     
@@ -103,17 +216,23 @@ class ReceptionistAgent(Agent):
         if any(word in response_lower for word in ['yes', 'yeah', 'sure', 'have', 'know']):
             # Customer has a destination
             self.state = ConversationState.COLLECT_DEPARTURE
-            return "Great! What is your intended destination?"
+            prompt = (
+                "The customer says they already have a destination in mind. "
+                "Respond positively and ask them what their intended destination is. "
+                "Keep it friendly and conversational."
+            )
+            return self._generate_response(prompt)
         else:
             # Customer needs suggestions
             self.state = ConversationState.SUGGEST_DESTINATION
-            return (
-                "No problem! I can help you find the perfect destination. "
-                "You can either:\n"
-                "1. Describe your ideal trip (e.g., 'a quiet beach with good food')\n"
-                "2. Send me an image of a place that inspires you\n"
-                "Which would you prefer?"
+            prompt = (
+                "The customer doesn't have a destination yet and needs help. "
+                "Tell them you can help find the perfect destination. Offer two options: "
+                "1) They can describe their ideal trip (give an example like 'a quiet beach with good food'), "
+                "or 2) They can send an image of a place that inspires them. "
+                "Ask which they'd prefer. Be friendly and helpful."
             )
+            return self._generate_response(prompt)
     
     def suggest_destination_from_text(self, description: str) -> str:
         """Suggest destination based on text description.
@@ -192,12 +311,22 @@ class ReceptionistAgent(Agent):
                 location = "this location"
                 description = "I identified a travel destination from your image."
             
-            self.travel_data['destination'] = location
+            # Extract city/country from landmark name
+            city_extraction_prompt = (
+                f"The location identified is: {location}\n"
+                f"If this is a specific landmark or building, extract the CITY or COUNTRY name only. "
+                f"For example: 'N Seoul Tower' -> 'Seoul', 'Eiffel Tower' -> 'Paris', 'Statue of Liberty' -> 'New York'\n"
+                f"If it's already a city or country name, return it as is.\n"
+                f"Return ONLY the city/country name, nothing else."
+            )
+            city_name = self._generate_response(city_extraction_prompt).strip()
+            
+            self.travel_data['destination'] = city_name
             
             response = (
                 f"This appears to be {location}! "
                 f"{description}\n\n"
-                f"Would you like to visit this destination?"
+                f"Would you like to visit {city_name}?"
             )
             
             self.state = ConversationState.CONFIRM_DESTINATION
@@ -216,7 +345,12 @@ class ReceptionistAgent(Agent):
         """
         self.travel_data['departure_point'] = departure
         self.state = ConversationState.COLLECT_TRAVEL_DATE
-        return f"Got it! Departing from {departure}. When are you planning to travel?"
+        prompt = (
+            f"The customer said they're departing from {departure}. "
+            f"Acknowledge this and ask when they're planning to travel. "
+            f"Be friendly and conversational."
+        )
+        return self._generate_response(prompt)
     
     def collect_travel_date(self, date: str) -> str:
         """Collect travel date information.
@@ -227,9 +361,24 @@ class ReceptionistAgent(Agent):
         Returns:
             Confirmation and next question.
         """
+        # Validate date
+        is_valid, error_msg = self._validate_date(date)
+        if not is_valid:
+            prompt = (
+                f"The customer provided '{date}' as their travel date, but {error_msg.lower()} "
+                f"Politely explain the issue and ask them to provide a valid future date. "
+                f"Be friendly and helpful."
+            )
+            return self._generate_response(prompt)
+        
         self.travel_data['travel_date'] = date
         self.state = ConversationState.COLLECT_LENGTH_OF_STAY
-        return f"Perfect! Planning to travel on {date}. How long do you plan to stay?"
+        prompt = (
+            f"The customer is planning to travel on {date}. "
+            f"Acknowledge this positively and ask how long they plan to stay. "
+            f"Be friendly and conversational."
+        )
+        return self._generate_response(prompt)
     
     def collect_length_of_stay(self, length: str) -> str:
         """Collect length of stay information.
@@ -242,7 +391,13 @@ class ReceptionistAgent(Agent):
         """
         self.travel_data['length_of_stay'] = length
         self.state = ConversationState.COLLECT_NUM_GUESTS
-        return f"Noted! A {length} trip. How many people will be traveling?"
+        prompt = (
+            f"The customer plans to stay for {length}. "
+            f"Acknowledge this and ask how many people will be traveling in total (including the customer). "
+            f"Important: Ask for TOTAL travelers, not 'with you' or 'accompanying you'. "
+            f"For example: 'How many people in total?' or 'How many travelers?'. Be friendly and conversational."
+        )
+        return self._generate_response(prompt)
     
     def collect_num_guests(self, num_guests: str) -> str:
         """Collect number of guests.
@@ -253,9 +408,32 @@ class ReceptionistAgent(Agent):
         Returns:
             Confirmation and next question.
         """
-        self.travel_data['num_guests'] = num_guests
+        # Validate number
+        is_valid, error_msg, parsed_num = self._validate_number(num_guests)
+        if not is_valid:
+            prompt = (
+                f"The customer provided '{num_guests}' for number of guests, but {error_msg.lower()} "
+                f"Politely ask them to provide a valid number. Be friendly and helpful."
+            )
+            return self._generate_response(prompt)
+        
+        # Store the validated number
+        self.travel_data['num_guests'] = str(parsed_num) if parsed_num else num_guests
         self.state = ConversationState.COLLECT_BUDGET
-        return f"Great! {num_guests} travelers. What's your approximate budget?"
+        
+        # Handle solo vs group travel
+        num = parsed_num or num_guests
+        if num == 1 or str(num) == '1':
+            travel_description = "you'll be traveling solo"
+        else:
+            travel_description = f"{num} people will be traveling"
+        
+        prompt = (
+            f"The customer said {travel_description}. "
+            f"Acknowledge this appropriately and ask about their approximate budget. "
+            f"Be friendly and conversational."
+        )
+        return self._generate_response(prompt)
     
     def collect_budget(self, budget: str) -> str:
         """Collect budget information.
@@ -266,12 +444,60 @@ class ReceptionistAgent(Agent):
         Returns:
             Confirmation and next question.
         """
+        # Validate budget
+        is_valid, error_msg = self._validate_budget(budget)
+        if not is_valid:
+            prompt = (
+                f"The customer provided '{budget}' as their budget, but {error_msg.lower()} "
+                f"Politely ask them to provide a budget amount. Be friendly and helpful."
+            )
+            return self._generate_response(prompt)
+        
+        # Check if budget is reasonable for the trip
+        reasonability_prompt = (
+            f"Analyze if this budget is reasonable for the trip:\n"
+            f"- Destination: {self.travel_data['destination']}\n"
+            f"- Number of Guests: {self.travel_data['num_guests']}\n"
+            f"- Length of Stay: {self.travel_data['length_of_stay']}\n"
+            f"- Budget: {budget}\n\n"
+            f"Respond with JSON format: {{\"reasonable\": true/false, \"reason\": \"explanation\"}}\n"
+            f"Consider typical costs for accommodation, food, transportation, and activities.\n"
+            f"Be realistic but not overly strict. If the budget is very low (e.g., 5 million VND for 3 people, 4 days in Seoul), mark as unreasonable.\n"
+            f"Respond with ONLY the JSON, nothing else."
+        )
+        
+        try:
+            reasonability_result = self._generate_response(reasonability_prompt).strip()
+            # Remove markdown code blocks if present
+            if reasonability_result.startswith('```'):
+                reasonability_result = reasonability_result.split('\n', 1)[1].rsplit('\n', 1)[0].strip()
+            
+            reasonability = json.loads(reasonability_result)
+            
+            if not reasonability.get('reasonable', True):
+                # Budget seems too low, warn customer
+                prompt = (
+                    f"The customer provided a budget of {budget} for {self.travel_data['num_guests']} people "
+                    f"going to {self.travel_data['destination']} for {self.travel_data['length_of_stay']}. "
+                    f"This seems quite low. Reason: {reasonability.get('reason', 'The budget may not be sufficient')}.\n\n"
+                    f"Politely let them know the budget might be insufficient and explain why. "
+                    f"Ask if they'd like to reconsider or if they have a specific plan in mind. "
+                    f"Be helpful and not judgmental."
+                )
+                # Don't change state, stay in COLLECT_BUDGET to allow them to update
+                return self._generate_response(prompt)
+        except:
+            # If parsing fails, continue without budget check
+            pass
+        
         self.travel_data['budget'] = budget
         self.state = ConversationState.COLLECT_TRAVEL_STYLE
-        return (
-            f"Thank you! Budget of {budget} noted. "
-            "What's your preferred travel style? (independent/self-guided or package tour)"
+        prompt = (
+            f"The customer's budget is {budget}. "
+            f"Acknowledge this and ask about their preferred travel style "
+            f"(independent/self-guided or package tour). Be friendly and conversational."
         )
+        return self._generate_response(prompt)
     
     def collect_travel_style(self, style: str) -> str:
         """Collect travel style preference.
@@ -284,11 +510,13 @@ class ReceptionistAgent(Agent):
         """
         self.travel_data['travel_style'] = style
         self.state = ConversationState.COLLECT_NOTES
-        return (
-            f"Understood! {style} travel style. "
-            "Do you have any special requests or notes? (e.g., dietary restrictions, "
-            "accessibility needs, specific activities)"
+        prompt = (
+            f"The customer prefers {style} travel style. "
+            f"Acknowledge this and ask if they have any special requests or notes, "
+            f"such as dietary restrictions, accessibility needs, or specific activities. "
+            f"Be friendly and helpful."
         )
+        return self._generate_response(prompt)
     
     def collect_special_notes(self, notes: str) -> str:
         """Collect special notes and requirements.
@@ -309,20 +537,29 @@ class ReceptionistAgent(Agent):
         Returns:
             Formatted summary with confirmation question.
         """
-        summary = "\n=== Travel Plan Summary ===\n"
-        summary += f"Destination: {self.travel_data['destination']}\n"
-        summary += f"Departure Point: {self.travel_data['departure_point']}\n"
-        summary += f"Travel Date: {self.travel_data['travel_date']}\n"
-        summary += f"Length of Stay: {self.travel_data['length_of_stay']}\n"
-        summary += f"Number of Guests: {self.travel_data['num_guests']}\n"
-        summary += f"Budget: {self.travel_data['budget']}\n"
-        summary += f"Travel Style: {self.travel_data['travel_style']}\n"
+        travel_info = {
+            'Destination': self.travel_data['destination'],
+            'Departure Point': self.travel_data['departure_point'],
+            'Travel Date': self.travel_data['travel_date'],
+            'Length of Stay': self.travel_data['length_of_stay'],
+            'Number of Guests': self.travel_data['num_guests'],
+            'Budget': self.travel_data['budget'],
+            'Travel Style': self.travel_data['travel_style']
+        }
         
-        if self.travel_data['special_notes']:
-            summary += f"Special Notes: {self.travel_data['special_notes']}\n"
+        if self.travel_data['special_notes'] and self.travel_data['special_notes'] != 'None':
+            travel_info['Special Notes'] = self.travel_data['special_notes']
         
-        summary += "\nIs this information correct? Would you like to make any changes?"
-        return summary
+        info_text = '\n'.join([f"{k}: {v}" for k, v in travel_info.items()])
+        
+        prompt = (
+            f"You are a travel receptionist. Present the following travel plan summary "
+            f"to the customer in a friendly, organized way. After the summary, ask if "
+            f"the information is correct and if they'd like to make any changes.\n\n"
+            f"Travel Plan Details:\n{info_text}"
+        )
+        
+        return self._generate_response(prompt)
     
     def handle_confirmation(self, response: str) -> str:
         """Handle customer's confirmation of travel details.
@@ -335,20 +572,60 @@ class ReceptionistAgent(Agent):
         """
         response_lower = response.lower()
         
-        if any(word in response_lower for word in ['yes', 'correct', 'looks good', 'perfect', 'right']):
+        if any(word in response_lower for word in ['yes', 'correct', 'looks good', 'perfect', 'right', 'ok', 'okay', 'good']):
             self.state = ConversationState.COMPLETED
-            return (
-                "Excellent! Your travel details have been recorded. "
-                "Thank you for using NaviAgent Travel Service. "
-                "Have a wonderful trip!"
+            prompt = (
+                "The customer has confirmed their travel details are correct. "
+                "Thank them, let them know their travel details have been recorded, "
+                "and wish them a wonderful trip. Be warm and friendly."
             )
+            return self._generate_response(prompt)
         else:
-            self.state = ConversationState.UPDATE_DETAILS
-            return (
-                "No problem! What would you like to update? "
-                "Please specify the field (e.g., 'destination', 'budget', 'travel date') "
-                "and the new value."
+            # Try to parse direct update request using LLM
+            parse_prompt = (
+                f"The customer said: '{response}'\n\n"
+                f"Analyze if they are requesting to update a specific field. "
+                f"Available fields: destination, departure_point, travel_date, length_of_stay, num_guests, budget, travel_style, special_notes\n\n"
+                f"If they are requesting an update, respond with JSON format: {{\"field\": \"field_name\", \"value\": \"new_value\"}}\n"
+                f"If they are just saying they want to change something but didn't specify what, respond with: {{\"field\": null}}\n"
+                f"Examples:\n"
+                f"- 'change to 4 days of stay' -> {{\"field\": \"length_of_stay\", \"value\": \"4 days\"}}\n"
+                f"- 'budget to 50 million' -> {{\"field\": \"budget\", \"value\": \"50 million\"}}\n"
+                f"- 'I want to change something' -> {{\"field\": null}}\n"
+                f"Respond with ONLY the JSON, nothing else."
             )
+            
+            try:
+                parse_result = self._generate_response(parse_prompt).strip()
+                # Remove markdown code blocks if present
+                if parse_result.startswith('```'):
+                    parse_result = parse_result.split('\n', 1)[1].rsplit('\n', 1)[0].strip()
+                
+                parsed = json.loads(parse_result)
+                
+                if parsed.get('field') and parsed.get('value'):
+                    # Direct update
+                    return self.update_travel_detail(parsed['field'], parsed['value'])
+                else:
+                    # Generic change request
+                    self.state = ConversationState.UPDATE_DETAILS
+                    prompt = (
+                        "The customer wants to make changes to their travel details. "
+                        "Respond positively and ask them what they'd like to update. "
+                        "Tell them to specify the field (like 'destination', 'budget', 'travel date') "
+                        "and the new value. Be helpful and friendly."
+                    )
+                    return self._generate_response(prompt)
+            except:
+                # Fallback to asking for clarification
+                self.state = ConversationState.UPDATE_DETAILS
+                prompt = (
+                    "The customer wants to make changes to their travel details. "
+                    "Respond positively and ask them what they'd like to update. "
+                    "Tell them to specify the field (like 'destination', 'budget', 'travel date') "
+                    "and the new value. Be helpful and friendly."
+                )
+                return self._generate_response(prompt)
     
     def update_travel_detail(self, field: str, value: str) -> str:
         """Update a specific travel detail.
@@ -363,14 +640,75 @@ class ReceptionistAgent(Agent):
         field_lower = field.lower().replace(' ', '_')
         
         if field_lower in self.travel_data:
-            self.travel_data[field_lower] = value
-            self.state = ConversationState.CONFIRM_DETAILS
-            return f"Updated {field} to {value}.\n\n{self.generate_summary()}"
-        else:
-            return (
-                f"I couldn't find the field '{field}'. "
-                f"Available fields: {', '.join(self.travel_data.keys())}"
+            current_value = self.travel_data[field_lower]
+            
+            # Use LLM to compute the actual new value based on current value and update instruction
+            compute_prompt = (
+                f"Current value of {field}: {current_value}\n"
+                f"Customer wants to update it with: '{value}'\n\n"
+                f"Compute the new value. Examples:\n"
+                f"- Current: '3', Update: 'add 1 more' -> New: '4'\n"
+                f"- Current: '5 days', Update: 'change to 7 days' -> New: '7 days'\n"
+                f"- Current: '30 million', Update: 'increase to 50 million' -> New: '50 million'\n"
+                f"- Current: 'Seoul', Update: 'Tokyo' -> New: 'Tokyo'\n\n"
+                f"Respond with ONLY the new value, nothing else. No explanations."
             )
+            
+            new_value = self._generate_response(compute_prompt).strip()
+            
+            # Validate the new value if it's a special field
+            if field_lower == 'num_guests':
+                is_valid, error_msg, parsed_num = self._validate_number(new_value)
+                if not is_valid:
+                    prompt = (
+                        f"The customer tried to update guests to '{value}' but {error_msg.lower()} "
+                        f"Politely explain the issue. Be friendly and helpful."
+                    )
+                    return self._generate_response(prompt)
+                new_value = str(parsed_num)
+            elif field_lower == 'travel_date':
+                is_valid, error_msg = self._validate_date(new_value)
+                if not is_valid:
+                    prompt = (
+                        f"The customer tried to update travel date to '{value}' but {error_msg.lower()} "
+                        f"Politely explain the issue. Be friendly and helpful."
+                    )
+                    return self._generate_response(prompt)
+            elif field_lower == 'budget':
+                is_valid, error_msg = self._validate_budget(new_value)
+                if not is_valid:
+                    prompt = (
+                        f"The customer tried to update budget to '{value}' but {error_msg.lower()} "
+                        f"Politely explain the issue. Be friendly and helpful."
+                    )
+                    return self._generate_response(prompt)
+            
+            # Update the value
+            self.travel_data[field_lower] = new_value
+            self.state = ConversationState.CONFIRM_DETAILS
+            
+            prompt = (
+                f"The customer updated their {field} from {current_value} to {new_value}. "
+                f"Acknowledge the update positively, then present the updated travel summary "
+                f"and ask if everything looks correct now.\n\n"
+                f"Updated travel details:\n"
+                f"Destination: {self.travel_data['destination']}\n"
+                f"Departure Point: {self.travel_data['departure_point']}\n"
+                f"Travel Date: {self.travel_data['travel_date']}\n"
+                f"Length of Stay: {self.travel_data['length_of_stay']}\n"
+                f"Number of Guests: {self.travel_data['num_guests']}\n"
+                f"Budget: {self.travel_data['budget']}\n"
+                f"Travel Style: {self.travel_data['travel_style']}\n"
+                f"Special Notes: {self.travel_data.get('special_notes', 'None')}"
+            )
+            return self._generate_response(prompt)
+        else:
+            prompt = (
+                f"The customer tried to update a field called '{field}' but that field doesn't exist. "
+                f"Politely let them know you couldn't find that field and list the available fields: "
+                f"{', '.join(self.travel_data.keys())}. Be helpful and friendly."
+            )
+            return self._generate_response(prompt)
     
     def process_message(self, message: str, image_url: Optional[str] = None) -> str:
         """Process customer message based on current conversation state.
@@ -436,14 +774,51 @@ class ReceptionistAgent(Agent):
             return self.handle_confirmation(message)
         
         elif self.state == ConversationState.UPDATE_DETAILS:
-            # Parse update request (expecting format like "budget 5000" or "update budget to 5000")
-            parts = message.split()
-            if len(parts) >= 2:
-                field = parts[0]
-                value = ' '.join(parts[1:]).replace('to ', '')
-                return self.update_travel_detail(field, value)
-            else:
-                return "Please specify both the field and new value (e.g., 'budget 5000')"
+            # Check if customer is confirming (done with edits)
+            message_lower = message.lower()
+            if any(word in message_lower for word in ['ok', 'okay', 'done', 'corrected', 'finished', 'complete', 'that\'s all', 'nothing', 'good']) and len(message.split()) <= 2:
+                # Customer is done editing, mark as completed
+                self.state = ConversationState.COMPLETED
+                prompt = (
+                    "The customer has confirmed their travel details are correct. "
+                    "Thank them, let them know their travel details have been recorded, "
+                    "and wish them a wonderful trip. Be warm and friendly."
+                )
+                return self._generate_response(prompt)
+            
+            # Try to parse update request using LLM
+            parse_prompt = (
+                f"The customer said: '{message}'\n\n"
+                f"Parse their update request. Available fields: destination, departure_point, travel_date, length_of_stay, num_guests, budget, travel_style, special_notes\n\n"
+                f"Respond with JSON format: {{\"field\": \"field_name\", \"value\": \"new_value\"}}\n"
+                f"Examples:\n"
+                f"- 'change to 4 days of stay' -> {{\"field\": \"length_of_stay\", \"value\": \"4 days\"}}\n"
+                f"- 'budget 50 million' -> {{\"field\": \"budget\", \"value\": \"50 million\"}}\n"
+                f"- 'length_of_stay to 4' -> {{\"field\": \"length_of_stay\", \"value\": \"4 days\"}}\n"
+                f"Respond with ONLY the JSON, nothing else."
+            )
+            
+            try:
+                parse_result = self._generate_response(parse_prompt).strip()
+                # Remove markdown code blocks if present
+                if parse_result.startswith('```'):
+                    parse_result = parse_result.split('\n', 1)[1].rsplit('\n', 1)[0].strip()
+                
+                parsed = json.loads(parse_result)
+                
+                if parsed.get('field') and parsed.get('value'):
+                    return self.update_travel_detail(parsed['field'], parsed['value'])
+                else:
+                    return "Please specify both the field and new value (e.g., 'budget 5000' or 'change to 4 days')"
+            except:
+                # Fallback to simple parsing
+                parts = message.split()
+                if len(parts) >= 2:
+                    field = parts[0]
+                    value = ' '.join(parts[1:]).replace('to ', '')
+                    return self.update_travel_detail(field, value)
+                else:
+                    return "Please specify both the field and new value (e.g., 'budget 5000' or 'change to 4 days')"
         
         elif self.state == ConversationState.COMPLETED:
             return "Your travel plan is complete. Is there anything else I can help you with?"
