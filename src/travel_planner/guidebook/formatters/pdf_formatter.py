@@ -1,6 +1,6 @@
 """Enhanced PDF formatter using WeasyPrint for professional guidebook generation."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
@@ -151,8 +151,6 @@ class EnhancedPDFFormatter(BaseFormatter):
         template_data["trip_duration"] = trip_duration
 
         if isinstance(dep_date, (date, datetime)):
-            from datetime import timedelta
-
             return_date = dep_date + timedelta(days=trip_duration)
             template_data["return_date"] = return_date.strftime("%Y-%m-%d")
         else:

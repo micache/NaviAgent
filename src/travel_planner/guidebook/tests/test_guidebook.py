@@ -332,10 +332,11 @@ class TestEnhancedPDFFormatter:
         except ImportError:
             pytest.skip("WeasyPrint not installed")
 
+        # Use fixed test date for reproducible test results
         minimal_data = {
             "destination": "Paris",
             "departure_point": "Hanoi",
-            "departure_date": "2024-06-01",
+            "departure_date": "2024-06-01",  # Fixed test date
             "trip_duration": 3,
             "num_travelers": 2,
         }
