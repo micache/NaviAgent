@@ -12,6 +12,9 @@ from .response import (
     BudgetCategory,
     DaySchedule,
     FlightOption,
+    GuidebookOptions,
+    GuidebookRequest,
+    GuidebookResponse,
     ItineraryTimeline,
     LocationDescription,
     LogisticsInfo,
@@ -40,4 +43,7 @@ __all__ = [
     "AccommodationOption",
     "SelectedFlightInfo",
     "SelectedAccommodationInfo",
+    "GuidebookOptions",
+    "GuidebookRequest",
+    "GuidebookResponse",
 ]

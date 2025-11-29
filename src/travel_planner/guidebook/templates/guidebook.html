@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ labels.title }} - {{ travel_plan.request_summary.destination if travel_plan.request_summary else 'Travel Guide' }}</title>
+    <link rel="stylesheet" href="guidebook.css">
+    <style>
+        /* Inline fallback styles */
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --accent-color: #f59e0b;
+            --success-color: #10b981;
+            --background-color: #f8fafc;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .guidebook {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .cover-page {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-header {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        @media print {
+            .actions { display: none; }
+            .section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="guidebook">
+        <!-- Cover Page -->
+        <div class="cover-page">
+            <h1>🗺️ {{ labels.title }}</h1>
+            <div class="destination">{{ travel_plan.request_summary.destination if travel_plan.request_summary else 'Your Destination' }}</div>
+            {% if travel_plan.request_summary %}
+            <div class="trip-info">
+                <div class="trip-info-item">
+                    <div class="label">{{ labels.duration }}</div>
+                    <div class="value">{{ travel_plan.request_summary.duration }} {{ 'ngày' if language == 'vi' else 'days' }}</div>
+                </div>
+                <div class="trip-info-item">
+                    <div class="label">{{ labels.travelers }}</div>
+                    <div class="value">{{ travel_plan.request_summary.travelers }} {{ 'người' if language == 'vi' else 'travelers' }}</div>
+                </div>
+                <div class="trip-info-item">
+                    <div class="label">{{ labels.budget_label }}</div>
+                    <div class="value">{{ format_currency(travel_plan.request_summary.budget) }}</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
+        </div>
+        
+        <!-- Executive Summary -->
+        <div class="section">
+            <h2 class="section-header">📊 {{ labels.executive_summary }}</h2>
+            {% if travel_plan.itinerary %}
+            <p>{{ travel_plan.itinerary.summary }}</p>
+            {% if travel_plan.itinerary.location_list %}
+            <h3>📍 Highlights</h3>
+            <ul>
+                {% for loc in travel_plan.itinerary.location_list[:5] %}
+                <li>{{ loc }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% endif %}
+        </div>
+        
+        <!-- Itinerary -->
+        {% if travel_plan.itinerary and travel_plan.itinerary.daily_schedules %}
+        <div class="section">
+            <h2 class="section-header">📅 {{ labels.itinerary }}</h2>
+            {% for day in travel_plan.itinerary.daily_schedules %}
+            <div class="day-schedule">
+                <div class="day-header">
+                    {{ labels.day }} {{ day.day_number }}{% if day.title %}: {{ day.title }}{% endif %}
+                    {% if day.date %} ({{ format_date(day.date) }}){% endif %}
+                </div>
+                <div class="day-content">
+                    {% for activity in day.activities %}
+                    <div class="activity">
+                        <div class="activity-time">{{ activity.time }}</div>
+                        <div class="activity-icon">{{ get_activity_icon(activity.activity_type) }}</div>
+                        <div class="activity-details">
+                            <div class="activity-name">{{ activity.description }}</div>
+                            <div class="activity-location">📍 {{ activity.location_name }}</div>
+                            {% if activity.notes %}
+                            <div class="activity-notes">💡 {{ activity.notes }}</div>
+                            {% endif %}
+                        </div>
+                        {% if activity.estimated_cost %}
+                        <div class="activity-cost">{{ format_currency(activity.estimated_cost) }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Budget -->
+        {% if travel_plan.budget %}
+        <div class="section">
+            <h2 class="section-header">💰 {{ labels.budget }}</h2>
+            {% if travel_plan.budget.categories %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ labels.category }}</th>
+                        <th>{{ labels.estimated }}</th>
+                        <th>{{ labels.notes }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cat in travel_plan.budget.categories %}
+                    <tr>
+                        <td>{{ cat.category_name }}</td>
+                        <td>{{ format_currency(cat.estimated_cost) }}</td>
+                        <td>{{ cat.notes or '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+            <div class="budget-total">
+                <strong>{{ labels.total_cost }}:</strong> {{ format_currency(travel_plan.budget.total_estimated_cost) }}<br>
+                <span>{{ labels.status }}: {{ travel_plan.budget.budget_status }}</span>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Advisory -->
+        {% if travel_plan.advisory %}
+        <div class="section">
+            <h2 class="section-header">⚠️ {{ labels.advisory }}</h2>
+            {% if travel_plan.advisory.warnings_and_tips %}
+            <h3>📢 {{ labels.warnings }}</h3>
+            <ul class="warning-list">
+                {% for warning in travel_plan.advisory.warnings_and_tips %}
+                <li>{{ warning }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% if travel_plan.advisory.visa_info %}
+            <h3>🛂 {{ labels.visa_info }}</h3>
+            <p>{{ travel_plan.advisory.visa_info }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Souvenirs -->
+        {% if travel_plan.souvenirs %}
+        <div class="section">
+            <h2 class="section-header">🎁 {{ labels.souvenirs }}</h2>
+            {% for souvenir in travel_plan.souvenirs %}
+            <div class="card">
+                <h3>🛍️ {{ souvenir.item_name }}</h3>
+                <p>{{ souvenir.description }}</p>
+                {% if souvenir.estimated_price %}
+                <p><strong>{{ labels.price }}:</strong> {{ souvenir.estimated_price }}</p>
+                {% endif %}
+                {% if souvenir.where_to_buy %}
+                <p><strong>{{ labels.where_to_buy }}:</strong> {{ souvenir.where_to_buy }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>{{ labels.generated_at }}: {{ travel_plan.generated_at[:10] if travel_plan.generated_at else '' }}</p>
+            <p>NaviAgent Travel Guidebook v{{ travel_plan.version }}</p>
+        </div>
+    </div>
+</body>
+</html>
