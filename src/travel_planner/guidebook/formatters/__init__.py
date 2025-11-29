@@ -1,15 +1,11 @@
-"""
-Guidebook formatters package.
+"""Formatters module for guidebook generation."""
 
-Provides formatters for different output formats:
-- PDF: Professional PDF documents
-- HTML: Responsive web pages
-- Markdown: Clean, readable markdown
-"""
+from travel_planner.guidebook.formatters.base_formatter import BaseFormatter
 
-from travel_planner.guidebook.formatters.base import BaseFormatter
-from travel_planner.guidebook.formatters.html_formatter import HTMLFormatter
-from travel_planner.guidebook.formatters.markdown_formatter import MarkdownFormatter
-from travel_planner.guidebook.formatters.pdf_formatter import PDFFormatter
+# Lazy import to handle optional WeasyPrint dependency
+try:
+    from travel_planner.guidebook.formatters.pdf_formatter import EnhancedPDFFormatter
+except ImportError:
+    EnhancedPDFFormatter = None  # type: ignore[assignment,misc]
 
-__all__ = ["BaseFormatter", "PDFFormatter", "HTMLFormatter", "MarkdownFormatter"]
+__all__ = ["BaseFormatter", "EnhancedPDFFormatter"]

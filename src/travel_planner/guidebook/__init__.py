@@ -1,10 +1,11 @@
-"""
-Travel Guidebook Generation Module.
+"""Guidebook generation module for creating professional travel guidebook PDFs."""
 
-This module provides functionality to transform travel plan data
-into professional, printable guidebooks in multiple formats (PDF, HTML, Markdown).
-"""
+from travel_planner.guidebook.image_fetcher import ImageFetcher
 
-from travel_planner.guidebook.generator import GuidebookGenerator
+# Lazy import to handle optional WeasyPrint dependency
+try:
+    from travel_planner.guidebook.formatters.pdf_formatter import EnhancedPDFFormatter
+except ImportError:
+    EnhancedPDFFormatter = None  # type: ignore[assignment,misc]
 
-__all__ = ["GuidebookGenerator"]
+__all__ = ["EnhancedPDFFormatter", "ImageFetcher"]
