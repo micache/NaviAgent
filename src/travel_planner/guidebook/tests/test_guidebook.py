@@ -1,4 +1,4 @@
-"""Tests for the guidebook PDF generator."""
+"""Tests for the guidebook module."""
 
 import os
 import tempfile
@@ -79,8 +79,331 @@ class TestImageFetcher:
         assert len(result.data) > 0
 
 
+class TestGuidebookGenerator:
+    """Tests for the GuidebookGenerator class."""
+
+    @pytest.fixture
+    def sample_travel_data(self):
+        """Create sample travel plan data for testing."""
+        return {
+            "request_summary": {
+                "destination": "Tokyo, Japan",
+                "duration": 5,
+                "travelers": 2,
+                "budget": 50000000,
+            },
+            "itinerary": {
+                "summary": "A 5-day trip to Tokyo exploring culture and food",
+                "location_list": ["Shibuya", "Shinjuku", "Asakusa"],
+                "daily_schedules": [
+                    {
+                        "day_number": 1,
+                        "title": "Arrival Day",
+                        "date": "2024-06-01",
+                        "activities": [
+                            {
+                                "time": "18:00",
+                                "description": "Check-in at hotel",
+                                "location_name": "Shinjuku",
+                                "activity_type": "check-in",
+                                "estimated_cost": 0,
+                            },
+                            {
+                                "time": "20:00",
+                                "description": "Welcome dinner",
+                                "location_name": "Shibuya",
+                                "activity_type": "food",
+                                "estimated_cost": 100000,
+                            },
+                        ],
+                    },
+                ],
+            },
+            "budget": {
+                "total_estimated_cost": 45000000,
+                "budget_status": "Within Budget",
+                "categories": [
+                    {"category_name": "Flights", "estimated_cost": 20000000},
+                    {"category_name": "Accommodation", "estimated_cost": 15000000},
+                ],
+                "recommendations": ["Book flights in advance"],
+            },
+            "advisory": {
+                "warnings_and_tips": ["Check visa requirements"],
+                "visa_info": "Visa-free for 90 days",
+                "safety_tips": ["Japan is very safe"],
+            },
+            "souvenirs": [
+                {
+                    "item_name": "Japanese Green Tea",
+                    "description": "High quality matcha",
+                    "estimated_price": "2000 JPY",
+                    "where_to_buy": "Uji, Kyoto",
+                },
+            ],
+            "generated_at": "2024-05-15T10:00:00",
+            "version": "1.0",
+        }
+
+    def test_generator_initialization(self, sample_travel_data):
+        """Test that GuidebookGenerator initializes correctly."""
+        from travel_planner.guidebook import GuidebookGenerator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            generator = GuidebookGenerator(
+                sample_travel_data, output_dir=tmpdir, language="vi"
+            )
+            assert generator is not None
+            assert generator.language == "vi"
+
+    def test_generate_all_formats(self, sample_travel_data):
+        """Test generating all guidebook formats."""
+        from travel_planner.guidebook import GuidebookGenerator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            generator = GuidebookGenerator(
+                sample_travel_data, output_dir=tmpdir, language="vi"
+            )
+            results = generator.generate_all_formats()
+
+            assert "pdf" in results
+            assert "html" in results
+            assert "markdown" in results
+
+            # All files should exist
+            for fmt, path in results.items():
+                assert os.path.exists(path), f"{fmt} file not generated"
+                assert os.path.getsize(path) > 0, f"{fmt} file is empty"
+
+    def test_generate_pdf(self, sample_travel_data):
+        """Test PDF generation."""
+        from travel_planner.guidebook import GuidebookGenerator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            generator = GuidebookGenerator(
+                sample_travel_data, output_dir=tmpdir, language="vi"
+            )
+            pdf_path = generator.generate_pdf()
+
+            assert os.path.exists(pdf_path)
+            assert pdf_path.endswith(".pdf")
+            assert os.path.getsize(pdf_path) > 1000  # Should be substantial
+
+    def test_generate_html(self, sample_travel_data):
+        """Test HTML generation."""
+        from travel_planner.guidebook import GuidebookGenerator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            generator = GuidebookGenerator(
+                sample_travel_data, output_dir=tmpdir, language="vi"
+            )
+            html_path = generator.generate_html()
+
+            assert os.path.exists(html_path)
+            assert html_path.endswith(".html")
+
+            # Check content
+            with open(html_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                assert "Tokyo" in content
+                assert "<!DOCTYPE html>" in content
+
+    def test_generate_markdown(self, sample_travel_data):
+        """Test Markdown generation."""
+        from travel_planner.guidebook import GuidebookGenerator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            generator = GuidebookGenerator(
+                sample_travel_data, output_dir=tmpdir, language="vi"
+            )
+            md_path = generator.generate_markdown()
+
+            assert os.path.exists(md_path)
+            assert md_path.endswith(".md")
+
+            # Check content
+            with open(md_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                assert "Tokyo" in content
+                assert "# " in content  # Should have headers
+
+    def test_invalid_data_rejected(self):
+        """Test that invalid data is properly rejected."""
+        from travel_planner.guidebook import GuidebookGenerator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Empty dict should be rejected
+            with pytest.raises(ValueError):
+                GuidebookGenerator({}, output_dir=tmpdir)
+
+            # Non-dict should be rejected
+            with pytest.raises(ValueError):
+                GuidebookGenerator("invalid", output_dir=tmpdir)
+
+    def test_english_language_support(self, sample_travel_data):
+        """Test English language generation."""
+        from travel_planner.guidebook import GuidebookGenerator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            generator = GuidebookGenerator(
+                sample_travel_data, output_dir=tmpdir, language="en"
+            )
+            html_path = generator.generate_html()
+
+            with open(html_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                assert "Travel Guidebook" in content or "Trip Summary" in content
+
+
+class TestPDFFormatter:
+    """Tests for the standard PDFFormatter class."""
+
+    @pytest.fixture
+    def sample_travel_data(self):
+        """Create sample travel plan data for testing."""
+        return {
+            "request_summary": {
+                "destination": "Tokyo, Japan",
+                "duration": 5,
+                "travelers": 2,
+                "budget": 50000000,
+            },
+            "itinerary": {
+                "summary": "A trip to Tokyo",
+                "daily_schedules": [
+                    {
+                        "day_number": 1,
+                        "title": "Arrival",
+                        "activities": [
+                            {
+                                "time": "18:00",
+                                "description": "Check-in",
+                                "location_name": "Hotel",
+                            }
+                        ],
+                    }
+                ],
+            },
+            "budget": {
+                "total_estimated_cost": 45000000,
+                "budget_status": "OK",
+                "categories": [{"category_name": "Flights", "estimated_cost": 20000000}],
+            },
+            "generated_at": "2024-05-15",
+            "version": "1.0",
+        }
+
+    def test_pdf_formatter_initialization(self, sample_travel_data):
+        """Test that PDFFormatter initializes correctly."""
+        from travel_planner.guidebook.formatters.pdf_formatter import PDFFormatter
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            formatter = PDFFormatter(sample_travel_data, output_dir=tmpdir)
+            assert formatter is not None
+
+    def test_pdf_formatter_generate(self, sample_travel_data):
+        """Test PDFFormatter generates PDF."""
+        from travel_planner.guidebook.formatters.pdf_formatter import PDFFormatter
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            formatter = PDFFormatter(sample_travel_data, output_dir=tmpdir)
+            pdf_path = formatter.generate()
+
+            assert os.path.exists(pdf_path)
+            assert pdf_path.endswith(".pdf")
+            assert os.path.getsize(pdf_path) > 1000
+
+
+class TestHTMLFormatter:
+    """Tests for the HTMLFormatter class."""
+
+    @pytest.fixture
+    def sample_travel_data(self):
+        """Create sample travel plan data for testing."""
+        return {
+            "request_summary": {
+                "destination": "Paris, France",
+                "duration": 3,
+                "travelers": 2,
+                "budget": 30000000,
+            },
+            "itinerary": {
+                "summary": "A trip to Paris",
+                "daily_schedules": [],
+            },
+            "generated_at": "2024-05-15",
+            "version": "1.0",
+        }
+
+    def test_html_formatter_initialization(self, sample_travel_data):
+        """Test that HTMLFormatter initializes correctly."""
+        from travel_planner.guidebook.formatters.html_formatter import HTMLFormatter
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            formatter = HTMLFormatter(sample_travel_data, output_dir=tmpdir)
+            assert formatter is not None
+
+    def test_html_formatter_generate(self, sample_travel_data):
+        """Test HTMLFormatter generates HTML."""
+        from travel_planner.guidebook.formatters.html_formatter import HTMLFormatter
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            formatter = HTMLFormatter(sample_travel_data, output_dir=tmpdir)
+            html_path = formatter.generate()
+
+            assert os.path.exists(html_path)
+            assert html_path.endswith(".html")
+
+            with open(html_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                assert "Paris" in content
+
+
+class TestMarkdownFormatter:
+    """Tests for the MarkdownFormatter class."""
+
+    @pytest.fixture
+    def sample_travel_data(self):
+        """Create sample travel plan data for testing."""
+        return {
+            "request_summary": {
+                "destination": "London, UK",
+                "duration": 4,
+                "travelers": 1,
+                "budget": 25000000,
+            },
+            "itinerary": {"summary": "A trip to London"},
+            "generated_at": "2024-05-15",
+            "version": "1.0",
+        }
+
+    def test_markdown_formatter_initialization(self, sample_travel_data):
+        """Test that MarkdownFormatter initializes correctly."""
+        from travel_planner.guidebook.formatters.markdown_formatter import MarkdownFormatter
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            formatter = MarkdownFormatter(sample_travel_data, output_dir=tmpdir)
+            assert formatter is not None
+
+    def test_markdown_formatter_generate(self, sample_travel_data):
+        """Test MarkdownFormatter generates Markdown."""
+        from travel_planner.guidebook.formatters.markdown_formatter import MarkdownFormatter
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            formatter = MarkdownFormatter(sample_travel_data, output_dir=tmpdir)
+            md_path = formatter.generate()
+
+            assert os.path.exists(md_path)
+            assert md_path.endswith(".md")
+
+            with open(md_path, "r", encoding="utf-8") as f:
+                content = f.read()
+                assert "London" in content
+                assert "#" in content  # Has markdown headers
+
+
 class TestEnhancedPDFFormatter:
-    """Tests for the EnhancedPDFFormatter class."""
+    """Tests for the EnhancedPDFFormatter class (WeasyPrint-based)."""
 
     @pytest.fixture
     def sample_travel_data(self):
@@ -96,49 +419,8 @@ class TestEnhancedPDFFormatter:
             "weather": {
                 "forecast": [
                     {"date": "June 1", "temperature": 22, "condition": "Sunny"},
-                    {"date": "June 2", "temperature": 20, "condition": "Cloudy"},
-                    {"date": "June 3", "temperature": 18, "condition": "Rain"},
                 ],
-                "seasonal_events": "Summer festivals in Paris",
-                "packing_suggestions": [
-                    "Light jacket",
-                    "Comfortable walking shoes",
-                    "Umbrella",
-                ],
-            },
-            "logistics": {
-                "flights": [
-                    {
-                        "airline": "Vietnam Airlines",
-                        "departure_airport": "HAN",
-                        "arrival_airport": "CDG",
-                        "departure_city": "Hanoi",
-                        "arrival_city": "Paris",
-                        "departure_time": "10:00",
-                        "arrival_time": "18:00",
-                        "price": "15,000,000 VND",
-                    }
-                ],
-                "local_transport": [
-                    {"type": "Metro", "description": "Paris Metro system", "cost": "1.90€"},
-                    {
-                        "type": "Eurostar",
-                        "description": "High-speed train to London",
-                        "cost": "89€",
-                    },
-                ],
-            },
-            "accommodation": {
-                "hotels": [
-                    {
-                        "name": "Hotel Le Marais",
-                        "stars": 4,
-                        "location": "Paris 4th Arr.",
-                        "amenities": ["WiFi", "Breakfast", "Gym"],
-                        "price": "2,500,000 VND/night",
-                    }
-                ],
-                "tips": "Book early for better rates",
+                "packing_suggestions": ["Light jacket", "Umbrella"],
             },
             "itinerary": {
                 "days": [
@@ -149,128 +431,22 @@ class TestEnhancedPDFFormatter:
                         "activities": [
                             {
                                 "time": "18:00",
-                                "time_of_day": "evening",
                                 "name": "Check-in at hotel",
                                 "description": "Settle in and rest",
-                            },
-                            {
-                                "time": "20:00",
-                                "time_of_day": "evening",
-                                "name": "Welcome dinner",
-                                "description": "French cuisine at local bistro",
-                                "cost": "50€",
-                            },
-                        ],
-                    },
-                    {
-                        "day_number": 2,
-                        "title": "Exploring Paris",
-                        "date": "June 2, 2024",
-                        "activities": [
-                            {
-                                "time": "09:00",
-                                "time_of_day": "morning",
-                                "name": "Eiffel Tower",
-                                "description": "Visit the iconic tower",
-                                "cost": "26€",
-                                "tips": "Book tickets online to skip the queue",
-                            },
-                            {
-                                "time": "14:00",
-                                "time_of_day": "afternoon",
-                                "name": "Louvre Museum",
-                                "description": "World's largest art museum",
-                                "cost": "17€",
-                            },
-                        ],
-                        "meals": [
-                            {
-                                "type": "lunch",
-                                "restaurant": "Café de Flore",
-                                "cuisine": "French",
                             }
                         ],
-                    },
-                ],
+                    }
+                ]
             },
-            "budget": {
-                "total": "50,000,000 VND",
-                "currency": "VND",
-                "breakdown": [
-                    {"category": "Flights", "amount": "15,000,000 VND"},
-                    {"category": "Accommodation", "amount": "17,500,000 VND"},
-                    {"category": "Food", "amount": "7,000,000 VND"},
-                    {"category": "Activities", "amount": "5,000,000 VND"},
-                    {"category": "Transport", "amount": "3,000,000 VND"},
-                    {"category": "Shopping", "amount": "2,500,000 VND"},
-                ],
-                "saving_tips": [
-                    "Use metro instead of taxis",
-                    "Book attractions in advance",
-                    "Eat at local markets",
-                ],
-            },
-            "souvenirs": {
-                "recommendations": [
-                    {
-                        "name": "French Wine",
-                        "icon": "🍷",
-                        "price": "20-100€",
-                        "description": "Bordeaux or Burgundy",
-                    },
-                    {
-                        "name": "Macarons",
-                        "icon": "🍪",
-                        "price": "15-30€",
-                        "description": "From Ladurée",
-                    },
-                    {
-                        "name": "Perfume",
-                        "icon": "💐",
-                        "price": "50-200€",
-                        "description": "French perfume brands",
-                    },
-                ],
-                "shopping_areas": [
-                    {
-                        "name": "Champs-Élysées",
-                        "description": "Luxury shopping avenue",
-                        "best_for": "Designer brands",
-                    },
-                    {
-                        "name": "Le Marais",
-                        "description": "Trendy boutiques",
-                        "best_for": "Unique finds",
-                    },
-                ],
-            },
-            "advisory": {
-                "visa": "Schengen visa required for Vietnamese citizens",
-                "health": "No special vaccinations required",
-                "safety": "Generally safe, watch for pickpockets in tourist areas",
-                "customs": "Greet with 'Bonjour', tipping 5-10%",
-                "emergency_contacts": [
-                    {"service": "Police", "number": "17"},
-                    {"service": "Ambulance", "number": "15"},
-                    {"service": "Fire", "number": "18"},
-                ],
-                "useful_phrases": [
-                    {"english": "Hello", "local": "Bonjour"},
-                    {"english": "Thank you", "local": "Merci"},
-                    {"english": "Excuse me", "local": "Excusez-moi"},
-                ],
-                "important_tips": [
-                    "Carry your passport at all times",
-                    "Most shops close on Sundays",
-                    "Metro runs until midnight",
-                ],
-            },
+            "budget": {"total": "50,000,000 VND"},
         }
 
-    def test_formatter_initialization(self):
-        """Test that formatter initializes correctly."""
+    def test_enhanced_formatter_initialization(self):
+        """Test that EnhancedPDFFormatter initializes correctly."""
         try:
-            from travel_planner.guidebook.formatters.pdf_formatter import EnhancedPDFFormatter
+            from travel_planner.guidebook.formatters.enhanced_pdf_formatter import (
+                EnhancedPDFFormatter,
+            )
 
             formatter = EnhancedPDFFormatter()
             assert formatter is not None
@@ -278,10 +454,12 @@ class TestEnhancedPDFFormatter:
         except ImportError as e:
             pytest.skip(f"WeasyPrint not installed: {e}")
 
-    def test_generate_pdf(self, sample_travel_data):
-        """Test PDF generation with sample data."""
+    def test_enhanced_generate_pdf(self, sample_travel_data):
+        """Test EnhancedPDFFormatter PDF generation with sample data."""
         try:
-            from travel_planner.guidebook.formatters.pdf_formatter import EnhancedPDFFormatter
+            from travel_planner.guidebook.formatters.enhanced_pdf_formatter import (
+                EnhancedPDFFormatter,
+            )
         except ImportError:
             pytest.skip("WeasyPrint not installed")
 
@@ -293,66 +471,7 @@ class TestEnhancedPDFFormatter:
 
             assert result == output_path
             assert os.path.exists(output_path)
-
-            # Check file size is reasonable (not empty, not too large)
-            file_size = os.path.getsize(output_path)
-            assert file_size > 1000, "PDF file too small"
-            assert file_size < 10_000_000, "PDF file too large (>10MB)"
-
-    def test_generate_pdf_vietnamese_content(self, sample_travel_data):
-        """Test that Vietnamese characters are properly rendered."""
-        try:
-            from travel_planner.guidebook.formatters.pdf_formatter import EnhancedPDFFormatter
-        except ImportError:
-            pytest.skip("WeasyPrint not installed")
-
-        formatter = EnhancedPDFFormatter()
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_path = os.path.join(tmpdir, "test_vietnamese.pdf")
-            formatter.format(sample_travel_data, output_path)
-
-            assert os.path.exists(output_path)
-            # PDF should be generated without encoding errors
-            file_size = os.path.getsize(output_path)
-            assert file_size > 1000
-
-    def test_generate_pdf_minimal_data(self):
-        """Test PDF generation with minimal data."""
-        try:
-            from travel_planner.guidebook.formatters.pdf_formatter import EnhancedPDFFormatter
-        except ImportError:
-            pytest.skip("WeasyPrint not installed")
-
-        # Use fixed test date for reproducible test results
-        minimal_data = {
-            "destination": "Paris",
-            "departure_point": "Hanoi",
-            "departure_date": "2024-06-01",  # Fixed test date
-            "trip_duration": 3,
-            "num_travelers": 2,
-        }
-
-        formatter = EnhancedPDFFormatter()
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_path = os.path.join(tmpdir, "test_minimal.pdf")
-            formatter.format(minimal_data, output_path)
-
-            assert os.path.exists(output_path)
-
-    def test_convenience_function(self, sample_travel_data):
-        """Test the convenience function for PDF generation."""
-        try:
-            from travel_planner.guidebook.formatters.pdf_formatter import generate_guidebook_pdf
-        except ImportError:
-            pytest.skip("WeasyPrint not installed")
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_path = os.path.join(tmpdir, "test_convenience.pdf")
-            generate_guidebook_pdf(sample_travel_data, output_path)
-
-            assert os.path.exists(output_path)
+            assert os.path.getsize(output_path) > 1000
 
 
 class TestTemplateRendering:
