@@ -7,8 +7,23 @@ import Image from "next/image";
 import passwordShow from "@/images/password-show.svg";
 import passwordHide from "@/images/password-hide.svg";
 
+// API URLs for different backend services
+const USER_API_URL = process.env.NEXT_PUBLIC_USER_API_URL || "http://localhost:8000";
+// const RECEPTION_API_URL = process.env.NEXT_PUBLIC_RECEPTION_API_URL || "http://localhost:8001";
+// const TRAVEL_PLANNER_API_URL = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8002";
+// const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || "http://localhost:8003";
+
+// Email validation regex - must contain @
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 6;
+
+interface AuthUser {
+  email: string;
+  access_token: string;
+}
+
 export default function Header() {
-  const pathname = usePathname(); // 👉 lấy đường dẫn hiện tại
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -17,13 +32,19 @@ export default function Header() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     // Check if user is logged in from localStorage
     const loggedUser = localStorage.getItem("user");
     if (loggedUser) {
-      setUser(JSON.parse(loggedUser));
+      try {
+        setUser(JSON.parse(loggedUser));
+      } catch {
+        localStorage.removeItem("user");
+      }
     }
   }, []);
 
@@ -51,30 +72,111 @@ export default function Header() {
       : "main-header transparent"
     : "main-header solid";
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSignUp) {
-      // Xử lý Sign Up
-      if (password !== confirmPassword) {
-        alert("Passwords do not match!");
-        return;
-      }
-      const newUser = { email };
-      localStorage.setItem("user", JSON.stringify(newUser));
-      setUser(newUser);
-      closeModal();
-      alert("Account created successfully!");
-    } else {
-      // Xử lý Sign In - Check admin credentials
-      if (email === "admin@gmail.com" && password === "admin") {
-        const loggedUser = { email };
+    setErrorMessage("");
+    setIsLoading(true);
+
+    // Validate email format
+    if (!EMAIL_REGEX.test(email)) {
+      setErrorMessage("Please enter a valid email address");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate password length
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setErrorMessage(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      if (isSignUp) {
+        // Sign Up - call /auth/register
+        if (password !== confirmPassword) {
+          setErrorMessage("Passwords do not match!");
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await fetch(`${USER_API_URL}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || "Registration failed");
+        }
+
+        // After successful registration, auto login
+        const loginResponse = await fetch(`${USER_API_URL}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!loginResponse.ok) {
+          // Registration succeeded but login failed - user can login manually
+          alert("Account created! Please sign in.");
+          toggleAuthMode();
+          setIsLoading(false);
+          return;
+        }
+
+        const loginData = await loginResponse.json();
+        
+        // Validate response has access_token
+        if (!loginData.access_token) {
+          throw new Error("Invalid server response: missing access token");
+        }
+
+        const newUser: AuthUser = {
+          email,
+          access_token: loginData.access_token,
+        };
+        localStorage.setItem("user", JSON.stringify(newUser));
+        setUser(newUser);
+        closeModal();
+      } else {
+        // Sign In - call /auth/login
+        const response = await fetch(`${USER_API_URL}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.detail || "Invalid email or password");
+        }
+
+        const data = await response.json();
+        
+        // Validate response has access_token
+        if (!data.access_token) {
+          throw new Error("Invalid server response: missing access token");
+        }
+
+        const loggedUser: AuthUser = {
+          email,
+          access_token: data.access_token,
+        };
         localStorage.setItem("user", JSON.stringify(loggedUser));
         setUser(loggedUser);
         closeModal();
-        alert("Welcome, Admin!");
-      } else {
-        alert("Invalid email or password!");
       }
+    } catch (error) {
+      // Handle network errors vs API errors
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        setErrorMessage("Cannot connect to server. Please check your connection.");
+      } else {
+        setErrorMessage(error instanceof Error ? error.message : "An error occurred");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -95,12 +197,26 @@ export default function Header() {
     setConfirmPassword("");
     setShowPassword(false);
     setShowConfirmPassword(false);
+    setErrorMessage("");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (!user) return;
+    
+    try {
+      await fetch(`${USER_API_URL}/auth/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.access_token}`,
+        },
+      });
+    } catch {
+      // Logout locally even if API call fails
+    }
+    
     localStorage.removeItem("user");
     setUser(null);
-    alert("Logged out successfully!");
   };
 
   return (
@@ -134,6 +250,9 @@ export default function Header() {
               ×
             </button>
             <h2>{isSignUp ? "Sign Up" : "Sign In"}</h2>
+            {errorMessage && (
+              <div className="auth-error">{errorMessage}</div>
+            )}
             <form onSubmit={handleAuthSubmit}>
               <div className="form-group">
                 <label htmlFor="email">Email</label>
@@ -200,8 +319,8 @@ export default function Header() {
                   </div>
                 </div>
               )}
-              <button type="submit" className="auth-submit-btn">
-                {isSignUp ? "Sign Up" : "Sign In"}
+              <button type="submit" className="auth-submit-btn" disabled={isLoading}>
+                {isLoading ? "Loading..." : (isSignUp ? "Sign Up" : "Sign In")}
               </button>
             </form>
             <p className="auth-toggle">
