@@ -16,7 +16,7 @@
             --text-color: #1e293b;
             --border-color: #e2e8f0;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--background-color);
@@ -25,13 +25,13 @@
             margin: 0;
             padding: 0;
         }
-        
+
         .guidebook {
             max-width: 900px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .cover-page {
             background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
             color: white;
@@ -40,7 +40,7 @@
             text-align: center;
             margin-bottom: 30px;
         }
-        
+
         .section {
             background: white;
             border-radius: 12px;
@@ -48,14 +48,14 @@
             margin-bottom: 20px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        
+
         .section-header {
             font-size: 1.4em;
             font-weight: 600;
             color: var(--primary-color);
             margin-bottom: 20px;
         }
-        
+
         @media print {
             .actions { display: none; }
             .section { page-break-inside: avoid; }
@@ -85,12 +85,12 @@
             </div>
             {% endif %}
         </div>
-        
+
         <!-- Actions -->
         <div class="actions">
             <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
         </div>
-        
+
         <!-- Executive Summary -->
         <div class="section">
             <h2 class="section-header">📊 {{ labels.executive_summary }}</h2>
@@ -106,7 +106,7 @@
             {% endif %}
             {% endif %}
         </div>
-        
+
         <!-- Itinerary -->
         {% if travel_plan.itinerary and travel_plan.itinerary.daily_schedules %}
         <div class="section">
@@ -139,7 +139,7 @@
             {% endfor %}
         </div>
         {% endif %}
-        
+
         <!-- Budget -->
         {% if travel_plan.budget %}
         <div class="section">
@@ -170,7 +170,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         <!-- Advisory -->
         {% if travel_plan.advisory %}
         <div class="section">
@@ -189,7 +189,7 @@
             {% endif %}
         </div>
         {% endif %}
-        
+
         <!-- Souvenirs -->
         {% if travel_plan.souvenirs %}
         <div class="section">
@@ -208,7 +208,7 @@
             {% endfor %}
         </div>
         {% endif %}
-        
+
         <!-- Footer -->
         <div class="footer">
             <p>{{ labels.generated_at }}: {{ travel_plan.generated_at[:10] if travel_plan.generated_at else '' }}</p>

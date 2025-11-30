@@ -4,20 +4,16 @@ Specialized agent for finding hotels, hostels, homestays, and other accommodatio
 Uses Agno's structured input/output
 """
 
-import ssl
 import sys
 from pathlib import Path
 
-import certifi
-import httpx
 from agno.agent import Agent
 from agno.db import PostgresDb
 from agno.memory import MemoryManager
-from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import model_settings, settings
+from config import model_settings
 from models.schemas import AccommodationAgentInput, AccommodationAgentOutput
 from tools.external_api_tools import create_hotel_tools
 from tools.search_tool import search_tools

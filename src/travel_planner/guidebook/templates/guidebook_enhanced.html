@@ -131,9 +131,9 @@
                 </div>
             </div>
             <div class="flight-details">
-                <strong>{{ flight.airline|default('Airline') }}</strong> • 
-                {{ flight.flight_number|default('') }} • 
-                {{ flight.departure_time|default('') }} - {{ flight.arrival_time|default('') }} • 
+                <strong>{{ flight.airline|default('Airline') }}</strong> •
+                {{ flight.flight_number|default('') }} •
+                {{ flight.departure_time|default('') }} - {{ flight.arrival_time|default('') }} •
                 <span style="color: #667eea; font-weight: bold;">{{ flight.price|default('Price TBD') }}</span>
             </div>
         </div>
@@ -205,7 +205,7 @@
                     <div class="day-date">{{ day.date|default('') }}</div>
                 </div>
             </div>
-            
+
             {% if day.activities %}
             {% for activity in day.activities %}
             <div class="activity-card {% if activity.time_of_day|default('') == 'morning' %}morning{% elif activity.time_of_day|default('') == 'afternoon' %}afternoon{% elif activity.time_of_day|default('') == 'evening' %}evening{% endif %}">

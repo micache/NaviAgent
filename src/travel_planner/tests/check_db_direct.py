@@ -27,8 +27,8 @@ try:
     # Check if 'ai' schema exists
     cursor.execute(
         """
-        SELECT schema_name 
-        FROM information_schema.schemata 
+        SELECT schema_name
+        FROM information_schema.schemata
         WHERE schema_name = 'ai'
     """
     )
@@ -43,8 +43,8 @@ try:
     # List all tables in 'ai' schema
     cursor.execute(
         """
-        SELECT table_name 
-        FROM information_schema.tables 
+        SELECT table_name
+        FROM information_schema.tables
         WHERE table_schema = 'ai'
         ORDER BY table_name
     """

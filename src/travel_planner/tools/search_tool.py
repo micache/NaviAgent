@@ -5,7 +5,6 @@ Provides real-time search capabilities for agents with error handling
 
 import logging
 import time
-from typing import Any, Dict, List
 
 from agno.tools.duckduckgo import DuckDuckGoTools
 

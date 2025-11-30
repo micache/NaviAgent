@@ -79,7 +79,6 @@ class BaseFormatter(ABC):
         Returns:
             Path to the generated file.
         """
-        pass
 
     @abstractmethod
     def get_default_filename(self) -> str:
@@ -89,7 +88,6 @@ class BaseFormatter(ABC):
         Returns:
             Default filename string.
         """
-        pass
 
     def get_output_path(self, output_path: Optional[str] = None) -> Path:
         """

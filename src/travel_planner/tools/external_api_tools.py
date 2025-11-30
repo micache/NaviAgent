@@ -5,8 +5,7 @@ Provides real-time data from WeatherAPI.com and TripAdvisor via RapidAPI
 
 import logging
 import os
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 import requests
 from agno.tools import Toolkit

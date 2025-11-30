@@ -304,12 +304,12 @@ _guidebook_storage: dict = {}
     summary="Generate Travel Guidebook",
     description="""
     Generate a professional travel guidebook from a travel plan.
-    
+
     Supports multiple output formats:
     - **PDF**: Professional PDF with table of contents, page numbers, and print-ready layout
     - **HTML**: Responsive web page with interactive elements and print support
     - **Markdown**: Clean, readable markdown with GitHub-flavored markdown support
-    
+
     **Processing Time:** Typically 2-10 seconds depending on content size
     """,
     responses={

@@ -1,6 +1,5 @@
 """Simple database check - verify if Agno creates tables"""
 
-import asyncio
 import sys
 from pathlib import Path
 

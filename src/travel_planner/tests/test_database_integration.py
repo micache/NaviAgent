@@ -4,14 +4,12 @@ Quick test to demonstrate database integration with all agents
 
 import asyncio
 import sys
-from datetime import date
 from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from agents.orchestrator_agent import OrchestratorAgent
-from schemas import TravelRequest
 
 
 async def test_database_integration():

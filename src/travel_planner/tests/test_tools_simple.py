@@ -3,7 +3,6 @@ Simple Test - External API Tools Integration
 Tests tools directly like plain Python functions
 """
 
-import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path

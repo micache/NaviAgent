@@ -2,7 +2,6 @@
 Test DuckDuckGo với Agno trực tiếp theo documentation
 """
 
-import os
 from pathlib import Path
 
 from dotenv import load_dotenv

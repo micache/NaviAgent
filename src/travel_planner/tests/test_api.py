@@ -4,8 +4,6 @@ Run this after starting the API server
 """
 
 import json
-import uuid
-from datetime import datetime
 from pprint import pprint
 
 import requests
