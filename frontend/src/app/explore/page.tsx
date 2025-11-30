@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
+import sendIcon from "@/images/send.svg";
 import { motion, AnimatePresence } from "framer-motion";
 import "@/styles/explore.css";
 
 export default function ExplorePage() {
   const [mode, setMode] = useState<"gallery" | "weather">("gallery");
   const [showLeftPanel, setShowLeftPanel] = useState(false);
+
+  // Chat state
+  const [chatInput, setChatInput] = useState("");
+  const [messages, setMessages] = useState<string[]>([]);
 
   const destinations = [
     {
@@ -33,6 +39,14 @@ export default function ExplorePage() {
     setIndex((prev) => (prev === 0 ? destinations.length - 1 : prev - 1));
   const nextImg = () =>
     setIndex((prev) => (prev === destinations.length - 1 ? 0 : prev + 1));
+
+  // Gửi tin nhắn chat
+  const handleSendChat = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!chatInput.trim()) return;
+    setMessages((prev) => [...prev, chatInput.trim()]);
+    setChatInput("");
+  };
 
   return (
     <section className="explore-layout">
@@ -124,7 +138,7 @@ export default function ExplorePage() {
         </div>
       )}
 
-      {/* ========== RIGHT PANEL (CHATBOT PLACEHOLDER) ========== */}
+      {/* ========== RIGHT PANEL (CHATBOT + CHAT INPUT) ========== */}
       <div className={`explore-right ${!showLeftPanel ? "full-width" : ""}`}>
         <div className="chat-header">
           <h2>💬 Travel Assistant</h2>
@@ -137,7 +151,31 @@ export default function ExplorePage() {
             </button>
           )}
         </div>
-        <p>Chatbot coming soon...</p>
+        {/* Hiển thị tin nhắn chat */}
+        <div className="chat-messages">
+          {messages.length === 0 ? (
+            <p className="chat-placeholder">Hãy nhập câu hỏi về du lịch!</p>
+          ) : (
+            messages.map((msg, idx) => (
+              <div key={idx} className="chat-message">{msg}</div>
+            ))
+          )}
+        </div>
+        {/* Ô nhập chat và nút gửi */}
+        <div className="chat-input-container">
+          <form className="chat-input-row" onSubmit={handleSendChat}>
+            <input
+              type="text"
+              className="chat-input"
+              placeholder="Nhập tin nhắn..."
+              value={chatInput}
+              onChange={e => setChatInput(e.target.value)}
+            />
+            <button type="submit" className="chat-send-btn" title="Gửi">
+              <Image src={sendIcon} alt="Send" width={24} height={24} />
+            </button>
+          </form>
+        </div>
       </div>
     </section>
   );
