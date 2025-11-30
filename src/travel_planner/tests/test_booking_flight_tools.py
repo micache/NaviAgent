@@ -1,18 +1,21 @@
 """
 Test Booking.com Flight Tools integration
 """
-import sys
+
 import os
+import sys
+
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
 # Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from datetime import datetime, timedelta
 
 from tools.external_api_tools import create_flight_tools
-from datetime import datetime, timedelta
 
 print("=" * 80)
 print("TESTING BOOKING.COM FLIGHT TOOLS")
@@ -42,7 +45,7 @@ result = flight_tools.search_flights(
     destination="Ho Chi Minh",
     departure_date=departure_date,
     num_adults=1,
-    max_results=5
+    max_results=5,
 )
 print(result)
 
@@ -55,7 +58,7 @@ result = flight_tools.search_flights(
     departure_date=departure_date,
     num_adults=2,
     cabin_class="ECONOMY",
-    max_results=3
+    max_results=3,
 )
 print(result)
 

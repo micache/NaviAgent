@@ -1,6 +1,8 @@
 """Direct database check using psycopg2"""
+
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 # Load environment
@@ -19,33 +21,37 @@ try:
     # Connect to database
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
-    
+
     print(f"\n✅ Connected to database")
-    
+
     # Check if 'ai' schema exists
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT schema_name 
         FROM information_schema.schemata 
         WHERE schema_name = 'ai'
-    """)
+    """
+    )
     schema_exists = cursor.fetchone()
-    
+
     if schema_exists:
         print(f"✅ Schema 'ai' exists")
     else:
         print(f"❌ Schema 'ai' NOT FOUND")
         print(f"   -> Agno has not created the schema yet")
-    
+
     # List all tables in 'ai' schema
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT table_name 
         FROM information_schema.tables 
         WHERE table_schema = 'ai'
         ORDER BY table_name
-    """)
-    
+    """
+    )
+
     tables = cursor.fetchall()
-    
+
     if tables:
         print(f"\n📊 Found {len(tables)} tables in 'ai' schema:")
         for table in tables:
@@ -58,26 +64,27 @@ try:
         print(f"\n❌ NO TABLES in 'ai' schema")
         print(f"   -> Agno framework has NOT created any tables")
         print(f"   -> This means database integration is not working")
-    
+
     # Check expected Agno tables
-    expected_tables = ['agent_sessions', 'agent_runs', 'user_memories']
+    expected_tables = ["agent_sessions", "agent_runs", "user_memories"]
     print(f"\n🔍 Checking for expected Agno tables:")
-    
+
     table_names = [t[0] for t in tables] if tables else []
-    
+
     for expected in expected_tables:
         if expected in table_names:
             print(f"   ✅ {expected} - EXISTS")
         else:
             print(f"   ❌ {expected} - NOT FOUND")
             print(f"      → Agno should auto-create this when agent runs")
-    
+
     cursor.close()
     conn.close()
-    
+
 except Exception as e:
     print(f"\n❌ Error: {e}")
     import traceback
+
     traceback.print_exc()
 
 print("\n" + "=" * 80)

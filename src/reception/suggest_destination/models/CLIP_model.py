@@ -2,9 +2,10 @@ import torch
 import torch.nn as nn
 from transformers import AutoModel
 
+
 class TextTextCLIPModel(nn.Module):
     """Text-Text Contrastive Learning Model"""
-    
+
     def __init__(self, model_name: str = "bert-base-multilingual-cased", proj_dim: int = 256):
         super().__init__()
         self.encoder = AutoModel.from_pretrained(model_name)

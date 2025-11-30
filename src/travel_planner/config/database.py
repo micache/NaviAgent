@@ -4,11 +4,11 @@ Handles agent sessions, chat history, and user memories
 """
 
 import os
+from pathlib import Path
 from typing import Optional
 
 from agno.db.postgres import PostgresDb
 from dotenv import load_dotenv
-from pathlib import Path
 
 # Load environment variables
 env_path = Path(__file__).parent.parent / ".env"
