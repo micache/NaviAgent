@@ -26,7 +26,7 @@ class TextDestinationAgent(Agent):
         prompt = f"""
         Based on the following description, suggest a travel destination:
         "{description}"
-        
+
         Only suggest well-known travel destinations in Vietnam and East/Southeast Asia.
         Provide the suggestion in JSON format: {{ 'destination': str, 'reason': str }}
         """
@@ -48,7 +48,7 @@ class TextDestinationAgent(Agent):
             k=config.search.top_k,
             group_by_destination=config.search.group_by_destination,
         )
-        print("Retrieved Results:", results)
+        # print("Retrieved Results:", results)
 
         # run LLM with retrieved results
         results_text = str(results)

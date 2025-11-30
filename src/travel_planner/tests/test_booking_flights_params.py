@@ -2,7 +2,6 @@
 Test Booking.com searchFlights with different parameters
 """
 
-import json
 from datetime import datetime, timedelta
 
 import requests

@@ -75,7 +75,7 @@ class GoogleVisionImagesAgent(Agent):
             return "No landmarks detected."
 
         landmark = landmarks[0]
-        lat_lng = landmark.locations[0].lat_lng
+        landmark.locations[0].lat_lng
 
         prompt = f"Provide a brief description of the landmark: {landmark.description}"
         response = self.run(input=prompt, stream=False)

@@ -6,8 +6,7 @@ print-friendly media queries, and interactive elements.
 """
 
 import logging
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 
@@ -142,7 +141,7 @@ class HTMLFormatter(BaseFormatter):
                 content.style.display = content.style.display === 'none' ? 'block' : 'none';
             }});
         }});
-        
+
         // Print button
         document.getElementById('printBtn')?.addEventListener('click', () => window.print());
     </script>
@@ -488,26 +487,26 @@ th {
     body {
         background: white;
     }
-    
+
     .guidebook {
         max-width: none;
         padding: 0;
     }
-    
+
     .cover-page {
         page-break-after: always;
     }
-    
+
     .section {
         page-break-inside: avoid;
         box-shadow: none;
         border: 1px solid #ddd;
     }
-    
+
     .actions, .btn {
         display: none;
     }
-    
+
     .section-header::after {
         display: none;
     }
@@ -518,24 +517,24 @@ th {
     .cover-page {
         padding: 40px 20px;
     }
-    
+
     .cover-page h1 {
         font-size: 1.8em;
     }
-    
+
     .trip-info {
         grid-template-columns: repeat(2, 1fr);
     }
-    
+
     .activity {
         flex-direction: column;
         gap: 10px;
     }
-    
+
     .activity-time {
         min-width: auto;
     }
-    
+
     table {
         display: block;
         overflow-x: auto;
@@ -568,7 +567,7 @@ th {
         <div class="cover-page">
             <h1>🗺️ {labels['title']}</h1>
             <div class="destination">{sanitize_text(self.destination)}</div>
-            
+
             <div class="trip-info">
                 <div class="trip-info-item">
                     <div class="label">{labels['duration']}</div>

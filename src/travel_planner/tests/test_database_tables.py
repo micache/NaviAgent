@@ -3,9 +3,7 @@ Test to verify database tables are created by Agno and check data persistence
 """
 
 import asyncio
-import os
 import sys
-from datetime import date
 from pathlib import Path
 
 # Add parent directory to path
@@ -13,7 +11,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from agents.orchestrator_agent import TravelOrchestrator
 from config.database import get_db
-from schemas.request import TravelRequest
 
 
 async def check_database_tables():

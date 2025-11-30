@@ -1,9 +1,10 @@
 """FastAPI application for NaviAgent Receptionist service."""
 
+import uuid
 from typing import Any, Dict, Optional
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -13,7 +14,7 @@ from reception.receptionist_agent import ReceptionistAgent
 app = FastAPI(
     title="NaviAgent Receptionist API",
     description="API for travel planning receptionist agent",
-    version="1.0.0",
+    version="2.0.0",
 )
 
 # Add CORS middleware
@@ -25,23 +26,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Single agent instance
-agent = ReceptionistAgent()
+
+class StartChatRequest(BaseModel):
+    """Request model for starting a new chat session."""
+
+    user_id: str
+
+
+class StartChatResponse(BaseModel):
+    """Response model for starting a new chat session."""
+
+    session_id: str
+    message: str
 
 
 class ChatRequest(BaseModel):
     """Request model for chat messages."""
 
+    session_id: str
     message: str
-    image_url: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
     """Response model for chat messages."""
 
-    response: str
-    state: str
+    message: str
     travel_data: Dict[str, Any]
+
+
+class SessionInfo(BaseModel):
+    """Session information model."""
+
+    session_id: str
+    user_id: str
+    created_at: Optional[str] = None
 
 
 @app.get("/")
@@ -49,53 +67,72 @@ async def root():
     """Root endpoint with API information."""
     return {
         "name": "NaviAgent Receptionist API",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "endpoints": {
-            "POST /chat": "Send a message to the agent",
-            "POST /reset": "Reset the conversation",
-            "GET /status": "Get current state and travel data",
+            "POST /start_chat": "Start a new chat session",
+            "POST /chat": "Send a message in an existing session",
+            "GET /sessions/{user_id}": "Get all sessions for a user",
+            "GET /sessions/{session_id}/messages": "Get chat history for a session",
         },
     }
 
 
-@app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
-    """Send a message to the agent and get a response.
+@app.post("/start_chat", response_model=StartChatResponse)
+async def start_chat(request: StartChatRequest):
+    """Start a new chat session.
 
     Args:
-        request: Chat request with message and optional image_url.
+        request: Request with user_id.
 
     Returns:
-        Agent's response with state and travel data.
+        New session_id and greeting message.
     """
-    response = agent.process_message(request.message, request.image_url)
+    try:
+        # Generate new session_id
+        session_id = str(uuid.uuid4())
 
-    return ChatResponse(
-        response=response, state=agent.state.value, travel_data=agent.get_travel_data()
-    )
+        # Create agent with storage
+        agent = ReceptionistAgent(
+            user_id=request.user_id,
+            session_id=session_id,
+        )
+
+        # Get greeting
+        greeting = agent.greet_customer()
+
+        return StartChatResponse(
+            session_id=session_id,
+            message=greeting,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/reset")
-async def reset_conversation():
-    """Reset the conversation to start over.
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """Send a message in an existing session.
+
+    Args:
+        request: Chat request with session_id and message.
 
     Returns:
-        Greeting message and initial state.
+        Agent's response and current travel data.
     """
-    agent.reset()
-    greeting = agent.greet_customer()
+    try:
+        # Create agent with existing session
+        agent = ReceptionistAgent(
+            session_id=request.session_id,
+        )
 
-    return {"message": greeting, "state": agent.state.value}
+        # Process message
+        response = agent.run(request.message)
 
-
-@app.get("/status")
-async def get_status():
-    """Get current conversation status and travel data.
-
-    Returns:
-        Current state and collected travel data.
-    """
-    return {"state": agent.state.value, "travel_data": agent.get_travel_data()}
+        return ChatResponse(
+            message=response.content,
+            travel_data=agent.get_travel_data(),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

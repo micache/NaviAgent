@@ -4,12 +4,10 @@ Demonstrates how to use PostgreSQL database for chat history and user memories
 """
 
 import asyncio
-from datetime import date
 
 from agno.agent import Agent
 from config.database import get_db
 from config.model_settings import model_settings
-from rich.pretty import pprint
 
 
 async def demo_basic_session():

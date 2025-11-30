@@ -5,7 +5,7 @@ Kiểm tra xem các agents có gọi đúng API tools không
 
 import asyncio
 import sys
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -17,8 +17,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
-from agents.accommodation_agent import create_accommodation_agent, run_accommodation_agent
-from agents.logistics_agent import create_logistics_agent, run_logistics_agent
+from agents.accommodation_agent import create_accommodation_agent
+from agents.logistics_agent import create_logistics_agent
 
 # Import agents
 from agents.weather_agent import create_weather_agent, run_weather_agent

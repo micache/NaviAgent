@@ -3,7 +3,6 @@ Test External APIs - WeatherAPI.com and TripAdvisor via RapidAPI
 Run this to verify API connections and data retrieval
 """
 
-import json
 import os
 import sys
 from datetime import datetime, timedelta
@@ -398,7 +397,9 @@ def test_tripadvisor_flights():
                             print(f"\n   {i}. Flight Option:")
                             print(f"      🛫 Departure: {leg.get('departureDateTime', 'N/A')}")
                             print(f"      🛬 Arrival: {leg.get('arrivalDateTime', 'N/A')}")
-                            print(f"      ⏱️  Duration: {leg.get('durationMinutes', 'N/A')} minutes")
+                            print(
+                                f"      ⏱️  Duration: {leg.get('durationMinutes', 'N/A')} minutes"
+                            )
                             print(
                                 f"      ✈️  Airline: {leg.get('marketingCarrier', {}).get('displayName', 'N/A')}"
                             )

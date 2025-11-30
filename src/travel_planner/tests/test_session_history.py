@@ -24,7 +24,7 @@ async def test_session_continuity():
     print("=" * 80)
 
     # Get database instance
-    db = get_db()
+    get_db()
     print("\n✓ Database connection established")
 
     # Create orchestrator with user and session IDs

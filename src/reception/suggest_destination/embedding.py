@@ -15,7 +15,7 @@ class EmbeddingGenerator:
     def __init__(self, model_path: str = None, device: str = None):
         self.device = device or config.index.device
         if self.device == "cuda" and not torch.cuda.is_available():
-            print("CUDA not available, using CPU")
+            # print("CUDA not available, using CPU")
             self.device = "cpu"
 
         self.device = torch.device(self.device)
@@ -25,9 +25,10 @@ class EmbeddingGenerator:
             num_threads = getattr(config.index, "num_threads", 8)
             torch.set_num_threads(num_threads)
             torch.set_num_interop_threads(max(1, num_threads // 2))
-            print(f"Using device: CPU with {torch.get_num_threads()} threads")
+            # print(f"Using device: CPU with {torch.get_num_threads()} threads")
         else:
-            print(f"Using device: {self.device}")
+            pass
+            # print(f"Using device: {self.device}")
 
         # Load tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(config.model.model_name)
@@ -47,7 +48,7 @@ class EmbeddingGenerator:
         model.load_state_dict(state_dict)
         model.to(self.device)
 
-        print(f"✓ Model loaded from {model_path}")
+        # print(f"✓ Model loaded from {model_path}")
         return model
 
     def preprocess(self, text: str) -> Dict[str, torch.Tensor]:

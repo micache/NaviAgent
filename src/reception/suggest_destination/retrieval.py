@@ -24,18 +24,18 @@ class RetrievalSystem:
         if reset:
             try:
                 self.client.delete_collection(collection_name)
-                print(f"Deleted existing collection: {collection_name}")
+                # print(f"Deleted existing collection: {collection_name}")
             except:
                 pass
 
         try:
             self.collection = self.client.get_collection(collection_name)
-            print(f"✓ Loaded collection: {collection_name} ({self.collection.count()} docs)")
+            # print(f"✓ Loaded collection: {collection_name} ({self.collection.count()} docs)")
         except:
             self.collection = self.client.create_collection(
                 name=collection_name, metadata={"hnsw:space": "cosine"}
             )
-            print(f"✓ Created collection: {collection_name}")
+            # print(f"✓ Created collection: {collection_name}")
 
     def index_dataset(self, csv_path: str = None, batch_size: int = None):
         """Index dataset into ChromaDB
