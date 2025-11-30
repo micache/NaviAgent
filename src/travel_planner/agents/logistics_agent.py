@@ -53,7 +53,7 @@ def create_logistics_agent(
 
     # Create flight tools
     flight_tools = create_flight_tools()
-    
+
     return Agent(
         name="LogisticsAgent",
         model=model,

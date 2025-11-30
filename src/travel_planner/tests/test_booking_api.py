@@ -1,13 +1,15 @@
 """
 Test Booking.com Flight API from RapidAPI
 """
-import requests
+
 import json
 from datetime import datetime, timedelta
 
+import requests
+
 headers = {
     "x-rapidapi-key": "4474c9c793msh3cf72c8184daf74p137175jsn88cdd1fcb2d2",
-    "x-rapidapi-host": "booking-com15.p.rapidapi.com"
+    "x-rapidapi-host": "booking-com15.p.rapidapi.com",
 }
 
 print("=" * 80)
@@ -24,7 +26,7 @@ try:
     print(f"Status: {response.status_code}")
     data = response.json()
     print(f"Result: {json.dumps(data, indent=2)[:1000]}")
-    
+
     # Extract first destination ID if available
     if data.get("status") and data.get("data"):
         first_dest = data["data"][0]
@@ -42,7 +44,7 @@ try:
     print(f"Status: {response.status_code}")
     data = response.json()
     print(f"Result: {json.dumps(data, indent=2)[:1000]}")
-    
+
     if data.get("status") and data.get("data"):
         first_dest = data["data"][0]
         hcm_id = first_dest.get("id")
@@ -64,7 +66,7 @@ querystring = {
     "children": "0",
     "sort": "BEST",
     "cabinClass": "ECONOMY",
-    "currency_code": "USD"
+    "currency_code": "USD",
 }
 try:
     response = requests.get(url, headers=headers, params=querystring, timeout=15)

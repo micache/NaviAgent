@@ -270,9 +270,7 @@ class TestEnhancedPDFFormatter:
     def test_formatter_initialization(self):
         """Test that formatter initializes correctly."""
         try:
-            from travel_planner.guidebook.formatters.pdf_formatter import (
-                EnhancedPDFFormatter,
-            )
+            from travel_planner.guidebook.formatters.pdf_formatter import EnhancedPDFFormatter
 
             formatter = EnhancedPDFFormatter()
             assert formatter is not None
@@ -283,9 +281,7 @@ class TestEnhancedPDFFormatter:
     def test_generate_pdf(self, sample_travel_data):
         """Test PDF generation with sample data."""
         try:
-            from travel_planner.guidebook.formatters.pdf_formatter import (
-                EnhancedPDFFormatter,
-            )
+            from travel_planner.guidebook.formatters.pdf_formatter import EnhancedPDFFormatter
         except ImportError:
             pytest.skip("WeasyPrint not installed")
 
@@ -306,9 +302,7 @@ class TestEnhancedPDFFormatter:
     def test_generate_pdf_vietnamese_content(self, sample_travel_data):
         """Test that Vietnamese characters are properly rendered."""
         try:
-            from travel_planner.guidebook.formatters.pdf_formatter import (
-                EnhancedPDFFormatter,
-            )
+            from travel_planner.guidebook.formatters.pdf_formatter import EnhancedPDFFormatter
         except ImportError:
             pytest.skip("WeasyPrint not installed")
 
@@ -326,9 +320,7 @@ class TestEnhancedPDFFormatter:
     def test_generate_pdf_minimal_data(self):
         """Test PDF generation with minimal data."""
         try:
-            from travel_planner.guidebook.formatters.pdf_formatter import (
-                EnhancedPDFFormatter,
-            )
+            from travel_planner.guidebook.formatters.pdf_formatter import EnhancedPDFFormatter
         except ImportError:
             pytest.skip("WeasyPrint not installed")
 
@@ -352,9 +344,7 @@ class TestEnhancedPDFFormatter:
     def test_convenience_function(self, sample_travel_data):
         """Test the convenience function for PDF generation."""
         try:
-            from travel_planner.guidebook.formatters.pdf_formatter import (
-                generate_guidebook_pdf,
-            )
+            from travel_planner.guidebook.formatters.pdf_formatter import generate_guidebook_pdf
         except ImportError:
             pytest.skip("WeasyPrint not installed")
 

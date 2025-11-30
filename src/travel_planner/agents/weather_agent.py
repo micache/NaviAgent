@@ -54,7 +54,7 @@ def create_weather_agent(
 
     # Create weather tools
     weather_tools = create_weather_tools()
-    
+
     return Agent(
         name="WeatherAgent",
         model=model,
@@ -213,7 +213,9 @@ async def run_weather_agent(
         if response.content.seasonal_events:
             print(f"[WeatherAgent] ✓ Found {len(response.content.seasonal_events)} seasonal events")
         if response.content.best_activities:
-            print(f"[WeatherAgent] ✓ Best activities: {len(response.content.best_activities)} suggestions")
+            print(
+                f"[WeatherAgent] ✓ Best activities: {len(response.content.best_activities)} suggestions"
+            )
         return response.content
     else:
         print(f"[WeatherAgent] ⚠ Unexpected response type: {type(response.content)}")

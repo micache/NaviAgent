@@ -54,7 +54,7 @@ def create_accommodation_agent(
 
     # Create hotel tools
     hotel_tools = create_hotel_tools()
-    
+
     return Agent(
         name="AccommodationAgent",
         model=model,

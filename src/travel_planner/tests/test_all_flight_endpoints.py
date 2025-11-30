@@ -1,13 +1,15 @@
 """
 Test all TripAdvisor Flight API endpoints to find which ones work
 """
-import requests
+
 import json
 from datetime import datetime, timedelta
 
+import requests
+
 headers = {
     "x-rapidapi-key": "4474c9c793msh3cf72c8184daf74p137175jsn88cdd1fcb2d2",
-    "x-rapidapi-host": "tripadvisor16.p.rapidapi.com"
+    "x-rapidapi-host": "tripadvisor16.p.rapidapi.com",
 }
 
 print("=" * 80)
@@ -35,7 +37,7 @@ querystring = {
     "sourceAirportCode": "BOM",
     "destinationAirportCode": "DEL",
     "itineraryType": "ONE_WAY",
-    "classOfService": "ECONOMY"
+    "classOfService": "ECONOMY",
 }
 try:
     response = requests.get(url, headers=headers, params=querystring, timeout=10)
@@ -55,7 +57,7 @@ querystring = {
     "itineraryType": "ONE_WAY",
     "classOfService": "ECONOMY",
     "numAdults": "1",
-    "currencyCode": "USD"
+    "currencyCode": "USD",
 }
 try:
     response = requests.get(url, headers=headers, params=querystring, timeout=10)
@@ -76,7 +78,7 @@ querystring = {
     "itineraryType": "ONE_WAY",
     "classOfService": "ECONOMY",
     "numAdults": "1",
-    "currencyCode": "USD"
+    "currencyCode": "USD",
 }
 try:
     response = requests.get(url, headers=headers, params=querystring, timeout=10)

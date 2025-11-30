@@ -1,8 +1,9 @@
 from enum import Enum
 
+
 class ConversationState(Enum):
     """Enum to track the current state of the conversation."""
-    
+
     GREETING = "greeting"
     ASK_DESTINATION = "ask_destination"
     SUGGEST_DESTINATION = "suggest_destination"
