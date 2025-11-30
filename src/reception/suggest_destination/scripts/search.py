@@ -1,8 +1,8 @@
 # scripts/search.py
 
 import argparse
-from retrieval import RetrievalSystem
-from config.config import config
+from reception.suggest_destination.retrieval import RetrievalSystem
+from reception.suggest_destination.config.config import config
 
 
 def main():

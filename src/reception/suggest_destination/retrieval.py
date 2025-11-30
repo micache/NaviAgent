@@ -3,8 +3,8 @@ import pandas as pd
 from typing import List, Dict
 from tqdm import tqdm
 
-from embedding import EmbeddingGenerator
-from config.config import config
+from reception.suggest_destination.embedding import EmbeddingGenerator
+from reception.suggest_destination.config.config import config
 
 
 class RetrievalSystem:

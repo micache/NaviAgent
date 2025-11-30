@@ -4,8 +4,8 @@ from typing import Dict, List
 from transformers import AutoTokenizer
 from safetensors.torch import load_file
 
-from models.CLIP_model import TextTextCLIPModel
-from config.config import config
+from reception.suggest_destination.models.CLIP_model import TextTextCLIPModel
+from reception.suggest_destination.config.config import config
 
 
 class EmbeddingGenerator:

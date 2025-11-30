@@ -35,7 +35,8 @@ class SearchConfig:
     """Search configuration"""
     top_k: int = 5
     collection_name: str = "destinations"
-
+    group_by_destination: bool = True
+    aggregate_results: bool = False
 
 class Config:
     """Main config class"""
