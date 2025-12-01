@@ -18,9 +18,9 @@ env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path, override=True)
 api_key = os.getenv("OPENAI_API_KEY")
 model = os.getenv("OPENAI_MODEL")
-supabase_url = os.getenv("DATABASE_URL")
+supabase_uri = os.getenv("DATABASE_URL")
 
-db = PostgresDb(db_url=supabase_url)
+db = PostgresDb(db_url=supabase_uri)
 
 
 class ReceptionistAgent(Agent):
@@ -39,7 +39,6 @@ class ReceptionistAgent(Agent):
         Args:
             user_id: User ID for this conversation
             session_id: Session ID for continuing conversations
-            storage: Storage for persisting chat history
         """
         # Travel data storage
         self.travel_data: Dict[str, Any] = {
@@ -78,7 +77,10 @@ class ReceptionistAgent(Agent):
             "- If customer provides multiple info at once → save ALL using respective tools",
             "- If customer changes information → update and confirm",
             "- ALWAYS ask for customer_notes (item 8) after collecting travel_style",
-            "- After collecting all info including customer_notes → summarize and ask for confirmation",
+            "- After collecting all info → call get_travel_summary() and ask for confirmation",
+            "- When customer confirms (says 'ok', 'yes', 'đúng', 'xác nhận', 'có') → IMMEDIATELY call export_travel_data()",
+            "- DO NOT ask for confirmation again after customer already confirmed",
+            "- DO NOT repeat summary after customer confirms",
             "- Always respond in Vietnamese, friendly, natural tone",
             "- DON'T include validation rules in your questions (like 'must be > 0', 'must be future date')",
             "- DON'T include English translations in your questions (like 'self-guided hoặc tour')",
@@ -95,9 +97,21 @@ class ReceptionistAgent(Agent):
             "- ALWAYS use save_budget() IMMEDIATELY when customer mentions budget",
             "- ALWAYS use save_style() IMMEDIATELY when customer mentions travel style",
             "- ALWAYS use save_notes() when customer mentions special requests (optional)",
-            "- ALWAYS use get_travel_summary() to view collected information",
-            "- ALWAYS use export_travel_data() when customer confirms → this displays JSON and ENDS conversation",
-            "- After calling export_travel_data(), the conversation is COMPLETE - don't ask anything more",
+            "- ALWAYS use get_travel_summary() to show summary ONCE when all info collected",
+            "",
+            "⚠️ CRITICAL - MANDATORY EXPORT FLOW ⚠️",
+            "When customer says ANY confirmation word (ok/có/đúng/xác nhận/yes/vâng/ừ/oke):",
+            "1. STOP what you are doing",
+            "2. IMMEDIATELY call export_travel_data() tool",
+            "3. DO NOT write ANY response text before calling the tool",
+            "4. The tool will return the complete message with JSON",
+            "5. Return that message AS-IS to customer",
+            "",
+            "FORBIDDEN ACTIONS after confirmation:",
+            "- ❌ DO NOT say 'Cảm ơn' or goodbye BEFORE calling export_travel_data()",
+            "- ❌ DO NOT ask any questions",
+            "- ❌ DO NOT write your own response",
+            "- ✅ ONLY call export_travel_data() and return its result",
         ]
 
         # Create bound tools that close over self
@@ -155,7 +169,7 @@ class ReceptionistAgent(Agent):
             session_id=session_id,
             db=db,
             add_history_to_context=True,
-            num_history_runs=5,
+            num_history_runs=15,
             read_chat_history=True,
             instructions=instructions,
             tools=[
@@ -543,12 +557,12 @@ class ReceptionistAgent(Agent):
         if missing:
             return f"❌ Không thể hoàn tất vì còn thiếu thông tin: {', '.join(missing)}"
 
-        # Export as formatted JSON
+        # Export as formatted JSON (no markdown wrapper)
         json_output = json.dumps(self.travel_data, ensure_ascii=False, indent=2)
 
         return (
-            f"🎉 Cảm ơn bạn! Đây là thông tin chuyến đi của bạn:\n\n"
-            f"```json\n{json_output}\n```\n\n"
+            f"🎉 Cảm ơn bạn! Thông tin chuyến đi của bạn đã được lưu lại.\n\n"
+            # f"{json_output}\n\n"
             f"Chúc bạn có một chuyến đi tuyệt vời! 🌏✈️"
         )
 
