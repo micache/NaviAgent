@@ -194,7 +194,7 @@ async def chat(request: ChatRequest):
         # Update session timestamp
         update_session_timestamp(request.session_id)
 
-        # Check if conversation is complete (export was called)
+        # Check if conversation is complete
         travel_data = agent.get_travel_data()
         is_complete = False
 
@@ -209,20 +209,31 @@ async def chat(request: ChatRequest):
             "travel_style",
         ]
         if all(travel_data.get(field) is not None for field in required_fields):
-            # Check if customer confirmed (message contains confirmation keywords)
-            confirmation_keywords = [
-                "ok",
-                "có",
-                "đúng",
-                "xác nhận",
-                "yes",
-                "vâng",
-                "ừ",
-                "uh",
-                "oke",
-            ]
-            if any(keyword in request.message.lower() for keyword in confirmation_keywords):
-                is_complete = True
+            # Use LLM to detect if customer confirmed (handles nuanced responses)
+            confirmation_prompt = (
+                f"Phân tích câu trả lời của khách hàng: '{request.message}'\n\n"
+                f"Context: Nhân viên vừa hỏi 'Bạn có xác nhận thông tin này không?'\n\n"
+                f"Hãy phân tích xem khách hàng có đang XÁC NHẬN (agree/confirm) hay KHÔNG XÁC NHẬN (disagree/reject)?\n\n"
+                f"Ví dụ:\n"
+                f"- 'ok' → XÁC NHẬN\n"
+                f"- 'đúng rồi' → XÁC NHẬN\n"
+                f"- 'chưa đúng' → KHÔNG XÁC NHẬN\n"
+                f"- 'sai rồi' → KHÔNG XÁC NHẬN\n"
+                f"- 'có' (trong ngữ cảnh này) → XÁC NHẬN\n"
+                f"- 'không' → KHÔNG XÁC NHẬN\n\n"
+                f"Trả về CHỈ MỘT từ: 'YES' hoặc 'NO'"
+            )
+
+            try:
+                check_response = agent.run(confirmation_prompt)
+                is_confirmed = "YES" in check_response.content.upper()
+                is_complete = is_confirmed
+            except Exception:
+                # Fallback to simple keyword check if LLM fails
+                positive_keywords = ["ok", "có", "đúng", "xác nhận", "yes", "vâng", "ừ", "oke"]
+                is_complete = any(
+                    keyword in request.message.lower() for keyword in positive_keywords
+                )
 
         return ChatResponse(
             message=response.content,

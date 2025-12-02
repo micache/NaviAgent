@@ -379,70 +379,45 @@ class ReceptionistAgent(Agent):
         Returns:
             Confirmation message
         """
-        import re
 
-        # Extract budget amount in VND
-        budget_vnd = None
-        try:
-            # Look for numbers
-            numbers = re.findall(r"(\d+(?:[.,]\d+)?)", budget.lower())
-            if numbers:
-                amount = float(numbers[0].replace(",", "."))
+        # Use LLM to validate budget reasonableness if we have destination info
+        if self.travel_data.get("destination"):
+            validation_prompt = (
+                f"Đánh giá ngân sách du lịch:\n"
+                f"- Ngân sách: {budget}\n"
+                f"- Điểm đến: {self.travel_data['destination']}\n"
+                f"- Số người: {self.travel_data.get('num_travelers', 'chưa rõ')}\n"
+                f"- Thời gian: {self.travel_data.get('trip_duration', 'chưa rõ')}\n\n"
+                f"Hãy đánh giá ngân sách này có hợp lý không. Nếu quá thấp, đưa ra cảnh báo và gợi ý ngân sách tối thiểu.\n"
+                f"Trả về CHỈ MỘT trong hai định dạng:\n"
+                f"1. Nếu OK: '✓ Đã lưu ngân sách: [budget]'\n"
+                f"2. Nếu thấp: '⚠️ Ngân sách [budget] có vẻ thấp cho chuyến đi... Bạn có chắc chắn muốn tiếp tục với ngân sách này không?'\n\n"
+                f"Lưu ý: Chỉ trả về text tiếng Việt, KHÔNG giải thích thêm."
+            )
 
-                # Convert to VND if needed
-                if "triệu" in budget.lower() or "million" in budget.lower():
-                    budget_vnd = amount * 1_000_000
-                elif "tỷ" in budget.lower() or "billion" in budget.lower():
-                    budget_vnd = amount * 1_000_000_000
-                elif (
-                    "nghìn" in budget.lower()
-                    or "thousand" in budget.lower()
-                    or "k" in budget.lower()
-                ):
-                    budget_vnd = amount * 1_000
-                elif "usd" in budget.lower() or "$" in budget:
-                    budget_vnd = amount * 25_000  # Approximate rate
+            try:
+                response = self.run(validation_prompt)
+                validation_result = response.content.strip()
+
+                # If validation passes (contains ✓), save and return
+                if "✓" in validation_result:
+                    self.travel_data["budget"] = budget
+                    return validation_result
+                # If warning (contains ⚠️), return warning WITHOUT saving
+                elif "⚠️" in validation_result:
+                    return validation_result
                 else:
-                    budget_vnd = amount
-        except:
-            pass
-
-        # Validate budget reasonableness
-        if budget_vnd and self.travel_data.get("destination"):
-            destination = self.travel_data["destination"].lower()
-            num_travelers = self.travel_data.get("num_travelers", 1)
-            trip_duration = self.travel_data.get("trip_duration", "3")
-
-            # Extract days
-            import re
-
-            duration_match = re.search(r"(\d+)", str(trip_duration))
-            days = int(duration_match.group(1)) if duration_match else 3
-
-            # Rough estimate: minimum budget per person per day
-            international_destinations = [
-                "paris",
-                "london",
-                "tokyo",
-                "new york",
-                "singapore",
-                "sydney",
-                "dubai",
-            ]
-            is_international = any(dest in destination for dest in international_destinations)
-
-            min_per_day = 2_000_000 if is_international else 500_000  # VND per person per day
-            min_budget = min_per_day * num_travelers * days
-
-            if budget_vnd < min_budget * 0.5:  # Allow some flexibility
-                return (
-                    f"⚠️ Ngân sách {budget} có vẻ thấp cho chuyến đi {days} ngày đến {self.travel_data['destination']} "
-                    f"với {num_travelers} người. Ngân sách tối thiểu gợi ý: {min_budget:,.0f} VND. "
-                    f"Bạn có chắc chắn muốn tiếp tục với ngân sách này không?"
-                )
-
-        self.travel_data["budget"] = budget
-        return f"✓ Đã lưu ngân sách: {budget}"
+                    # Fallback if LLM returns unexpected format
+                    self.travel_data["budget"] = budget
+                    return f"✓ Đã lưu ngân sách: {budget}"
+            except Exception:
+                # If LLM fails, just save without validation
+                self.travel_data["budget"] = budget
+                return f"✓ Đã lưu ngân sách: {budget}"
+        else:
+            # No destination yet, just save
+            self.travel_data["budget"] = budget
+            return f"✓ Đã lưu ngân sách: {budget}"
 
     def _save_style(self, travel_style: str) -> str:
         """Save travel style preference.

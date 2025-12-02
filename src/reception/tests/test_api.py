@@ -19,7 +19,7 @@ def test_root_endpoint():
 
 def test_start_chat():
     """Test starting a new chat session."""
-    response = client.post("/start_chat", json={"user_id": "6986c9c3-947d-4978-88c2-0a2797fdc86c"})
+    response = client.post("/start_chat", json={"user_id": "cf6929e0-3c9c-40e5-a63d-2b1375775887"})
 
     if response.status_code != 200:
         print(f"❌ Error: {response.status_code}")
@@ -41,7 +41,7 @@ def test_chat_with_session():
     """Test sending messages in a session."""
     # Start a new session
     start_response = client.post(
-        "/start_chat", json={"user_id": "6986c9c3-947d-4978-88c2-0a2797fdc86c"}
+        "/start_chat", json={"user_id": "cf6929e0-3c9c-40e5-a63d-2b1375775887"}
     )
 
     if start_response.status_code != 200:
@@ -87,7 +87,7 @@ def test_full_conversation_flow():
     """Test a complete conversation flow."""
     # Start session
     start_response = client.post(
-        "/start_chat", json={"user_id": "6986c9c3-947d-4978-88c2-0a2797fdc86c"}
+        "/start_chat", json={"user_id": "cf6929e0-3c9c-40e5-a63d-2b1375775887"}
     )
     session_id = start_response.json()["session_id"]
 
