@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import passwordShow from "@/images/password-show.svg";
 import passwordHide from "@/images/password-hide.svg";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // API URLs for different backend services
 const USER_API_URL = process.env.NEXT_PUBLIC_USER_API_URL || "http://localhost:8000";
@@ -24,6 +25,7 @@ interface AuthUser {
 
 export default function Header() {
   const pathname = usePathname();
+  const { language, setLanguage, t } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -222,22 +224,30 @@ export default function Header() {
   return (
     <>
       <header className={headerClass}>
-        <div className="logo">🌍 AstrAgent</div>
+        <div className="logo">🌍 NaviAgent</div>
         <nav>
-          <Link href="/">Home</Link>
-          <Link href="/explore">Explore</Link>
-          <Link href="/visited">Visited</Link>
-          <Link href="/plan">Plan</Link>
+          <Link href="/" className={pathname === "/" ? "active" : ""}>{t("home")}</Link>
+          <Link href="/explore" className={pathname === "/explore" ? "active" : ""}>{t("explore")}</Link>
+          <Link href="/visited" className={pathname === "/visited" ? "active" : ""}>{t("visited")}</Link>
+          <Link href="/plan" className={pathname === "/plan" ? "active" : ""}>{t("plan")}</Link>
+          <button 
+            className="lang-toggle"
+            onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
+            title={language === "vi" ? "Switch to English" : "Chuyển sang Tiếng Việt"}
+          >
+            <span className={`lang-option ${language === "vi" ? "active" : ""}`}>VN</span>
+            <span className={`lang-option ${language === "en" ? "active" : ""}`}>EN</span>
+          </button>
           {user ? (
               <button className="sign-out-btn" onClick={handleLogout}>
-                Sign Out
+                {t("signOut")}
               </button>
           ) : (
             <button 
               className="sign-in-btn"
               onClick={() => setShowAuthModal(true)}
             >
-              Sign In
+              {t("signIn")}
             </button>
           )}
         </nav>
@@ -249,13 +259,13 @@ export default function Header() {
             <button className="close-modal" onClick={closeModal}>
               ×
             </button>
-            <h2>{isSignUp ? "Sign Up" : "Sign In"}</h2>
+            <h2>{isSignUp ? t("signUp") : t("signIn")}</h2>
             {errorMessage && (
               <div className="auth-error">{errorMessage}</div>
             )}
             <form onSubmit={handleAuthSubmit}>
               <div className="form-group">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email">{t("email")}</label>
                 <input
                   type="email"
                   id="email"
@@ -266,7 +276,7 @@ export default function Header() {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">{t("password")}</label>
                 <div className="password-input-wrapper">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -293,7 +303,7 @@ export default function Header() {
               </div>
               {isSignUp && (
                 <div className="form-group">
-                  <label htmlFor="confirmPassword">Confirm Password</label>
+                  <label htmlFor="confirmPassword">{t("confirmPassword")}</label>
                   <div className="password-input-wrapper">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
@@ -320,19 +330,19 @@ export default function Header() {
                 </div>
               )}
               <button type="submit" className="auth-submit-btn" disabled={isLoading}>
-                {isLoading ? "Loading..." : (isSignUp ? "Sign Up" : "Sign In")}
+                {isLoading ? "Loading..." : (isSignUp ? t("signUp") : t("signIn"))}
               </button>
             </form>
             <p className="auth-toggle">
               {isSignUp ? (
                 <>
-                  Already have an account?{" "}
-                  <span onClick={toggleAuthMode}>Sign In</span>
+                  {t("alreadyHaveAccount")}{" "}
+                  <span onClick={toggleAuthMode}>{t("signIn")}</span>
                 </>
               ) : (
                 <>
-                  Don't have an account?{" "}
-                  <span onClick={toggleAuthMode}>Sign Up</span>
+                  {t("dontHaveAccount")}{" "}
+                  <span onClick={toggleAuthMode}>{t("signUp")}</span>
                 </>
               )}
             </p>

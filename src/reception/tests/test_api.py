@@ -19,7 +19,11 @@ def test_root_endpoint():
 
 def test_start_chat():
     """Test starting a new chat session."""
-    response = client.post("/start_chat", json={"user_id": "test_user_123"})
+    response = client.post("/start_chat", json={"user_id": "cf6929e0-3c9c-40e5-a63d-2b1375775887"})
+
+    if response.status_code != 200:
+        print(f"❌ Error: {response.status_code}")
+        print(f"Response: {response.text}")
 
     assert response.status_code == 200
     data = response.json()
@@ -36,8 +40,21 @@ def test_start_chat():
 def test_chat_with_session():
     """Test sending messages in a session."""
     # Start a new session
-    start_response = client.post("/start_chat", json={"user_id": "test_user_456"})
-    session_id = start_response.json()["session_id"]
+    start_response = client.post(
+        "/start_chat", json={"user_id": "cf6929e0-3c9c-40e5-a63d-2b1375775887"}
+    )
+
+    if start_response.status_code != 200:
+        print(f"❌ Start chat error: {start_response.status_code}")
+        print(f"Response: {start_response.text}")
+
+    assert start_response.status_code == 200
+    data = start_response.json()
+
+    if "session_id" not in data:
+        print(f"❌ Missing session_id in response: {data}")
+
+    session_id = data["session_id"]
 
     # Answer yes to destination question
     response1 = client.post("/chat", json={"session_id": session_id, "message": "có"})
@@ -69,7 +86,9 @@ def test_chat_with_session():
 def test_full_conversation_flow():
     """Test a complete conversation flow."""
     # Start session
-    start_response = client.post("/start_chat", json={"user_id": "test_user_789"})
+    start_response = client.post(
+        "/start_chat", json={"user_id": "cf6929e0-3c9c-40e5-a63d-2b1375775887"}
+    )
     session_id = start_response.json()["session_id"]
 
     # Answer yes
@@ -92,19 +111,25 @@ def test_full_conversation_flow():
         assert response.status_code == 200
         data = response.json()
 
-        if req["expected_field"] != "confirmation":
-            continue
-
         # Check field is present (may be None for customer_notes)
         field = req["expected_field"]
         assert field in data["travel_data"], f"{field} should be in travel_data"
 
     # Final check - all fields should be filled
     print("\n✅ Confirming...")
-    final_response = client.post("/chat", json={"session_id": session_id, "message": "xác nhận"})
+    final_response = client.post("/chat", json={"session_id": session_id, "message": "ok"})
     data = final_response.json()
-    travel_data = data["travel_data"]
 
+    # Debug: check what we got
+    print(f"📝 Response message: {data['message'][:200]}...")
+    print(f"📊 Travel data: {data['travel_data']}")
+    print(f"🎯 Is complete: {data.get('is_complete', False)}")
+
+    # After confirmation, API should mark conversation as complete
+    assert data.get("is_complete") == True, "Conversation should be complete after confirmation"
+
+    # Travel data should have been saved throughout the conversation
+    travel_data = data["travel_data"]
     assert travel_data["destination"] is not None, f"Destination is None! Data: {travel_data}"
     assert (
         travel_data["departure_point"] is not None
@@ -115,6 +140,10 @@ def test_full_conversation_flow():
     assert travel_data["budget"] is not None, f"Budget is None! Data: {travel_data}"
     assert travel_data["travel_style"] is not None, f"Travel style is None! Data: {travel_data}"
     # customer_notes can be None
+
+    print(
+        f"✅ Travel data collected successfully: {travel_data['destination']} from {travel_data['departure_point']}"
+    )
 
 
 def test_invalid_session():

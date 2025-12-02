@@ -8,7 +8,7 @@ export default function HomePage() {
       {/* Hero section */}
       <section className="hero">
         <div className="hero-overlay">
-          <h1 className="hero-title">AstrAgent Travel</h1>
+          <h1 className="hero-title">NaviAgent Travel</h1>
           <p className="hero-subtitle">
             Plan smarter, travel further — Trợ lý du lịch thông minh của bạn.
           </p>

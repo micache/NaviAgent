@@ -8,7 +8,7 @@ auth.users (managed by Supabase Auth). We don't store passwords directly.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -43,8 +43,15 @@ class Trip(BaseModel):
     user_id: str
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
-    address: Optional[str] = None
+    address: Optional[Any] = None  # Can be dict or string
     status: Optional[str] = None
+
+
+class CreateTripRequest(BaseModel):
+    address: Any  # Can be dict {name, lat, lng} or string
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    status: Optional[str] = "visited"
 
 
 class ChatSession(BaseModel):
