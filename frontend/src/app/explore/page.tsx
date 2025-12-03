@@ -1,34 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import sendIcon from "@/images/send.svg";
 import { motion, AnimatePresence } from "framer-motion";
 import "@/styles/explore.css";
+import { useLanguage } from "@/contexts/LanguageContext";
+import ReactMarkdown from "react-markdown";
 
 export default function ExplorePage() {
+  const { t } = useLanguage();
   const [mode, setMode] = useState<"gallery" | "weather">("gallery");
-  const [showLeftPanel, setShowLeftPanel] = useState(false);
+  const [showLeftPanel, setShowLeftPanel] = useState(true);
 
   // Chat state
   const [chatInput, setChatInput] = useState("");
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState<Array<{role: string, content: string}>>([
+    { role: "assistant", content: t("describeDestination") }
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
 
   const destinations = [
     {
       name: "Hà Nội",
       image: "/images/hanoi.jpg",
-      description: "The heart of Vietnam with culture and history.",
+      description: t("hanoiDesc"),
     },
     {
       name: "Đà Nẵng",
       image: "/images/danang.jpg",
-      description: "Coastal city known for beaches and bridges.",
+      description: t("danangDesc"),
     },
     {
       name: "TP. HCM",
       image: "/images/hcmcity.jpg",
-      description: "Vibrant modern city full of energy and nightlife.",
+      description: t("hcmDesc"),
     },
   ];
 
@@ -41,11 +53,53 @@ export default function ExplorePage() {
     setIndex((prev) => (prev === destinations.length - 1 ? 0 : prev + 1));
 
   // Gửi tin nhắn chat
-  const handleSendChat = (e?: React.FormEvent) => {
+  const handleSendChat = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!chatInput.trim()) return;
-    setMessages((prev) => [...prev, chatInput.trim()]);
+    if (!chatInput.trim() || isLoading) return;
+
+    const userMessage = chatInput.trim();
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setChatInput("");
+    setIsLoading(true);
+
+    try {
+      const token = localStorage.getItem("user");
+      if (!token) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: "Please sign in to get destination suggestions." },
+        ]);
+        setIsLoading(false);
+        return;
+      }
+
+      const user = JSON.parse(token);
+      const response = await fetch("http://localhost:8000/destinations/suggest", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.access_token}`,
+        },
+        body: JSON.stringify({ description: userMessage }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get suggestion");
+      }
+
+      const data = await response.json();
+      // Clean up markdown: remove trailing spaces that create line breaks
+      const cleanedContent = data.reason.replace(/  +\n/g, '\n').trim();
+      setMessages((prev) => [...prev, { role: "assistant", content: cleanedContent }]);
+    } catch (error) {
+      console.error("Error:", error);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Sorry, there was an error getting suggestions. Please try again." },
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -59,19 +113,19 @@ export default function ExplorePage() {
                 className={mode === "gallery" ? "active" : ""}
                 onClick={() => setMode("gallery")}
               >
-                📸 Gallery
+                {t("gallery")}
               </button>
               <button
                 className={mode === "weather" ? "active" : ""}
                 onClick={() => setMode("weather")}
               >
-                🌤️ Weather
+                {t("weather")}
               </button>
             </div>
             <button 
               className="close-panel-btn"
               onClick={() => setShowLeftPanel(false)}
-              title="Close panel"
+              title={t("closePanel")}
             >
               ✕
             </button>
@@ -113,23 +167,23 @@ export default function ExplorePage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <h1 className="explore-title">Weather Overview ☁️</h1>
+              <h1 className="explore-title">{t("weatherOverview")}</h1>
               <p className="explore-subtext">
-                Check the latest weather updates for your favorite destinations.
+                {t("weatherSubtext")}
               </p>
 
               <div className="explore-grid">
                 <div className="explore-card">
                   <h2>Hà Nội</h2>
-                  <p>🌤 30°C | Clear sky</p>
+                  <p>🌤 30°C | {t("clearSky")}</p>
                 </div>
                 <div className="explore-card">
                   <h2>Đà Nẵng</h2>
-                  <p>☀️ 32°C | Sunny</p>
+                  <p>☀️ 32°C | {t("sunny")}</p>
                 </div>
                 <div className="explore-card">
                   <h2>TP. HCM</h2>
-                  <p>🌧 28°C | Rainy</p>
+                  <p>🌧 28°C | {t("rainy")}</p>
                 </div>
               </div>
             </motion.div>
@@ -139,9 +193,9 @@ export default function ExplorePage() {
       )}
 
       {/* ========== RIGHT PANEL (CHATBOT + CHAT INPUT) ========== */}
-      <div className={`explore-right ${!showLeftPanel ? "full-width" : ""}`}>
+      <div className={`explore-right ${!showLeftPanel ? "full-width" : ""}}`}>
         <div className="chat-header">
-          <h2>💬 Travel Assistant</h2>
+          <h2>{t("travelAssistantTitle")}</h2>
           {!showLeftPanel && (
             <button 
               className="show-panel-btn"
@@ -153,13 +207,25 @@ export default function ExplorePage() {
         </div>
         {/* Hiển thị tin nhắn chat */}
         <div className="chat-messages">
-          {messages.length === 0 ? (
-            <p className="chat-placeholder">Hãy nhập câu hỏi về du lịch!</p>
-          ) : (
-            messages.map((msg, idx) => (
-              <div key={idx} className="chat-message">{msg}</div>
-            ))
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`chat-message ${msg.role}`}>
+              <ReactMarkdown
+                components={{
+                  p: ({children}) => <span>{children}</span>,
+                  strong: ({children}) => <strong>{children}</strong>,
+                  br: () => <br />,
+                }}
+              >
+                {msg.content}
+              </ReactMarkdown>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="chat-message assistant">
+              <span className="loading-dots">...</span>
+            </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
         {/* Ô nhập chat và nút gửi */}
         <div className="chat-input-container">
@@ -167,11 +233,11 @@ export default function ExplorePage() {
             <input
               type="text"
               className="chat-input"
-              placeholder="Nhập tin nhắn..."
+              placeholder={t("chatPlaceholder")}
               value={chatInput}
               onChange={e => setChatInput(e.target.value)}
             />
-            <button type="submit" className="chat-send-btn" title="Gửi">
+            <button type="submit" className="chat-send-btn" title={t("send")}>
               <Image src={sendIcon} alt="Send" width={24} height={24} />
             </button>
           </form>

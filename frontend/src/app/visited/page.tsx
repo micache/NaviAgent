@@ -63,7 +63,7 @@ export default function VisitedPage() {
 
       const user = JSON.parse(userStr);
       const token = user.access_token;
-      
+
       if (!token) {
         console.log("No access token in user object");
         return;
@@ -74,9 +74,9 @@ export default function VisitedPage() {
       const res = await fetch("http://localhost:8000/trips/", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       console.log("Response status:", res.status);
-      
+
       if (res.ok) {
         const trips = await res.json();
         const converted = trips
@@ -108,20 +108,20 @@ export default function VisitedPage() {
   // Initialize 3D Globe
   useEffect(() => {
     if (!is3D) return;
-    
+
     let world: any = null;
-    
+
     (async () => {
       const Globe = (await import("globe.gl")).default;
       const container = globeRef.current;
       if (!container) return;
-      
+
       // Clear container first
       container.innerHTML = "";
-      
+
       // Show loading state
       container.style.opacity = '0';
-      
+
       world = new Globe(container)
         .globeImageUrl("//unpkg.com/three-globe/example/img/earth-day.jpg")
         .width(container.offsetWidth)
@@ -139,12 +139,12 @@ export default function VisitedPage() {
           el.style.display = 'block';
           // Sử dụng margin để căn chỉnh chính xác
           el.style.marginLeft = '-5px';  // Dịch phải (tăng giá trị)
-          el.style.marginTop = '-8px'; 
+          el.style.marginTop = '-8px';
           el.onclick = () => {
             setSelectedPlace(d as Place);
             setImgIndex(0);
           };
-          
+
           // Add tooltip
           const tooltip = document.createElement('div');
           tooltip.innerHTML = d.name;
@@ -161,14 +161,14 @@ export default function VisitedPage() {
           tooltip.style.marginLeft = '-50%';
           tooltip.style.left = '50%';
           tooltip.style.transform = 'translateX(-50%)';
-          
+
           el.onmouseenter = () => {
             tooltip.style.display = 'block';
           };
           el.onmouseleave = () => {
             tooltip.style.display = 'none';
           };
-          
+
           el.appendChild(tooltip);
           return el;
         })
@@ -194,7 +194,7 @@ export default function VisitedPage() {
 
       // Wait for borders to load and globe to render, then show
       await bordersPromise;
-      
+
       // Wait for globe to finish initial render
       await new Promise(resolve => {
         requestAnimationFrame(() => {
@@ -203,7 +203,7 @@ export default function VisitedPage() {
           });
         });
       });
-      
+
       // Now fade in
       container.style.transition = 'opacity 0.3s ease-in';
       container.style.opacity = '1';
@@ -236,7 +236,7 @@ export default function VisitedPage() {
 
         const container = mapRef.current;
         if (!container) return;
-        
+
         // Clean up existing map first
         if (leafletMapRef.current) {
           try {
@@ -246,12 +246,12 @@ export default function VisitedPage() {
             console.warn("Error removing existing map:", e);
           }
         }
-        
+
         // Remove Leaflet internal reference
         if ((container as any)._leaflet_id) {
           delete (container as any)._leaflet_id;
         }
-        
+
         // Create Leaflet map centered on Hanoi with zoom to see East Asia
         leafletMapRef.current = L.map(container, {
           center: [21.0285, 105.8542],
@@ -371,7 +371,7 @@ export default function VisitedPage() {
       // Add to database
       const userStr = localStorage.getItem("user");
       console.log("User data:", userStr);
-      
+
       if (!userStr) {
         setChatMessages((prev) => [
           ...prev,
@@ -383,7 +383,7 @@ export default function VisitedPage() {
 
       const user = JSON.parse(userStr);
       const token = user.access_token;
-      
+
       if (!token) {
         setChatMessages((prev) => [
           ...prev,
@@ -407,7 +407,7 @@ export default function VisitedPage() {
 
       if (res.ok) {
         const newTrip = await res.json();
-        
+
         // Add marker immediately without reloading
         const newPlace: Place = {
           id: newTrip.id,
@@ -415,13 +415,13 @@ export default function VisitedPage() {
           lat: latitude,
           lng: longitude,
         };
-        
+
         setPlaces((prev) => [...prev, newPlace]);
-        
+
         // Add marker to current map
         if (!is3D && leafletMapRef.current) {
           const L = (await import("leaflet")).default;
-          
+
           // Create pin icon
           const pinIcon = L.divIcon({
             html: '<div style="font-size: 32px; line-height: 1;">📍</div>',
@@ -430,7 +430,7 @@ export default function VisitedPage() {
             iconAnchor: [16, 32],
             popupAnchor: [0, -32],
           });
-          
+
           const marker = L.marker([latitude, longitude], {
             icon: pinIcon,
           }).addTo(leafletMapRef.current);
@@ -439,14 +439,14 @@ export default function VisitedPage() {
             setSelectedPlace(newPlace);
             setImgIndex(0);
           });
-          
+
           // Pan to new location
           leafletMapRef.current.setView([latitude, longitude], 8, {
             animate: true,
             duration: 1,
           });
         }
-        
+
         setChatMessages((prev) => [
           ...prev,
           { role: "bot", content: `✅ Tuyệt vời! Đã thêm "${display_name}" vào bản đồ của bạn! 📍` },

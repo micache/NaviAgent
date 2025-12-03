@@ -1,14 +1,17 @@
 "use client";
 import "@/styles/plan.css";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function PlanPage() {
+  const { t } = useLanguage();
+  
   const plans = [
-    { id: 1, place: "Phú Quốc", date: "2025-11-02", note: "3-day beach trip" },
+    { id: 1, place: "Phú Quốc", date: "2025-11-02", note: t("beachTrip") },
     {
       id: 2,
       place: "Sa Pa",
       date: "2026-01-10",
-      note: "Hiking and cold weather",
+      note: t("hikingCold"),
     },
   ];
 
@@ -16,17 +19,17 @@ export default function PlanPage() {
     <section className="plan-layout">
       {/* ===== LEFT: Travel Plans ===== */}
       <div className="plan-left">
-        <h1 className="plan-title">Travel Plans 📅</h1>
+        <h1 className="plan-title">{t("travelPlans")}</h1>
         <p className="plan-subtext">
-          Manage your upcoming trips and prepare your journey.
+          {t("managePlans")}
         </p>
 
         <table className="plan-table">
           <thead>
             <tr>
-              <th>Destination</th>
-              <th>Date</th>
-              <th>Notes</th>
+              <th>{t("destination")}</th>
+              <th>{t("date")}</th>
+              <th>{t("notes")}</th>
             </tr>
           </thead>
           <tbody>
@@ -43,21 +46,20 @@ export default function PlanPage() {
 
       {/* ===== RIGHT: Chatbot Assistant ===== */}
       <div className="plan-right">
-        <h2>💬 Trip Planner Assistant</h2>
+        <h2>{t("tripPlanner")}</h2>
         <p>
-          Ask our assistant to create a detailed itinerary, estimate budget, or
-          suggest destinations for your next adventure!
+          {t("tripPlannerDesc")}
         </p>
 
         <div className="chat-box">
           <div className="chat-message bot">
-            👋 Hi there! Need help planning your next trip?
+            {t("plannerGreeting")}
           </div>
-          <div className="chat-message user">Yes, recommend a 3-day trip!</div>
+          <div className="chat-message user">{t("plannerExample")}</div>
 
           <div className="chat-input">
-            <input type="text" placeholder="Type your question..." />
-            <button>Send</button>
+            <input type="text" placeholder={t("typeQuestion")} />
+            <button>{t("send")}</button>
           </div>
         </div>
       </div>

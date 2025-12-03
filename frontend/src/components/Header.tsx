@@ -39,15 +39,9 @@ export default function Header() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const loggedUser = localStorage.getItem("user");
-    if (loggedUser) {
-      try {
-        setUser(JSON.parse(loggedUser));
-      } catch {
-        localStorage.removeItem("user");
-      }
-    }
+    // Clear user session on page load - require login every time
+    localStorage.removeItem("user");
+    setUser(null);
   }, []);
 
   useEffect(() => {
@@ -129,7 +123,7 @@ export default function Header() {
         }
 
         const loginData = await loginResponse.json();
-        
+
         // Validate response has access_token
         if (!loginData.access_token) {
           throw new Error("Invalid server response: missing access token");
@@ -156,7 +150,7 @@ export default function Header() {
         }
 
         const data = await response.json();
-        
+
         // Validate response has access_token
         if (!data.access_token) {
           throw new Error("Invalid server response: missing access token");
@@ -204,7 +198,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     if (!user) return;
-    
+
     try {
       await fetch(`${USER_API_URL}/auth/logout`, {
         method: "POST",
@@ -216,7 +210,7 @@ export default function Header() {
     } catch {
       // Logout locally even if API call fails
     }
-    
+
     localStorage.removeItem("user");
     setUser(null);
   };
@@ -224,13 +218,21 @@ export default function Header() {
   return (
     <>
       <header className={headerClass}>
-        <div className="logo">🌍 NaviAgent</div>
+        <div className="logo">
+          <Image 
+            src="/images/logo.png" 
+            alt="NaviAgent" 
+            width={120} 
+            height={120}
+            style={{ width: 'auto', height: '40px' }}
+          />
+        </div>
         <nav>
           <Link href="/" className={pathname === "/" ? "active" : ""}>{t("home")}</Link>
           <Link href="/explore" className={pathname === "/explore" ? "active" : ""}>{t("explore")}</Link>
           <Link href="/visited" className={pathname === "/visited" ? "active" : ""}>{t("visited")}</Link>
           <Link href="/plan" className={pathname === "/plan" ? "active" : ""}>{t("plan")}</Link>
-          <button 
+          <button
             className="lang-toggle"
             onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
             title={language === "vi" ? "Switch to English" : "Chuyển sang Tiếng Việt"}
@@ -243,7 +245,7 @@ export default function Header() {
                 {t("signOut")}
               </button>
           ) : (
-            <button 
+            <button
               className="sign-in-btn"
               onClick={() => setShowAuthModal(true)}
             >

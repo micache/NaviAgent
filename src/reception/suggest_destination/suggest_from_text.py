@@ -40,7 +40,13 @@ class TextDestinationAgent(Agent):
     def advanced_suggest_destination(self, description: str):
         # initialize retrieval system
         retrieval_system = RetrievalSystem()
-        retrieval_system.create_collection(collection_name=config.index.collection_name)
+        # Use get_or_create pattern instead of always calling create
+        try:
+            retrieval_system.collection = retrieval_system.client.get_collection(
+                config.index.collection_name
+            )
+        except:
+            retrieval_system.create_collection(collection_name=config.index.collection_name)
 
         # retrieve relevant destinations
         results = retrieval_system.search(
@@ -67,12 +73,37 @@ class TextDestinationAgent(Agent):
         response_text = re.sub(r"```json|```", "", response_text).strip()
 
         return response_text
+    
+    def top_k_suggest_destination(self, description: str, k: int = 5) -> str:
+        # initialize retrieval system
+        retrieval_system = RetrievalSystem()
+        # Use get_or_create pattern instead of always calling create
+        try:
+            retrieval_system.collection = retrieval_system.client.get_collection(
+                config.index.collection_name
+            )
+        except:
+            retrieval_system.create_collection(collection_name=config.index.collection_name)
 
+        # retrieve relevant destinations
+        results = retrieval_system.search(
+            description,
+            k=config.search.top_k,
+            group_by_destination=config.search.group_by_destination,
+        )
+        # print("Retrieved Results:", results)
+
+        results_text = str(results)
+        
+        return results_text
 
 def get_destination_suggestion(description: str) -> str:
     agent = TextDestinationAgent()
     return agent.advanced_suggest_destination(description)
 
+def get_top_k_destination_suggestion(description: str, k: int = 5) -> str:
+    agent = TextDestinationAgent()
+    return agent.top_k_suggest_destination(description, k=k)
 
 # def main():
 #     agent = TextDestinationAgent()

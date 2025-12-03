@@ -232,6 +232,9 @@
   display: flex;
   gap: 8px;
   margin-top: 8px;
+  background: #f9f9f9;
+  padding: 8px 12px;
+  border-radius: 12px;
 }
 
 .chat-input input {
@@ -239,6 +242,7 @@
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid var(--border);
+  background: white;
 }
 
 .chat-input button {

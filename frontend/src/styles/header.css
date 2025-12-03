@@ -13,20 +13,17 @@
   box-sizing: border-box;
 }
 
-/* 🌞 Trang Home lúc đầu — trong suốt */
 .main-header.transparent {
   background-color: transparent;
   color: var(--heading-text);
 }
 
-/* 📘 Trang khác (Explore, Visited, Plan) */
 .main-header.solid {
   background-color: white;
   color: var(--foreground);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* ✅ Link selector đúng (phải là a, không phải Link) */
 .main-header nav {
   display: flex;
   align-items: center;
@@ -49,7 +46,6 @@
   display: inline-block;
 }
 
-/* Hiệu ứng hover */
 .main-header nav a:hover {
   color: var(--primary);
 }
@@ -69,6 +65,20 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
+  padding: 7px 10px;
+}
+
+.logo::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  z-index: -1;
 }
 
 /* Sign In Button */
@@ -117,7 +127,7 @@
 }
 
 .lang-toggle .lang-option {
-  padding: 4px 12px;
+  padding: 4px 0;
   border-radius: 16px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -126,6 +136,9 @@
   color: #999;
   flex: 1;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .lang-toggle .lang-option.active {
