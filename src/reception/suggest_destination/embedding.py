@@ -23,8 +23,12 @@ class EmbeddingGenerator:
         # CPU optimization
         if self.device.type == "cpu":
             num_threads = getattr(config.index, "num_threads", 8)
-            torch.set_num_threads(num_threads)
-            torch.set_num_interop_threads(max(1, num_threads // 2))
+            try:
+                torch.set_num_threads(num_threads)
+                torch.set_num_interop_threads(max(1, num_threads // 2))
+            except RuntimeError:
+                # Threads already set, skip
+                pass
             # print(f"Using device: CPU with {torch.get_num_threads()} threads")
         else:
             pass

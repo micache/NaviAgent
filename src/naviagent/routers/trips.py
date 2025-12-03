@@ -47,6 +47,7 @@ def create_trip(
     if isinstance(address_data, str):
         try:
             import json
+
             address_data = json.loads(address_data)
         except:
             address_data = {"name": address_data}
