@@ -1,4 +1,5 @@
 from typing import Dict, List
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -13,9 +14,10 @@ class EmbeddingGenerator:
     """Generate embeddings from text using trained model"""
 
     def __init__(self, model_path: str = None, device: str = None):
+        print("[INFO] Initializing EmbeddingGenerator...")
         self.device = device or config.index.device
         if self.device == "cuda" and not torch.cuda.is_available():
-            # print("CUDA not available, using CPU")
+            print("CUDA not available, using CPU")
             self.device = "cpu"
 
         self.device = torch.device(self.device)
@@ -29,30 +31,46 @@ class EmbeddingGenerator:
             except RuntimeError:
                 # Threads already set, skip
                 pass
-            # print(f"Using device: CPU with {torch.get_num_threads()} threads")
+            print(f"Using device: CPU with {torch.get_num_threads()} threads")
         else:
-            pass
-            # print(f"Using device: {self.device}")
+            print(f"Using device: {self.device}")
 
         # Load tokenizer
+        print(f"[INFO] Loading tokenizer: {config.model.model_name}")
         self.tokenizer = AutoTokenizer.from_pretrained(config.model.model_name)
+        print("[INFO] Tokenizer loaded successfully")
 
         # Load model
         model_path = model_path or str(config.paths.model_path)
         self.model = self._load_model(model_path)
         self.model.eval()
+        print("[INFO] EmbeddingGenerator initialization complete")
 
     def _load_model(self, model_path: str) -> TextTextCLIPModel:
         """Load model from safetensors"""
+        print(f"[INFO] Loading model from: {model_path}")
+        print(f"[INFO] Model file exists: {Path(model_path).exists()}")
+        if Path(model_path).exists():
+            import os
+            file_size_mb = os.path.getsize(model_path) / (1024 * 1024)
+            print(f"[INFO] Model file size: {file_size_mb:.2f} MB")
+        
+        # Create model with local checkpoint directory
+        checkpoint_dir = str(config.paths.checkpoint_dir)
         model = TextTextCLIPModel(
-            model_name=config.model.model_name, proj_dim=config.model.proj_dim
+            model_name=config.model.model_name, 
+            proj_dim=config.model.proj_dim,
+            checkpoint_dir=checkpoint_dir
         )
 
+        print(f"[INFO] Loading safetensors state_dict...")
         state_dict = load_file(model_path)
+        print(f"[INFO] Safetensors loaded successfully. Keys count: {len(state_dict)}")
+        
         model.load_state_dict(state_dict)
         model.to(self.device)
 
-        # print(f"✓ Model loaded from {model_path}")
+        print(f"✓ Model loaded successfully from {model_path}")
         return model
 
     def preprocess(self, text: str) -> Dict[str, torch.Tensor]:

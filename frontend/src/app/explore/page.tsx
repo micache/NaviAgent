@@ -8,6 +8,8 @@ import "@/styles/explore.css";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ReactMarkdown from "react-markdown";
 
+const NAVIAGENT_API_URL = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://localhost:8000";
+
 export default function ExplorePage() {
   const { t } = useLanguage();
   const [mode, setMode] = useState<"gallery" | "weather">("gallery");
@@ -186,7 +188,7 @@ export default function ExplorePage() {
       }
 
       const user = JSON.parse(token);
-      const response = await fetch("http://localhost:8000/destinations/suggest", {
+      const response = await fetch(`${NAVIAGENT_API_URL}/destinations/suggest`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
