@@ -70,7 +70,7 @@ def get_suggestion_from_text(
        - Da Lat, Vietnam - NO, does NOT have cherry blossoms (has hydrangeas, mimosa)
        - Hue, Vietnam - NO, does NOT have cherry blossoms
        - Hanoi, Vietnam - NO, does NOT have cherry blossoms
-    4. If the retrieved results don't contain accurate matches, use your knowledge to suggest correct destinations in Vietnam and East/Southeast Asia
+    4. If the retrieved results don't contain accurate matches, use your knowledge to suggest correct destinations in Vietnam and East Asia
     5. Be honest about what each destination offers - don't invent features
     
     Format your response with markdown EXACTLY like this (in Vietnamese):
