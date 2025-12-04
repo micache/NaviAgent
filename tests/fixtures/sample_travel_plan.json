@@ -1,0 +1,380 @@
+{
+  "version": "1.0",
+  "request_summary": {
+    "destination": "Tokyo, Japan",
+    "duration": 7,
+    "budget": 50000000,
+    "travelers": 2
+  },
+  "itinerary": {
+    "daily_schedules": [
+      {
+        "day_number": 1,
+        "date": "2024-06-01",
+        "title": "Arrival & Shibuya Exploration",
+        "activities": [
+          {
+            "time": "08:00 - 12:00",
+            "location_name": "Narita Airport",
+            "address": "Narita City, Chiba Prefecture",
+            "activity_type": "transport",
+            "description": "Arrive at Narita Airport and take Narita Express to Tokyo",
+            "estimated_cost": 3000,
+            "notes": "Buy Suica/Pasmo card at the station"
+          },
+          {
+            "time": "12:00 - 13:30",
+            "location_name": "Ichiran Shibuya",
+            "address": "Shibuya, Tokyo",
+            "activity_type": "food",
+            "description": "Lunch at famous Ichiran Ramen",
+            "estimated_cost": 1500,
+            "notes": "Expect 20-30 minute queue"
+          },
+          {
+            "time": "14:00 - 16:00",
+            "location_name": "Shibuya Crossing",
+            "address": "Shibuya, Tokyo",
+            "activity_type": "sightseeing",
+            "description": "Visit the world's busiest pedestrian crossing",
+            "estimated_cost": 0,
+            "notes": "Best view from Starbucks above"
+          },
+          {
+            "time": "16:00 - 18:00",
+            "location_name": "Meiji Shrine",
+            "address": "Yoyogi, Shibuya, Tokyo",
+            "activity_type": "sightseeing",
+            "description": "Visit the beautiful Shinto shrine in forest",
+            "estimated_cost": 0,
+            "notes": "Free entry, closing time varies by season"
+          },
+          {
+            "time": "19:00 - 21:00",
+            "location_name": "Omoide Yokocho",
+            "address": "Shinjuku, Tokyo",
+            "activity_type": "food",
+            "description": "Dinner at traditional yakitori alley",
+            "estimated_cost": 3000,
+            "notes": "Cash only at most stalls"
+          }
+        ]
+      },
+      {
+        "day_number": 2,
+        "date": "2024-06-02",
+        "title": "Traditional Tokyo",
+        "activities": [
+          {
+            "time": "08:00 - 10:00",
+            "location_name": "Senso-ji Temple",
+            "address": "Asakusa, Taito, Tokyo",
+            "activity_type": "sightseeing",
+            "description": "Visit Tokyo's oldest Buddhist temple",
+            "estimated_cost": 0,
+            "notes": "Best to visit early morning"
+          },
+          {
+            "time": "10:00 - 12:00",
+            "location_name": "Nakamise Shopping Street",
+            "address": "Asakusa, Tokyo",
+            "activity_type": "shopping",
+            "description": "Traditional shopping street with souvenirs",
+            "estimated_cost": 5000,
+            "notes": "Try ningyoyaki sweets"
+          },
+          {
+            "time": "12:30 - 14:00",
+            "location_name": "Asakusa Unagi Restaurant",
+            "address": "Asakusa, Tokyo",
+            "activity_type": "food",
+            "description": "Traditional grilled eel lunch",
+            "estimated_cost": 4000,
+            "notes": null
+          },
+          {
+            "time": "15:00 - 18:00",
+            "location_name": "Tokyo Skytree",
+            "address": "Sumida, Tokyo",
+            "activity_type": "sightseeing",
+            "description": "Visit the tallest tower in Japan",
+            "estimated_cost": 3100,
+            "notes": "Book tickets online to skip queues"
+          }
+        ]
+      },
+      {
+        "day_number": 3,
+        "date": "2024-06-03",
+        "title": "Modern Tokyo",
+        "activities": [
+          {
+            "time": "09:00 - 11:00",
+            "location_name": "teamLab Borderless",
+            "address": "Odaiba, Tokyo",
+            "activity_type": "sightseeing",
+            "description": "Digital art museum experience",
+            "estimated_cost": 3200,
+            "notes": "Book at least 2 weeks in advance"
+          },
+          {
+            "time": "11:30 - 13:00",
+            "location_name": "Odaiba Seaside",
+            "address": "Odaiba, Tokyo",
+            "activity_type": "sightseeing",
+            "description": "Walk along Rainbow Bridge view",
+            "estimated_cost": 0,
+            "notes": "See the Gundam statue"
+          },
+          {
+            "time": "13:30 - 15:00",
+            "location_name": "Tsukiji Outer Market",
+            "address": "Tsukiji, Tokyo",
+            "activity_type": "food",
+            "description": "Fresh sushi and street food",
+            "estimated_cost": 5000,
+            "notes": "Many stalls close by 2pm"
+          },
+          {
+            "time": "16:00 - 19:00",
+            "location_name": "Ginza",
+            "address": "Ginza, Chuo, Tokyo",
+            "activity_type": "shopping",
+            "description": "Upscale shopping district",
+            "estimated_cost": 10000,
+            "notes": "Free tax refund for tourists"
+          }
+        ]
+      }
+    ],
+    "location_list": [
+      "Senso-ji Temple",
+      "Tokyo Skytree",
+      "Shibuya Crossing",
+      "Meiji Shrine",
+      "teamLab Borderless"
+    ],
+    "summary": "A comprehensive 7-day journey through Tokyo, blending traditional Japanese culture with modern attractions. Experience ancient temples, bustling shopping districts, world-class cuisine, and cutting-edge digital art.",
+    "selected_flight": {
+      "airline": "Vietnam Airlines",
+      "outbound_flight": "VN310 - 08:00 AM (SGN-NRT)",
+      "return_flight": "VN311 - 18:00 PM (NRT-SGN)",
+      "total_cost": 18000000
+    },
+    "selected_accommodation": {
+      "name": "Shinjuku Granbell Hotel",
+      "area": "Shinjuku",
+      "check_in": "2024-06-01",
+      "check_out": "2024-06-08",
+      "total_cost": 12000000
+    }
+  },
+  "budget": {
+    "categories": [
+      {
+        "category_name": "Flights",
+        "estimated_cost": 18000000,
+        "breakdown": null,
+        "notes": "Round trip for 2 passengers"
+      },
+      {
+        "category_name": "Accommodation",
+        "estimated_cost": 12000000,
+        "breakdown": null,
+        "notes": "7 nights at 4-star hotel in Shinjuku"
+      },
+      {
+        "category_name": "Transportation",
+        "estimated_cost": 4000000,
+        "breakdown": null,
+        "notes": "JR Pass + local metro"
+      },
+      {
+        "category_name": "Food",
+        "estimated_cost": 8000000,
+        "breakdown": null,
+        "notes": "Approximately 800,000/day for 2 people"
+      },
+      {
+        "category_name": "Activities",
+        "estimated_cost": 4000000,
+        "breakdown": null,
+        "notes": "Museum entries, experiences"
+      },
+      {
+        "category_name": "Shopping",
+        "estimated_cost": 3000000,
+        "breakdown": null,
+        "notes": "Souvenirs and personal items"
+      }
+    ],
+    "total_estimated_cost": 49000000,
+    "budget_status": "Within budget (2% remaining)",
+    "recommendations": [
+      "Consider purchasing 7-day JR Pass before departure",
+      "Download Suica app for contactless payment",
+      "Book popular restaurants in advance via Tabelog"
+    ]
+  },
+  "advisory": {
+    "warnings_and_tips": [
+      "Carry cash - many small shops don't accept cards",
+      "Purchase JR Pass before entering Japan",
+      "Download Japan Taxi app for emergencies",
+      "Most temples close around 5pm",
+      "Remove shoes when entering traditional areas"
+    ],
+    "location_descriptions": [
+      {
+        "location_name": "Senso-ji Temple",
+        "description": "Tokyo's oldest and most significant Buddhist temple, dating back to 645 AD. Known for its iconic Thunder Gate (Kaminarimon).",
+        "highlights": [
+          "Nakamise Shopping Street",
+          "Five-story pagoda",
+          "Incense purification ritual"
+        ]
+      },
+      {
+        "location_name": "Shibuya Crossing",
+        "description": "The world's busiest pedestrian crossing where up to 3,000 people cross simultaneously during rush hour.",
+        "highlights": [
+          "Scramble intersection",
+          "Hachiko statue",
+          "Best viewed from Magnet by Shibuya 109"
+        ]
+      }
+    ],
+    "visa_info": "Vietnam passport holders need a valid visa or eVisa for Japan. Apply at least 2 weeks in advance.",
+    "weather_info": "June is rainy season (tsuyu). Expect temperatures 20-27°C with frequent rain. Bring umbrella and light rain jacket.",
+    "sim_and_apps": [
+      "Pocket WiFi rental recommended",
+      "Download: Google Maps, Japan Transit, Tabelog, PayPay",
+      "Japan Rail Pass app for train schedules"
+    ],
+    "safety_tips": [
+      "Japan is very safe but remain aware of belongings in crowded areas",
+      "Emergency number: 110 (police), 119 (ambulance/fire)",
+      "Embassy of Vietnam in Tokyo: +81-3-3466-3311"
+    ]
+  },
+  "souvenirs": [
+    {
+      "item_name": "Matcha Kit-Kat",
+      "description": "Japan-exclusive green tea flavored Kit-Kat, perfect gift",
+      "estimated_price": "500-1500 JPY",
+      "where_to_buy": "Don Quijote, convenience stores, airports"
+    },
+    {
+      "item_name": "Tokyo Banana",
+      "description": "Famous banana-shaped sponge cake filled with banana custard cream",
+      "estimated_price": "1000-2000 JPY per box",
+      "where_to_buy": "Tokyo Station, airports, major department stores"
+    },
+    {
+      "item_name": "Furoshiki Wrapping Cloth",
+      "description": "Traditional Japanese fabric for gift wrapping, eco-friendly and reusable",
+      "estimated_price": "1500-5000 JPY",
+      "where_to_buy": "Nakamise Street, department stores"
+    },
+    {
+      "item_name": "Japanese Ceramics",
+      "description": "Handcrafted cups, plates, or sake sets from traditional kilns",
+      "estimated_price": "2000-20000 JPY",
+      "where_to_buy": "Kappabashi Street (Kitchen Town)"
+    }
+  ],
+  "logistics": {
+    "flight_options": [
+      {
+        "airline": "Vietnam Airlines",
+        "flight_type": "direct",
+        "departure_time": "08:00",
+        "arrival_time": "15:00",
+        "duration": "5h 30m",
+        "price_per_person": 9000000,
+        "cabin_class": "Economy",
+        "benefits": ["23kg luggage", "In-flight meals", "Entertainment"],
+        "booking_platforms": ["vietnamairlines.com", "Traveloka", "Booking.com"],
+        "notes": "Most popular option"
+      },
+      {
+        "airline": "Japan Airlines",
+        "flight_type": "direct",
+        "departure_time": "23:00",
+        "arrival_time": "06:00+1",
+        "duration": "5h 45m",
+        "price_per_person": 11000000,
+        "cabin_class": "Economy",
+        "benefits": ["23kg luggage", "Premium meals", "USB charging"],
+        "booking_platforms": ["jal.com", "Expedia"],
+        "notes": "Red-eye flight, arrive early morning"
+      },
+      {
+        "airline": "VietJet Air",
+        "flight_type": "direct",
+        "departure_time": "10:30",
+        "arrival_time": "17:30",
+        "duration": "5h 30m",
+        "price_per_person": 6500000,
+        "cabin_class": "Economy",
+        "benefits": ["7kg cabin luggage only", "Buy meals onboard"],
+        "booking_platforms": ["vietjetair.com"],
+        "notes": "Budget option - add luggage separately"
+      }
+    ],
+    "recommended_flight": "Vietnam Airlines - best balance of price and service",
+    "average_price": 8833333,
+    "booking_tips": [
+      "Book 2-3 months in advance for best prices",
+      "Tuesday and Wednesday flights are usually cheaper",
+      "Use incognito mode when searching to avoid price tracking"
+    ],
+    "visa_requirements": "Vietnam citizens need visa or eVisa"
+  },
+  "accommodation": {
+    "recommendations": [
+      {
+        "name": "Shinjuku Granbell Hotel",
+        "type": "hotel",
+        "area": "Shinjuku",
+        "price_per_night": 1700000,
+        "rating": 4.2,
+        "amenities": ["Free WiFi", "Restaurant", "24h front desk", "Luggage storage"],
+        "distance_to_center": "5 min to Shinjuku Station",
+        "booking_platforms": ["Booking.com", "Agoda", "Hotels.com"],
+        "notes": "Great location, modern rooms"
+      },
+      {
+        "name": "HOSHINOYA Tokyo",
+        "type": "hotel",
+        "area": "Otemachi",
+        "price_per_night": 5000000,
+        "rating": 4.8,
+        "amenities": ["Onsen", "Fine dining", "Spa", "Traditional service"],
+        "distance_to_center": "Tokyo Station 5 min walk",
+        "booking_platforms": ["hoshinoya.com"],
+        "notes": "Luxury ryokan experience in the city"
+      },
+      {
+        "name": "Khaosan Tokyo Origami",
+        "type": "hostel",
+        "area": "Asakusa",
+        "price_per_night": 400000,
+        "rating": 4.0,
+        "amenities": ["Free WiFi", "Shared kitchen", "Common area", "Bicycle rental"],
+        "distance_to_center": "Near Senso-ji Temple",
+        "booking_platforms": ["Booking.com", "Hostelworld"],
+        "notes": "Budget-friendly, great for backpackers"
+      }
+    ],
+    "best_areas": ["Shinjuku", "Shibuya", "Asakusa", "Ginza"],
+    "average_price_per_night": 2366666,
+    "booking_tips": [
+      "Book early for summer season (June-August)",
+      "Compare prices across multiple platforms",
+      "Look for hotel+flight packages for savings"
+    ],
+    "total_estimated_cost": 12000000
+  },
+  "generated_at": "2024-05-15T10:30:00"
+}

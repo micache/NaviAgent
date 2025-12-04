@@ -1,0 +1,35 @@
+:root {
+  /* ===== Theme: Ocean Blue ===== */
+  --primary: #0077b6;
+  --primary-light: #00b4d8;
+  --primary-dark: #023e8a;
+
+  --background: #ffffff;
+  --foreground: #171717;
+  --card-bg: #f8f9fa;
+  --accent: #90e0ef;
+  --border: #e0e0e0;
+
+  /* ===== Fonts ===== */
+  --font-main: "Poppins", sans-serif;
+  --font-secondary: "Roboto", sans-serif;
+  --font-display: "Playfair Display", serif;
+  --heading-text: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: var(--background);
+    --foreground: var(--foreground);
+    --card-bg: var(--card-bg);
+    --border: var(--border);
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-main);
+  transition: background 0.3s ease, color 0.3s ease;
+  margin: 0;
+}

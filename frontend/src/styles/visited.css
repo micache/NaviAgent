@@ -1,0 +1,203 @@
+.visited-layout {
+  margin-top: 70px; /* tránh đè header */
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  background: var(--background);
+  color: var(--foreground);
+  box-sizing: border-box;
+  height: calc(100vh - 70px);
+  width: 100%;
+}
+
+/* ===== LEFT (Globe) ===== */
+.visited-left {
+  flex: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  overflow: hidden;
+}
+
+.visited-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0px;
+}
+
+.visited-globe {
+  position: relative;
+  width: 100%;
+  height: 100%; /* hoặc height: 100% nếu layout cố định */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+.visited-left.has-image .visited-globe {
+  height: 40px; /* thu nhỏ bản đồ */
+  transform: translateY(0); /* vẫn căn giữa */
+}
+
+.visited-globe canvas {
+  display: block; /* bỏ inline flex behaviour */
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.visited-gallery {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden; /* 👈 Bắt buộc để giới hạn ảnh + nút */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.place-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+/* Nút điều hướng */
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  z-index: 2; /* đảm bảo nổi lên trên ảnh */
+}
+
+.nav-btn.left {
+  left: 10px;
+}
+.nav-btn.right {
+  right: 10px;
+}
+
+.nav-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Chữ caption — nằm trong ảnh, không bị tràn */
+.caption {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-weight: 500;
+  color: white;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  font-size: 0.95rem;
+  z-index: 2;
+}
+
+/* ===== RIGHT (Chatbot) ===== */
+.visited-right {
+  flex: 3;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.visited-right h2 {
+  color: var(--primary-dark);
+  margin-bottom: 8px;
+}
+
+.visited-right p {
+  margin-bottom: 16px;
+  color: #444;
+}
+
+/* Chat box styling */
+.chat-box {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 12px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.chat-message {
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  max-width: 80%;
+  font-size: 0.95rem;
+}
+
+.chat-message.bot {
+  background: #f1f1f1;
+  align-self: flex-start;
+}
+
+.chat-message.user {
+  background: var(--primary);
+  color: white;
+  align-self: flex-end;
+}
+
+.chat-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.chat-input button {
+  background: var(--primary);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.chat-input button:hover {
+  background: var(--primary-dark);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .visited-layout {
+    flex-direction: column;
+  }
+
+  .visited-right {
+    order: -1;
+    width: 100%;
+  }
+
+  .visited-globe {
+    height: 400px;
+  }
+}

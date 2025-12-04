@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ destination }} - Travel Guide</title>
+    <link rel="stylesheet" href="guidebook_enhanced.css">
+</head>
+<body>
+    <!-- Cover Page -->
+    <div class="cover-page">
+        <div class="hero-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            {% if hero_image %}
+            <img src="{{ hero_image }}" style="position: absolute; width: 100%; height: 100%; object-fit: cover; opacity: 0.3;">
+            {% endif %}
+            <div class="overlay">
+                <h1>{{ destination }}</h1>
+                <p class="subtitle">Complete Travel Guide</p>
+                <p class="dates">{{ departure_date }} - {{ return_date }}</p>
+                <p class="travelers">{{ num_travelers }} Traveler{% if num_travelers > 1 %}s{% endif %} • {{ trip_duration }} Days</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip Overview -->
+    <div class="section-header">
+        <h2>📋 Trip Overview</h2>
+    </div>
+    <div class="content-section">
+        <div class="two-column">
+            <div class="column">
+                <h3>Journey Details</h3>
+                <table class="data-table">
+                    <tr>
+                        <td><strong>Destination</strong></td>
+                        <td>{{ destination }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Departure From</strong></td>
+                        <td>{{ departure_point }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Travel Dates</strong></td>
+                        <td>{{ departure_date }} - {{ return_date }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Duration</strong></td>
+                        <td>{{ trip_duration }} days</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Travelers</strong></td>
+                        <td>{{ num_travelers }} person{% if num_travelers > 1 %}s{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Travel Style</strong></td>
+                        <td>{{ travel_style|title }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="column">
+                {% if route_map %}
+                <div class="map-section">
+                    <img src="{{ route_map }}" alt="Route Map" class="location-image">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% if customer_notes %}
+        <div class="info-box">
+            <h4>📝 Trip Notes</h4>
+            <p>{{ customer_notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Weather Section -->
+    {% if weather %}
+    <div class="section-header weather">
+        <h2>🌤️ Weather & Climate</h2>
+    </div>
+    <div class="content-section">
+        {% if weather.forecast %}
+        <h3>Weather Forecast</h3>
+        <div class="weather-forecast">
+            {% for day in weather.forecast[:6] %}
+            <div class="weather-day">
+                <div class="weather-date">{{ day.date }}</div>
+                <div class="weather-temp">{{ day.temperature }}°C</div>
+                <div class="weather-condition">{{ day.condition }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if weather.seasonal_events %}
+        <div class="tip-box">
+            <h4>🎉 Seasonal Events</h4>
+            <p>{{ weather.seasonal_events }}</p>
+        </div>
+        {% endif %}
+        {% if weather.packing_suggestions %}
+        <h4>🧳 Packing Suggestions</h4>
+        <ul class="styled-list">
+            {% for item in weather.packing_suggestions %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Logistics Section -->
+    {% if logistics %}
+    <div class="page-break"></div>
+    <div class="section-header logistics">
+        <h2>✈️ Transportation & Logistics</h2>
+    </div>
+    <div class="content-section">
+        {% if logistics.flights %}
+        <h3>Flight Options</h3>
+        {% for flight in logistics.flights[:3] %}
+        <div class="flight-card">
+            <div class="flight-route">
+                <div class="flight-city">
+                    <div class="flight-code">{{ flight.departure_airport|default('DEP') }}</div>
+                    <div class="flight-name">{{ flight.departure_city|default(departure_point) }}</div>
+                </div>
+                <div class="flight-arrow">✈️ →</div>
+                <div class="flight-city">
+                    <div class="flight-code">{{ flight.arrival_airport|default('ARR') }}</div>
+                    <div class="flight-name">{{ flight.arrival_city|default(destination) }}</div>
+                </div>
+            </div>
+            <div class="flight-details">
+                <strong>{{ flight.airline|default('Airline') }}</strong> • 
+                {{ flight.flight_number|default('') }} • 
+                {{ flight.departure_time|default('') }} - {{ flight.arrival_time|default('') }} • 
+                <span style="color: #667eea; font-weight: bold;">{{ flight.price|default('Price TBD') }}</span>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if logistics.local_transport %}
+        <h3>Local Transportation</h3>
+        <div class="two-column">
+            {% for transport in logistics.local_transport %}
+            <div class="activity-card">
+                <div class="activity-title">{{ transport.type|default('Transport') }}</div>
+                <div class="activity-description">{{ transport.description|default('') }}</div>
+                {% if transport.cost %}
+                <div style="margin-top: 8px; color: #667eea; font-weight: 600;">{{ transport.cost }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Accommodation Section -->
+    {% if accommodation %}
+    <div class="page-break"></div>
+    <div class="section-header accommodation">
+        <h2>🏨 Accommodation</h2>
+    </div>
+    <div class="content-section">
+        {% if accommodation.hotels %}
+        <h3>Recommended Hotels</h3>
+        {% for hotel in accommodation.hotels[:4] %}
+        <div class="hotel-card">
+            <div class="hotel-name">{{ hotel.name|default('Hotel') }}</div>
+            <div class="hotel-stars">{% for i in range(hotel.stars|default(3)) %}⭐{% endfor %}</div>
+            <div class="hotel-details">
+                {% if hotel.location %}<strong>Location:</strong> {{ hotel.location }}<br>{% endif %}
+                {% if hotel.amenities %}<strong>Amenities:</strong> {{ hotel.amenities|join(', ') }}<br>{% endif %}
+                {% if hotel.description %}{{ hotel.description }}{% endif %}
+            </div>
+            <div class="hotel-price">{{ hotel.price|default('Price on request') }}</div>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% if accommodation.tips %}
+        <div class="tip-box">
+            <h4>💡 Accommodation Tips</h4>
+            <p>{{ accommodation.tips }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Itinerary Section -->
+    {% if itinerary %}
+    <div class="page-break"></div>
+    <div class="section-header itinerary">
+        <h2>📅 Day-by-Day Itinerary</h2>
+    </div>
+    <div class="content-section">
+        {% for day in itinerary.days %}
+        <div class="day-card">
+            <div class="day-header">
+                <div class="day-number">{{ day.day_number|default(loop.index) }}</div>
+                <div>
+                    <div class="day-title">{{ day.title|default('Day ' ~ loop.index) }}</div>
+                    <div class="day-date">{{ day.date|default('') }}</div>
+                </div>
+            </div>
+            
+            {% if day.activities %}
+            {% for activity in day.activities %}
+            <div class="activity-card {% if activity.time_of_day|default('') == 'morning' %}morning{% elif activity.time_of_day|default('') == 'afternoon' %}afternoon{% elif activity.time_of_day|default('') == 'evening' %}evening{% endif %}">
+                <div class="activity-time">{{ activity.time|default('') }}</div>
+                <div class="activity-title">{{ activity.name|default(activity.title|default('Activity')) }}</div>
+                <div class="activity-description">{{ activity.description|default('') }}</div>
+                {% if activity.cost %}
+                <div style="margin-top: 8px; font-size: 10pt; color: #667eea;">
+                    <strong>Cost:</strong> {{ activity.cost }}
+                </div>
+                {% endif %}
+                {% if activity.tips %}
+                <div style="margin-top: 5px; font-size: 9pt; color: #718096; font-style: italic;">
+                    💡 {{ activity.tips }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% if day.meals %}
+            <div class="info-box">
+                <h4>🍽️ Dining Recommendations</h4>
+                {% for meal in day.meals %}
+                <p><strong>{{ meal.type|title }}:</strong> {{ meal.restaurant|default('') }} - {{ meal.cuisine|default('') }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Budget Section -->
+    {% if budget %}
+    <div class="page-break"></div>
+    <div class="section-header budget">
+        <h2>💰 Budget Breakdown</h2>
+    </div>
+    <div class="content-section">
+        <div class="budget-summary">
+            <div class="budget-label">Estimated Total Budget</div>
+            <div class="budget-total">{{ budget.total|default(total_budget)|default('N/A') }}</div>
+            <div class="budget-label">{{ budget.currency|default('VND') }} per person</div>
+        </div>
+
+        {% if budget.breakdown %}
+        <h3>Budget Breakdown</h3>
+        <div class="budget-breakdown">
+            {% for item in budget.breakdown %}
+            <div class="budget-item">
+                <div class="budget-item-amount">{{ item.amount }}</div>
+                <div class="budget-item-label">{{ item.category }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if budget.daily_budget %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Daily Est.</th>
+                    <th>Total Est.</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in budget.daily_budget %}
+                <tr>
+                    <td>{{ category.name }}</td>
+                    <td>{{ category.daily }}</td>
+                    <td>{{ category.total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if budget.saving_tips %}
+        <div class="tip-box">
+            <h4>💡 Money-Saving Tips</h4>
+            <ul class="styled-list">
+                {% for tip in budget.saving_tips %}
+                <li>{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Souvenirs Section -->
+    {% if souvenirs %}
+    <div class="page-break"></div>
+    <div class="section-header souvenirs">
+        <h2>🎁 Souvenirs & Shopping</h2>
+    </div>
+    <div class="content-section">
+        {% if souvenirs.recommendations %}
+        <h3>Recommended Souvenirs</h3>
+        <div class="souvenir-grid">
+            {% for item in souvenirs.recommendations[:8] %}
+            <div class="souvenir-card">
+                <div class="souvenir-icon">{{ item.icon|default('🎁') }}</div>
+                <div class="souvenir-name">{{ item.name }}</div>
+                <div class="souvenir-price">{{ item.price|default('Price varies') }}</div>
+                {% if item.description %}
+                <div class="souvenir-description">{{ item.description }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if souvenirs.shopping_areas %}
+        <h3>Best Shopping Areas</h3>
+        <div class="two-column">
+            {% for area in souvenirs.shopping_areas %}
+            <div class="activity-card">
+                <div class="activity-title">{{ area.name }}</div>
+                <div class="activity-description">{{ area.description|default('') }}</div>
+                {% if area.best_for %}
+                <div style="margin-top: 8px; font-size: 9pt; color: #667eea;">
+                    <strong>Best for:</strong> {{ area.best_for }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if souvenirs.customs_tips %}
+        <div class="warning-box">
+            <h4>⚠️ Customs & Import Rules</h4>
+            <p>{{ souvenirs.customs_tips }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Advisory Section -->
+    {% if advisory %}
+    <div class="page-break"></div>
+    <div class="section-header advisory">
+        <h2>ℹ️ Travel Advisory</h2>
+    </div>
+    <div class="content-section">
+        <div class="advisory-grid">
+            {% if advisory.visa %}
+            <div class="advisory-card visa">
+                <div class="advisory-title">🛂 Visa Requirements</div>
+                <div class="advisory-content">{{ advisory.visa }}</div>
+            </div>
+            {% endif %}
+
+            {% if advisory.health %}
+            <div class="advisory-card health">
+                <div class="advisory-title">🏥 Health & Vaccinations</div>
+                <div class="advisory-content">{{ advisory.health }}</div>
+            </div>
+            {% endif %}
+
+            {% if advisory.safety %}
+            <div class="advisory-card safety">
+                <div class="advisory-title">🔒 Safety Information</div>
+                <div class="advisory-content">{{ advisory.safety }}</div>
+            </div>
+            {% endif %}
+
+            {% if advisory.customs %}
+            <div class="advisory-card customs">
+                <div class="advisory-title">🎭 Local Customs</div>
+                <div class="advisory-content">{{ advisory.customs }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if advisory.emergency_contacts %}
+        <h3>Emergency Contacts</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Number</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contact in advisory.emergency_contacts %}
+                <tr>
+                    <td>{{ contact.service }}</td>
+                    <td>{{ contact.number }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+
+        {% if advisory.useful_phrases %}
+        <h3>Useful Phrases</h3>
+        <div class="two-column">
+            {% for phrase in advisory.useful_phrases %}
+            <div class="activity-card">
+                <div class="activity-title">{{ phrase.english }}</div>
+                <div class="activity-description" style="font-size: 12pt; color: #667eea;">{{ phrase.local }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if advisory.important_tips %}
+        <div class="tip-box">
+            <h4>💡 Important Tips</h4>
+            <ul class="styled-list">
+                {% for tip in advisory.important_tips %}
+                <li>{{ tip }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="page-footer">
+        <p>Generated by NaviAgent Travel Planner</p>
+        <p>{{ generated_at|default('') }}</p>
+    </div>
+</body>
+</html>

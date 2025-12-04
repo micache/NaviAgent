@@ -3,6 +3,9 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+# Generated guidebooks
+guidebooks/
+
 # C extensions
 *.so
 

@@ -1,0 +1,295 @@
+/* ===== Layout ===== */
+.explore-layout {
+  margin-top: 70px;
+  display: flex;
+  gap: 20px;
+  padding: 20px 20px;
+  background-color: var(--background);
+  color: var(--foreground);
+  box-sizing: border-box;
+
+  height: calc(100vh - 70px); /* chiếm toàn bộ phần còn lại */
+  width: 100%;
+}
+
+/* ===== Left / Right ===== */
+.explore-left {
+  flex: 7;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  animation: pushFromLeft 0.4s ease-out;
+}
+
+@keyframes pushFromLeft {
+  from {
+    flex: 0;
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    flex: 7;
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.explore-gallery {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+}
+
+.explore-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ===== Nút điều hướng ===== */
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  z-index: 2;
+}
+
+.nav-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.nav-btn.left {
+  left: 10px;
+}
+
+.nav-btn.right {
+  right: 10px;
+}
+
+/* ===== Caption Overlay ===== */
+.explore-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 20px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0));
+  color: white;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.explore-caption h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.explore-caption p {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.counter {
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+/* ===== RIGHT (Chatbot) ===== */
+.explore-right {
+  flex: 3;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.4s ease;
+  transform-origin: right;
+}
+
+.explore-right.full-width {
+  flex: 1;
+  max-width: 100%;
+  animation: expandFromRight 0.4s ease-out;
+}
+
+@keyframes expandFromRight {
+  from {
+    transform: translateX(50px);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.chat-header h2 {
+  margin: 0;
+}
+
+/* ===== Panel Header ===== */
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 12px;
+}
+
+/* ===== Mode Switch ===== */
+.mode-switch {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.mode-switch button {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.mode-switch button.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary-dark);
+}
+
+/* ===== Close Panel Button ===== */
+.close-panel-btn {
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.close-panel-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* ===== Show Panel Button ===== */
+.show-panel-btn {
+  background-color: var(--primary-light);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.show-panel-btn:hover {
+  background-color: var(--primary);
+}
+
+/* ===== Titles ===== */
+.explore-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 8px;
+}
+
+.explore-subtext {
+  color: #555;
+  margin-bottom: 24px;
+}
+
+/* ===== Grid Cards ===== */
+.explore-grid {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.explore-card {
+  flex: 1 1 calc(33.333% - 24px);
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.explore-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.explore-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+/* ===== Responsiveness ===== */
+@media (max-width: 1024px) {
+  .explore-layout {
+    flex-direction: column;
+  }
+
+  .explore-right {
+    order: -1;
+    width: 100%;
+  }
+
+  .explore-grid {
+    flex-direction: column;
+  }
+
+  .explore-card {
+    width: 100%;
+  }
+}

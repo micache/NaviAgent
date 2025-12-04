@@ -291,6 +291,167 @@ async def get_config():
     }
 
 
+# ============================================================================
+# GUIDEBOOK GENERATION ENDPOINTS
+# ============================================================================
+
+# Storage for generated guidebooks (in production, use a proper storage solution)
+_guidebook_storage: dict = {}
+
+
+@app.post(
+    f"{settings.api_prefix}/generate_guidebook",
+    summary="Generate Travel Guidebook",
+    description="""
+    Generate a professional travel guidebook from a travel plan.
+    
+    Supports multiple output formats:
+    - **PDF**: Professional PDF with table of contents, page numbers, and print-ready layout
+    - **HTML**: Responsive web page with interactive elements and print support
+    - **Markdown**: Clean, readable markdown with GitHub-flavored markdown support
+    
+    **Processing Time:** Typically 2-10 seconds depending on content size
+    """,
+    responses={
+        200: {"description": "Guidebook generated successfully"},
+        400: {"description": "Invalid request parameters"},
+        500: {"description": "Internal server error during generation"},
+    },
+)
+async def generate_guidebook(
+    travel_plan: TravelPlan = None,
+    formats: list = None,
+    language: str = "vi",
+):
+    """
+    Generate travel guidebook from a TravelPlan.
+
+    Args:
+        travel_plan: TravelPlan object with travel data
+        formats: List of formats to generate (pdf, html, markdown). Default: all
+        language: Language for content (vi or en). Default: vi
+
+    Returns:
+        GuidebookResponse with generated file paths
+    """
+    from schemas import GuidebookResponse
+
+    from travel_planner.guidebook import GuidebookGenerator
+
+    if formats is None:
+        formats = ["pdf", "html", "markdown"]
+
+    if travel_plan is None:
+        raise HTTPException(status_code=400, detail="travel_plan is required")
+
+    try:
+        print(f"\n[API] Generating guidebook...")
+        print(f"  - Formats: {formats}")
+        print(f"  - Language: {language}")
+
+        # Create generator
+        generator = GuidebookGenerator(
+            travel_plan_data=travel_plan.model_dump(),
+            output_dir="guidebooks",
+            language=language,
+        )
+
+        # Generate guidebooks
+        files = generator.generate_all_formats(formats=formats)
+
+        # Get response data
+        response_data = generator.get_guidebook_response()
+
+        # Store for later retrieval
+        _guidebook_storage[response_data["guidebook_id"]] = response_data
+
+        print(f"[API] Guidebook generated successfully!")
+        print(f"  - ID: {response_data['guidebook_id']}")
+        print(f"  - Files: {files}")
+
+        return GuidebookResponse(**response_data)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"[API] Error generating guidebook: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating guidebook: {str(e)}")
+
+
+@app.get(
+    f"{settings.api_prefix}/guidebook/{{guidebook_id}}",
+    summary="Get Guidebook Info",
+    description="Get information about a generated guidebook.",
+)
+async def get_guidebook_info(guidebook_id: str):
+    """
+    Get information about a previously generated guidebook.
+
+    Args:
+        guidebook_id: Unique identifier for the guidebook
+
+    Returns:
+        Guidebook information including file paths
+    """
+    if guidebook_id not in _guidebook_storage:
+        raise HTTPException(status_code=404, detail="Guidebook not found")
+
+    return _guidebook_storage[guidebook_id]
+
+
+@app.get(
+    f"{settings.api_prefix}/guidebook/{{guidebook_id}}/download",
+    summary="Download Guidebook File",
+    description="Download a specific guidebook file.",
+)
+async def download_guidebook(guidebook_id: str, format: str = "pdf"):
+    """
+    Download a guidebook file.
+
+    Args:
+        guidebook_id: Unique identifier for the guidebook
+        format: File format to download (pdf, html, markdown)
+
+    Returns:
+        File response for download
+    """
+    from fastapi.responses import FileResponse
+
+    if guidebook_id not in _guidebook_storage:
+        raise HTTPException(status_code=404, detail="Guidebook not found")
+
+    guidebook = _guidebook_storage[guidebook_id]
+    files = guidebook.get("files", {})
+
+    # Normalize format
+    format_lower = format.lower()
+    if format_lower == "md":
+        format_lower = "markdown"
+
+    if format_lower not in files:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Format '{format}' not found. Available: {list(files.keys())}",
+        )
+
+    file_path = Path(files[format_lower])
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found on disk")
+
+    # Determine media type
+    media_types = {
+        "pdf": "application/pdf",
+        "html": "text/html",
+        "markdown": "text/markdown",
+    }
+
+    return FileResponse(
+        path=str(file_path),
+        media_type=media_types.get(format_lower, "application/octet-stream"),
+        filename=file_path.name,
+    )
+
+
 # Error handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
