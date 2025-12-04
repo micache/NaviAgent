@@ -66,15 +66,15 @@ async def startup_event():
     print(f"{'=' * 80}")
 
     # ============================================================================
-    # 🔥 MODEL CONFIGURATION - Change provider here if needed
+    # 🔥 MODEL CONFIGURATION
     # ============================================================================
-    # Default: Uses OpenAI (configured in model_settings)
-    # To switch provider, uncomment one of these:
-
-    # model_settings.default_provider = ModelProvider.GOOGLE  # Switch to Gemini
-    model_settings.default_provider = ModelProvider.DEEPSEEK  # Switch to DeepSeek
-    # model_settings.default_provider = ModelProvider.ANTHROPIC  # Switch to Claude
-
+    # Model provider is configured in config/model_config.py
+    # Current: model_settings = create_deepseek_config()
+    # 
+    # To change provider, edit config/model_config.py line 339:
+    #   - create_default_config() → OpenAI
+    #   - create_deepseek_config() → DeepSeek (current)
+    #   - create_gemini_config() → Google Gemini
     # ============================================================================
 
     # Validate API keys
@@ -495,62 +495,6 @@ def run():
         reload=settings.reload,
         reload_delay=0.5,
     )
-
-
-async def main():
-    """Main function for testing."""
-    global travel_team
-
-    # Initialize team
-    travel_team = create_travel_planning_team(model=settings.openai_model)
-
-    # Create structured travel request
-    travel_request = TravelRequest(
-        destination="Châu Âu, Pháp, Anh, Đức",
-        departure_point="Hanoi",
-        departure_date=date(2024, 6, 1),
-        trip_duration=7,
-        budget=50_000_000,
-        num_travelers=4,
-        travel_style="self_guided",
-        customer_notes="Thích quẩy, thích bar, thích ăn chơi nhảy múa",
-    )
-
-    # Convert to team input
-    team_input = TravelPlanningTeamInput(
-        destination=travel_request.destination,
-        departure_point=travel_request.departure_point,
-        departure_date=travel_request.departure_date,
-        trip_duration=travel_request.trip_duration,
-        budget=travel_request.budget,
-        num_travelers=travel_request.num_travelers,
-        travel_style=travel_request.travel_style,
-        customer_notes=travel_request.customer_notes,
-    )
-
-    # Run team
-    team_response = await run_travel_planning_team(travel_team, team_input)
-
-    # Create travel plan
-    travel_plan = TravelPlan(
-        version="2.0-team",
-        destination=travel_request.destination,
-        departure_point=travel_request.departure_point,
-        departure_date=travel_request.departure_date,
-        trip_duration=travel_request.trip_duration,
-        budget=travel_request.budget,
-        num_travelers=travel_request.num_travelers,
-        travel_style=travel_request.travel_style,
-        team_full_response=team_response,
-        generated_at=datetime.utcnow(),
-    )
-
-    # Save structured output
-    output_file = Path("travel_plan_output.json")
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(travel_plan.model_dump(), f, ensure_ascii=False, indent=2, default=str)
-
-    print(f"\n✅ Travel plan saved to: {output_file}")
 
 
 if __name__ == "__main__":

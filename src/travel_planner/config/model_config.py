@@ -120,6 +120,7 @@ class AgentModelSettings(BaseModel):
         provider: ModelProvider,
         model_name: Optional[str] = None,
         temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
     ):
         """
         Override model configuration for a specific agent
@@ -129,6 +130,7 @@ class AgentModelSettings(BaseModel):
             provider: Model provider to use
             model_name: Specific model name (if None, uses default for provider)
             temperature: Temperature setting (if None, uses default)
+            max_tokens: Maximum tokens for response (if None, uses model default)
         """
         if model_name is None:
             model_name = self.model_mappings[provider]
@@ -139,7 +141,11 @@ class AgentModelSettings(BaseModel):
         api_key = self._get_api_key(provider)
 
         self.agent_overrides[agent_name] = ModelConfig(
-            provider=provider, model_name=model_name, api_key=api_key, temperature=temperature
+            provider=provider,
+            model_name=model_name,
+            api_key=api_key,
+            temperature=temperature,
+            max_tokens=max_tokens,
         )
 
     def get_memory_model_config(self) -> ModelConfig:
@@ -262,7 +268,7 @@ class AgentModelSettings(BaseModel):
 
 def create_default_config() -> AgentModelSettings:
     """Create default configuration (OpenAI GPT-4o-mini for all agents)"""
-    return AgentModelSettings(
+    config = AgentModelSettings(
         default_provider=ModelProvider.OPENAI,
         model_mappings={
             ModelProvider.OPENAI: "gpt-4o-mini",
@@ -272,6 +278,11 @@ def create_default_config() -> AgentModelSettings:
         },
         default_temperature=0.7,
     )
+    
+    # Set higher max_tokens for itinerary agent (complex JSON output)
+    config.set_agent_model("itinerary", ModelProvider.OPENAI, "gpt-4o-mini", 0.7, max_tokens=16384)
+    
+    return config
 
 
 def create_gemini_config() -> AgentModelSettings:
@@ -325,7 +336,8 @@ def create_hybrid_config() -> AgentModelSettings:
 # ============================================================================
 
 # Create global model settings instance
-model_settings = create_default_config()
+# Switch to DeepSeek (cheaper and no rate limits)
+model_settings = create_deepseek_config()
 
 
 # ============================================================================
