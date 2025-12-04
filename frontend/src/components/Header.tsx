@@ -9,9 +9,9 @@ import passwordHide from "@/images/password-hide.svg";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // API URLs for different backend services
-const USER_API_URL = process.env.NEXT_PUBLIC_USER_API_URL || "http://localhost:8000";
-// const RECEPTION_API_URL = process.env.NEXT_PUBLIC_RECEPTION_API_URL || "http://localhost:8001";
-// const TRAVEL_PLANNER_API_URL = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8002";
+const USER_API_URL = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://localhost:8001";
+const RECEPTION_API_URL = process.env.NEXT_PUBLIC_RECEPTION_API_URL || "http://localhost:8002";
+const TRAVEL_PLANNER_API_URL = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8003";
 // const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || "http://localhost:8003";
 
 // Email validation regex - must contain @
