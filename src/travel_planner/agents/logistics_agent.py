@@ -3,20 +3,16 @@ Logistics Agent - Specialized for Flight Tickets
 Provides detailed flight information with pricing, airlines, benefits using Agno's structured input/output
 """
 
-import ssl
 import sys
 from pathlib import Path
 
-import certifi
-import httpx
 from agno.agent import Agent
 from agno.db import PostgresDb
 from agno.memory import MemoryManager
-from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import model_settings, settings
+from config import model_settings
 from models.schemas import LogisticsAgentInput, LogisticsAgentOutput
 from tools.external_api_tools import create_flight_tools
 from tools.search_tool import search_tools
@@ -53,7 +49,7 @@ def create_logistics_agent(
 
     # Create flight tools
     flight_tools = create_flight_tools()
-    
+
     return Agent(
         name="LogisticsAgent",
         model=model,

@@ -3,21 +3,17 @@ Weather Agent
 Provides weather forecasts, seasonal information, and event details using search tools
 """
 
-import ssl
 import sys
 from datetime import date, timedelta
 from pathlib import Path
 
-import certifi
-import httpx
 from agno.agent import Agent
 from agno.db import PostgresDb
 from agno.memory import MemoryManager
-from agno.models.openai import OpenAIChat
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import model_settings, settings
+from config import model_settings
 from models.schemas import WeatherAgentInput, WeatherAgentOutput
 from tools.external_api_tools import create_weather_tools
 from tools.search_tool import search_tools
@@ -54,7 +50,7 @@ def create_weather_agent(
 
     # Create weather tools
     weather_tools = create_weather_tools()
-    
+
     return Agent(
         name="WeatherAgent",
         model=model,
@@ -213,7 +209,9 @@ async def run_weather_agent(
         if response.content.seasonal_events:
             print(f"[WeatherAgent] ✓ Found {len(response.content.seasonal_events)} seasonal events")
         if response.content.best_activities:
-            print(f"[WeatherAgent] ✓ Best activities: {len(response.content.best_activities)} suggestions")
+            print(
+                f"[WeatherAgent] ✓ Best activities: {len(response.content.best_activities)} suggestions"
+            )
         return response.content
     else:
         print(f"[WeatherAgent] ⚠ Unexpected response type: {type(response.content)}")

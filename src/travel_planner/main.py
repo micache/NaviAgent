@@ -304,12 +304,12 @@ _guidebook_storage: dict = {}
     summary="Generate Travel Guidebook",
     description="""
     Generate a professional travel guidebook from a travel plan.
-    
+
     Supports multiple output formats:
     - **PDF**: Professional PDF with table of contents, page numbers, and print-ready layout
     - **HTML**: Responsive web page with interactive elements and print support
     - **Markdown**: Clean, readable markdown with GitHub-flavored markdown support
-    
+
     **Processing Time:** Typically 2-10 seconds depending on content size
     """,
     responses={
@@ -495,62 +495,6 @@ def run():
         reload=settings.reload,
         reload_delay=0.5,
     )
-
-
-async def main():
-    """Main function for testing."""
-    global travel_team
-
-    # Initialize team
-    travel_team = create_travel_planning_team(model=settings.openai_model)
-
-    # Create structured travel request
-    travel_request = TravelRequest(
-        destination="Châu Âu, Pháp, Anh, Đức",
-        departure_point="Hanoi",
-        departure_date=date(2024, 6, 1),
-        trip_duration=7,
-        budget=50_000_000,
-        num_travelers=4,
-        travel_style="self_guided",
-        customer_notes="Thích quẩy, thích bar, thích ăn chơi nhảy múa",
-    )
-
-    # Convert to team input
-    team_input = TravelPlanningTeamInput(
-        destination=travel_request.destination,
-        departure_point=travel_request.departure_point,
-        departure_date=travel_request.departure_date,
-        trip_duration=travel_request.trip_duration,
-        budget=travel_request.budget,
-        num_travelers=travel_request.num_travelers,
-        travel_style=travel_request.travel_style,
-        customer_notes=travel_request.customer_notes,
-    )
-
-    # Run team
-    team_response = await run_travel_planning_team(travel_team, team_input)
-
-    # Create travel plan
-    travel_plan = TravelPlan(
-        version="2.0-team",
-        destination=travel_request.destination,
-        departure_point=travel_request.departure_point,
-        departure_date=travel_request.departure_date,
-        trip_duration=travel_request.trip_duration,
-        budget=travel_request.budget,
-        num_travelers=travel_request.num_travelers,
-        travel_style=travel_request.travel_style,
-        team_full_response=team_response,
-        generated_at=datetime.utcnow(),
-    )
-
-    # Save structured output
-    output_file = Path("travel_plan_output.json")
-    with open(output_file, "w", encoding="utf-8") as f:
-        json.dump(travel_plan.model_dump(), f, ensure_ascii=False, indent=2, default=str)
-
-    print(f"\n✅ Travel plan saved to: {output_file}")
 
 
 if __name__ == "__main__":

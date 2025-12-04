@@ -6,6 +6,10 @@ __pycache__/
 # Generated guidebooks
 guidebooks/
 
+# Models
+*.safetensors
+src/reception/suggest_destination/checkpoints/model.safetensors
+
 # C extensions
 *.so
 

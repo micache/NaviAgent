@@ -4,11 +4,10 @@ Handles agent sessions, chat history, and user memories
 """
 
 import os
-from typing import Optional
+from pathlib import Path
 
 from agno.db.postgres import PostgresDb
 from dotenv import load_dotenv
-from pathlib import Path
 
 # Load environment variables
 env_path = Path(__file__).parent.parent / ".env"
@@ -75,7 +74,6 @@ def get_user_session_count(user_id: str) -> int:
     """
     # This would require custom SQL query
     # Agno doesn't provide built-in session count method
-    pass
 
 
 def prune_old_memories(user_id: str, days: int = 90) -> int:

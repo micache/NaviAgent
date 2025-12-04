@@ -62,11 +62,11 @@ def test_orchestrator_session_support():
 
         # Check session history parameters
         has_history = getattr(agent, "add_history_to_context", False)
-        has_read_history = getattr(agent, "read_chat_history", False)
+        getattr(agent, "read_chat_history", False)
 
         # Check memory
         has_memory_manager = agent.memory_manager is not None
-        has_user_memories = getattr(agent, "enable_user_memories", False)
+        getattr(agent, "enable_user_memories", False)
 
         status = "✓" if all([has_db, has_user_id, has_history]) else "✗"
         print(

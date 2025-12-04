@@ -3,22 +3,18 @@ Itinerary Agent
 Generates detailed day-by-day travel itineraries using Agno's structured input/output
 """
 
-import ssl
 import sys
 from pathlib import Path
 
-import certifi
-import httpx
 from agno.agent import Agent
 from agno.db import PostgresDb
 from agno.memory import MemoryManager
-from agno.models.openai import OpenAIChat
 from agno.tools.reasoning import ReasoningTools
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import model_settings, settings
+from config import model_settings
 from models.schemas import ItineraryAgentInput, ItineraryAgentOutput
 from tools.search_tool import search_tools
 

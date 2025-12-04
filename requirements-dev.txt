@@ -26,3 +26,6 @@ bandit[toml]>=1.7.0
 
 # Pre-commit hooks
 pre-commit>=3.0.0
+
+supabase
+email-validator

@@ -1,7 +1,6 @@
 """Quick API test"""
 
 import json
-from datetime import date
 
 import requests
 

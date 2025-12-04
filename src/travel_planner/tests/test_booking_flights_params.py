@@ -1,13 +1,14 @@
 """
 Test Booking.com searchFlights with different parameters
 """
-import requests
-import json
+
 from datetime import datetime, timedelta
+
+import requests
 
 headers = {
     "x-rapidapi-key": "4474c9c793msh3cf72c8184daf74p137175jsn88cdd1fcb2d2",
-    "x-rapidapi-host": "booking-com15.p.rapidapi.com"
+    "x-rapidapi-host": "booking-com15.p.rapidapi.com",
 }
 
 url = "https://booking-com15.p.rapidapi.com/api/v1/flights/searchFlights"
@@ -29,7 +30,7 @@ querystring = {
     "children": "0,17",
     "sort": "BEST",
     "cabinClass": "ECONOMY",
-    "currency_code": "AED"
+    "currency_code": "AED",
 }
 try:
     response = requests.get(url, headers=headers, params=querystring, timeout=15)
@@ -49,7 +50,7 @@ querystring = {
     "adults": "1",
     "sort": "BEST",
     "cabinClass": "ECONOMY",
-    "currency_code": "USD"
+    "currency_code": "USD",
 }
 try:
     response = requests.get(url, headers=headers, params=querystring, timeout=15)
@@ -69,7 +70,7 @@ querystring = {
     "adults": "1",
     "sort": "BEST",
     "cabinClass": "ECONOMY",
-    "currency_code": "USD"
+    "currency_code": "USD",
 }
 try:
     response = requests.get(url, headers=headers, params=querystring, timeout=15)
@@ -85,7 +86,7 @@ querystring = {
     "fromId": "BKK.AIRPORT",
     "toId": "SGN.AIRPORT",
     "departDate": departure_date,
-    "adults": "1"
+    "adults": "1",
 }
 try:
     response = requests.get(url, headers=headers, params=querystring, timeout=15)

@@ -6,8 +6,7 @@ GitHub-flavored markdown support, table formatting, and emoji icons.
 """
 
 import logging
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 from travel_planner.guidebook.formatters.base import BaseFormatter
 from travel_planner.guidebook.utils.formatting_helpers import (

@@ -1,16 +1,12 @@
 """Pydantic models for structured input and output - Agent schemas for Agno."""
 
 from datetime import date
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 
 # Import shared schemas from public API
-from schemas.response import (
-    AccommodationOption,
-    Activity,
-    BudgetCategory,
-)
+from schemas.response import AccommodationOption, BudgetCategory
 from schemas.response import DaySchedule as DailySchedule  # Map to internal naming
 from schemas.response import (
     FlightOption,

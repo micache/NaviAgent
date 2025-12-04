@@ -5,18 +5,18 @@ This module provides tools for suggesting travel destinations based on:
 - Images (suggest_from_images)
 """
 
+from reception.suggest_destination.suggest_from_images import (
+    DuckDuckGoImagesAgent,
+    GoogleVisionImagesAgent,
+)
 from reception.suggest_destination.suggest_from_text import (
     TextDestinationAgent,
-    get_destination_suggestion
-)
-from reception.suggest_destination.suggest_from_images import (
-    GoogleVisionImagesAgent,
-    DuckDuckGoImagesAgent
+    get_destination_suggestion,
 )
 
 __all__ = [
-    'TextDestinationAgent',
-    'get_destination_suggestion',
-    'GoogleVisionImagesAgent',
-    'DuckDuckGoImagesAgent'
+    "TextDestinationAgent",
+    "get_destination_suggestion",
+    "GoogleVisionImagesAgent",
+    "DuckDuckGoImagesAgent",
 ]

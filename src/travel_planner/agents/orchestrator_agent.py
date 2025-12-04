@@ -157,7 +157,7 @@ class OrchestratorAgent:
         print(f"{'=' * 80}\n")
 
         return_date = request.departure_date + timedelta(days=request.trip_duration)
-        
+
         # Convert date objects to strings for JSON serialization in Agno session storage
         departure_date_str = request.departure_date.isoformat()
         return_date_str = return_date.isoformat()

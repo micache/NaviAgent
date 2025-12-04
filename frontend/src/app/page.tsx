@@ -1,26 +1,30 @@
+"use client";
 import "@/styles/home.css";
 import Image from "next/image";
 import "@/styles/features.css";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function HomePage() {
+  const { t } = useLanguage();
+
   return (
     <main className="home-page">
       {/* Hero section */}
       <section className="hero">
         <div className="hero-overlay">
-          <h1 className="hero-title">AstrAgent Travel</h1>
+          <h1 className="hero-title">{t("heroTitle")}</h1>
           <p className="hero-subtitle">
-            Plan smarter, travel further — Trợ lý du lịch thông minh của bạn.
+            {t("heroSubtitle")}
           </p>
           <a href="#features" className="hero-btn">
-            Khám phá ngay
+            {t("exploreNow")}
           </a>
         </div>
       </section>
 
       {/* Features section */}
       <div className="features-section">
-        <h2 className="features-title">Tính năng nổi bật</h2>
+        <h2 className="features-title">{t("featuresTitle")}</h2>
 
         {/* 1️⃣ Travel Map */}
         <section className="feature-row">
@@ -33,11 +37,9 @@ export default function HomePage() {
             />
           </div>
           <div className="feature-text">
-            <h3>🌍 Travel Map</h3>
+            <h3>{t("travelMapTitle")}</h3>
             <p>
-              Khám phá và nhìn lại hành trình của bạn trên bản đồ 3D tương tác.
-              Ghim những nơi bạn từng đến và xem lại hành trình du lịch của mình
-              một cách sinh động.
+              {t("travelMapDesc")}
             </p>
           </div>
         </section>
@@ -53,10 +55,9 @@ export default function HomePage() {
             />
           </div>
           <div className="feature-text">
-            <h3>🤖 AI Trip Planner</h3>
+            <h3>{t("aiPlannerTitle")}</h3>
             <p>
-              Nhập điểm đến, ngân sách, sở thích và để AI tự động xây dựng lịch
-              trình hoàn hảo — từ timeline đến chi phí chi tiết cho chuyến đi.
+              {t("aiPlannerDesc")}
             </p>
           </div>
         </section>
@@ -72,10 +73,9 @@ export default function HomePage() {
             />
           </div>
           <div className="feature-text">
-            <h3>🎯 Destination Finder</h3>
+            <h3>{t("destinationGuideTitle")}</h3>
             <p>
-              Chưa biết đi đâu? Hệ thống thông minh gợi ý điểm đến lý tưởng dựa
-              trên sở thích và ngân sách của bạn.
+              {t("destinationGuideDesc")}
             </p>
           </div>
         </section>
@@ -91,15 +91,12 @@ export default function HomePage() {
             />
           </div>
           <div className="feature-text">
-            <h3>🗂️ Xây dựng kế hoạch chuyên nghiệp</h3>
+            <h3>{t("planTitle")}</h3>
             <p>
-              Tạo và chỉnh sửa kế hoạch du lịch chi tiết — bao gồm lịch trình,
-              chi phí, lưu ý và gợi ý dịch vụ liên quan, giúp bạn sẵn sàng cho
-              hành trình tiếp theo.
+              {t("planDesc")}
             </p>
           </div>
         </section>
-        <button className="explore-btn">Create Plan</button>
       </div>
     </main>
   );
