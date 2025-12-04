@@ -18,7 +18,7 @@ python main.py
 Or with uvicorn directly:
 ```bash
 cd src
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+uvicorn naviagent.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 The API will be available at `http://localhost:8000`
