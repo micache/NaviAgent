@@ -50,7 +50,7 @@ class Settings(BaseSettings):
 
     # Server Settings
     host: str = "0.0.0.0"
-    port: int = 8000
+    port: int = 8003
     reload: bool = False  # Tắt reload mode
 
     # CORS Settings
