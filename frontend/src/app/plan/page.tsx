@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import sendIcon from "@/images/send.svg";
 import "@/styles/plan.css";
@@ -27,6 +28,7 @@ interface TravelData {
 
 export default function PlanPage() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -213,11 +215,81 @@ export default function PlanPage() {
   };
 
   // Handle create itinerary
-  const handleCreateItinerary = () => {
+  const handleCreateItinerary = async () => {
     console.log("🚀 Creating itinerary with travel data:");
     console.log(JSON.stringify(travelData, null, 2));
     
-    // TODO: Call travel planner API with travelData
+    setIsLoading(true);
+    
+    try {
+      // Call travel planner API
+      const PLANNER_API_URL = "http://localhost:8003";
+      
+      // Prepare data according to travel_planner schema
+      const plannerRequest = {
+        departure_point: travelData.departure_point,
+        destination: travelData.destination,
+        departure_date: travelData.departure_date,
+        trip_duration: parseInt(travelData.trip_duration || "1"),
+        num_travelers: parseInt(travelData.num_travelers || "1"),
+        budget: parseInt(travelData.budget || "0"),
+        travel_style: travelData.travel_style,
+        customer_notes: travelData.customer_notes || ""
+      };
+      
+      console.log("📤 Sending to travel planner:", plannerRequest);
+      
+      const response = await fetch(`${PLANNER_API_URL}/v1/plan_trip`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(plannerRequest),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Travel planner API error: ${response.status}`);
+      }
+      
+      const planResult = await response.json();
+      console.log("✅ Received plan from travel planner:", planResult);
+      
+      // Save to localStorage
+      const planId = Date.now().toString();
+      const completePlan = {
+        id: planId,
+        travel_data: travelData,
+        plan: planResult,
+        created_at: new Date().toISOString()
+      };
+      
+      // Save detail
+      localStorage.setItem(`travel_plan_${planId}`, JSON.stringify(completePlan));
+      
+      // Update list
+      const existingPlans = JSON.parse(localStorage.getItem('travel_plans_list') || '[]');
+      existingPlans.push({
+        id: planId,
+        destination: travelData.destination,
+        departure_date: travelData.departure_date,
+        trip_duration: parseInt(travelData.trip_duration || "1"),
+        num_travelers: parseInt(travelData.num_travelers || "1"),
+        budget: parseInt(travelData.budget || "0"),
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('travel_plans_list', JSON.stringify(existingPlans));
+      
+      console.log("💾 Plan saved to localStorage with ID:", planId);
+      
+      // Navigate to detail page
+      router.push(`/itinerary/${planId}`);
+      
+    } catch (error) {
+      console.error("❌ Error creating itinerary:", error);
+      alert("Không thể tạo lịch trình. Vui lòng thử lại!");
+    } finally {
+      setIsLoading(false);
+    }
     alert("Tính năng tạo lịch trình đang được phát triển!\n\nTravel Data:\n" + JSON.stringify(travelData, null, 2));
   };
 
@@ -235,7 +307,7 @@ export default function PlanPage() {
             <div className="banner-content">
               <span className="banner-text">{t("planComplete")}</span>
               <button className="create-itinerary-btn" onClick={handleCreateItinerary}>
-                🗓️ Tạo lịch trình
+                Tạo lịch trình
               </button>
             </div>
           </div>

@@ -237,6 +237,12 @@ export default function Header() {
           <Link href="/explore" className={pathname === "/explore" ? "active" : ""}>{t("explore")}</Link>
           <Link href="/visited" className={pathname === "/visited" ? "active" : ""}>{t("visited")}</Link>
           <Link href="/plan" className={pathname === "/plan" ? "active" : ""}>{t("plan")}</Link>
+          <Link 
+            href="/itinerary" 
+            className={pathname.startsWith("/itinerary") ? "active" : ""}
+          >
+            {language === "vi" ? "Lịch trình" : "Itinerary"}
+          </Link>
           <button
             className="lang-toggle"
             onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
