@@ -1,5 +1,6 @@
 """FastAPI application for NaviAgent Receptionist service."""
 
+import json
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -110,6 +111,20 @@ async def root():
     }
 
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    import os
+    checks = {
+        "status": "ok",
+        "supabase_url": bool(os.getenv("SUPABASE_URL")),
+        "supabase_key": bool(os.getenv("SUPABASE_KEY")),
+        "openai_api_key": bool(os.getenv("OPENAI_API_KEY")),
+        "database_url": bool(os.getenv("DATABASE_URL")),
+    }
+    return checks
+
+
 @app.post("/start_chat", response_model=StartChatResponse)
 async def start_chat(request: StartChatRequest):
     """Start a new chat session.
@@ -121,36 +136,56 @@ async def start_chat(request: StartChatRequest):
         New session_id and greeting message.
     """
     try:
+        print("\n" + "="*80)
+        print("🆕 START_CHAT endpoint called")
+        print(f"👤 User ID: {request.user_id}")
+        
         # Generate new session_id
         session_id = str(uuid.uuid4())
+        print(f"🆔 Generated session_id: {session_id}")
 
         # Create session in database
+        print("💾 Creating session in database...")
         create_chat_session(
             user_id=request.user_id, session_id=session_id, title="Travel Planning Session"
         )
+        print("✅ Session created in database")
 
         # Create agent and cache it
+        print("🤖 Initializing ReceptionistAgent...")
         agent = ReceptionistAgent(
             user_id=request.user_id,
             session_id=session_id,
         )
         _agent_cache[session_id] = agent
+        print("✅ Agent initialized and cached")
 
         # Get greeting
+        print("💬 Getting greeting from agent...")
         greeting = agent.greet_customer()
+        print(f"✅ Greeting: {greeting[:100]}...")
 
         # Save greeting message
+        print("💾 Saving greeting message...")
         save_chat_message(
             session_id=session_id,
             role="assistant",
             content=greeting,
         )
+        print("✅ Greeting saved")
+        print("="*80 + "\n")
 
         return StartChatResponse(
             session_id=session_id,
             message=greeting,
         )
     except Exception as e:
+        print("\n" + "❌"*40)
+        print(f"ERROR in start_chat: {type(e).__name__}")
+        print(f"Error message: {str(e)}")
+        import traceback
+        print(f"Traceback:\n{traceback.format_exc()}")
+        print("❌"*40 + "\n")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -198,6 +233,12 @@ async def chat(request: ChatRequest):
         travel_data = agent.get_travel_data()
         is_complete = False
 
+        # Print travel data for debugging
+        print("\n" + "="*80)
+        print("📋 TRAVEL DATA COLLECTED:")
+        print(json.dumps(travel_data, indent=2, ensure_ascii=False))
+        print("="*80 + "\n")
+
         # Check if all required fields are filled
         required_fields = [
             "destination",
@@ -208,6 +249,12 @@ async def chat(request: ChatRequest):
             "budget",
             "travel_style",
         ]
+        
+        # Count filled fields
+        filled_fields = sum(1 for field in required_fields if travel_data.get(field) is not None)
+        print(f"✅ Filled fields: {filled_fields}/{len(required_fields)}")
+        print(f"📝 Missing fields: {[f for f in required_fields if travel_data.get(f) is None]}")
+        print("-"*80 + "\n")
         if all(travel_data.get(field) is not None for field in required_fields):
             # Use LLM to detect if customer confirmed (handles nuanced responses)
             confirmation_prompt = (
@@ -228,12 +275,26 @@ async def chat(request: ChatRequest):
                 check_response = agent.run(confirmation_prompt)
                 is_confirmed = "YES" in check_response.content.upper()
                 is_complete = is_confirmed
+                
+                if is_complete:
+                    print("\n" + "🎉"*40)
+                    print("✅ TRAVEL DATA COLLECTION COMPLETE!")
+                    print("📦 FINAL TRAVEL DATA FOR BACKEND:")
+                    print(json.dumps(travel_data, indent=2, ensure_ascii=False))
+                    print("🎉"*40 + "\n")
             except Exception:
                 # Fallback to simple keyword check if LLM fails
                 positive_keywords = ["ok", "có", "đúng", "xác nhận", "yes", "vâng", "ừ", "oke"]
                 is_complete = any(
                     keyword in request.message.lower() for keyword in positive_keywords
                 )
+                
+                if is_complete:
+                    print("\n" + "🎉"*40)
+                    print("✅ TRAVEL DATA COLLECTION COMPLETE! (Fallback detection)")
+                    print("📦 FINAL TRAVEL DATA FOR BACKEND:")
+                    print(json.dumps(travel_data, indent=2, ensure_ascii=False))
+                    print("🎉"*40 + "\n")
 
         return ChatResponse(
             message=response.content,

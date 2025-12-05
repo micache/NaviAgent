@@ -29,3 +29,4 @@ pre-commit>=3.0.0
 
 supabase
 email-validator
+python-dotenv

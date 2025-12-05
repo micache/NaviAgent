@@ -81,6 +81,16 @@ const translations = {
     typeQuestion: "Nhập câu hỏi của bạn...",
     beachTrip: "Chuyến đi biển 3 ngày",
     hikingCold: "Đi bộ đường dài và thời tiết lạnh",
+    
+    // Travel Information
+    travelInfo: "Thông tin chuyến du lịch",
+    departurePoint: "Điểm khởi hành",
+    departureDate: "Ngày khởi hành",
+    duration: "Thời gian",
+    travelers: "Số lượng người đi",
+    budget: "Ngân sách",
+    travelStyle: "Phong cách du lịch",
+    planComplete: "✓ Hoàn thành thu thập thông tin chuyến đi!",
   },
   en: {
     // Header
@@ -151,6 +161,16 @@ const translations = {
     typeQuestion: "Type your question...",
     beachTrip: "3-day beach trip",
     hikingCold: "Hiking and cold weather",
+    
+    // Travel Information
+    travelInfo: "Travel Information",
+    departurePoint: "Departure Point",
+    departureDate: "Departure Date",
+    duration: "Duration",
+    travelers: "Number of Travelers",
+    budget: "Budget",
+    travelStyle: "Travel Style",
+    planComplete: "✓ Travel information collected successfully!",
   },
 };
 

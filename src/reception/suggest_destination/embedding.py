@@ -35,10 +35,18 @@ class EmbeddingGenerator:
         else:
             print(f"Using device: {self.device}")
 
-        # Load tokenizer
-        print(f"[INFO] Loading tokenizer: {config.model.model_name}")
-        self.tokenizer = AutoTokenizer.from_pretrained(config.model.model_name)
-        print("[INFO] Tokenizer loaded successfully")
+        # Load tokenizer from local checkpoint
+        checkpoint_dir = str(config.paths.checkpoint_dir)
+        print(f"[INFO] Loading tokenizer from local checkpoint: {checkpoint_dir}")
+        try:
+            # Try loading from local checkpoint first
+            self.tokenizer = AutoTokenizer.from_pretrained(checkpoint_dir, local_files_only=True)
+            print("[INFO] Tokenizer loaded from local checkpoint")
+        except Exception as e:
+            print(f"[WARNING] Failed to load from local: {e}")
+            print(f"[INFO] Falling back to HuggingFace Hub: {config.model.model_name}")
+            self.tokenizer = AutoTokenizer.from_pretrained(config.model.model_name)
+            print("[INFO] Tokenizer loaded from HuggingFace Hub")
 
         # Load model
         model_path = model_path or str(config.paths.model_path)
