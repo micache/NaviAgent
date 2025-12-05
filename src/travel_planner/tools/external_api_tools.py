@@ -567,6 +567,16 @@ class TripAdvisorHotelTools(Toolkit):
             if not location.isdigit():
                 logger.info(f"Searching location ID for: {location}")
                 location_id = self._get_location_id(location)
+
+                # Retry with cleaned city (strip country/commas) if first attempt failed
+                if not location_id and "," in location:
+                    cleaned_location = location.split(",")[0].strip()
+                    if cleaned_location and cleaned_location != location:
+                        logger.info(
+                            f"Retrying location ID lookup with cleaned city: {cleaned_location}"
+                        )
+                        location_id = self._get_location_id(cleaned_location)
+
                 if not location_id:
                     return f"❌ Không tìm thấy địa điểm: {location}"
             else:

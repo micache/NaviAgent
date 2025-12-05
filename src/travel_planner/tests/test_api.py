@@ -15,7 +15,7 @@ def test_health_check():
     print("Testing Health Check Endpoint")
     print("=" * 80)
 
-    response = requests.get("http://localhost:8000/v1/health")
+    response = requests.get("http://localhost:8003/v1/health")
     print(f"Status Code: {response.status_code}")
     print("Response:")
     pprint(response.json())
@@ -65,7 +65,7 @@ def test_plan_trip(user_id: str = None):
 
     try:
         response = requests.post(
-            "http://localhost:8000/v1/plan_trip",
+            "http://localhost:8003/v1/plan_trip",
             json=request_data,
             timeout=900,  # 15 minutes timeout (increased from 10)
         )
@@ -300,7 +300,7 @@ def test_config():
     print("Testing Config Endpoint")
     print("=" * 80)
 
-    response = requests.get("http://localhost:8000/v1/config")
+    response = requests.get("http://localhost:8003/v1/config")
     print(f"Status Code: {response.status_code}")
     print("Response:")
     pprint(response.json())

@@ -23,9 +23,25 @@ from .model_config import (
     model_settings,
 )
 
-# Load .env file explicitly
-env_path = Path(__file__).parent.parent / ".env"
-load_dotenv(env_path, override=True)
+# Locate root-level .env (outside travel_planner) with fallback to local .env
+def _find_env_file() -> Path | None:
+    candidates = [
+        Path(__file__).resolve().parents[3] / ".env",  # repository root
+        Path(__file__).resolve().parents[2] / ".env",  # src/.env (fallback)
+        Path(__file__).parent.parent / ".env",  # travel_planner/.env (last resort)
+    ]
+    for path in candidates:
+        if path.exists():
+            return path
+    return None
+
+
+env_path = _find_env_file()
+if env_path:
+    load_dotenv(env_path, override=True)
+    print(f"[Config] Loaded environment from {env_path}")
+else:
+    print("[Config] No .env file found; relying on existing environment")
 
 # Ensure SSL/TLS uses the bundled certifi CA bundle on all platforms
 _certifi_ca_bundle = certifi.where()
@@ -69,7 +85,7 @@ class Settings(BaseSettings):
         return v
 
     model_config = SettingsConfigDict(
-        env_file=str(env_path),
+        env_file=str(env_path) if env_path else None,
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
