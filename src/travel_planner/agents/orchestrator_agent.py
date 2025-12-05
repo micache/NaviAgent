@@ -118,7 +118,7 @@ class OrchestratorAgent:
         )
 
         # Print configuration summary
-        print(f"[Orchestrator] ✓ 7 specialist agents initialized")
+        print("[Orchestrator] ✓ 7 specialist agents initialized")
         print(f"[Orchestrator] ✓ Model provider: {model_settings.default_provider.value}")
         print(
             f"[Orchestrator] ✓ Default model: {model_settings.model_mappings[model_settings.default_provider]}"

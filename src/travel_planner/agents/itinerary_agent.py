@@ -111,6 +111,7 @@ def create_itinerary_agent(
             "**Internal Calculation (MANDATORY)**:",
             "   • selected_flight_cost = [cost from the flight object you selected]",
             "   • selected_accommodation_cost = [cost from the accommodation object you selected]",
+            "   • If any cost info comes in USD, convert to VND before these calculations",
             "   • 1. Calculate 'remaining_budget' = total_budget - selected_flight_cost - selected_accommodation_cost",
             "   • 2. Calculate 'daily_spending_limit' = (remaining_budget / duration_days) / num_travelers",
             "   • You MUST use this 'daily_spending_limit' to guide all 'estimated_cost' for activities and dining.",
@@ -144,7 +145,7 @@ def create_itinerary_agent(
             "   • Lunch (12:00-13:30): Local restaurant (activity_type: 'dining').",
             "   • Afternoon (14:00-18:00): 1-2 activities or 1 major site.",
             "   • Evening (19:00-22:00): 'Dinner' + optional night activity (night market, show).",
-            "   • ⚠️ IMPORTANT: Keep it concise - 4-5 activities per day MAXIMUM (not 7-8).",
+            "   • IMPORTANT: Keep it concise - 4-5 activities per day MAXIMUM (not 7-8).",
             "   • *Pacing*: Vary the pace. Mix sightseeing with 'relaxation' or 'shopping'.",
             "   • *Budget Check*: Sum of 'estimated_cost' for the day must not exceed 'daily_spending_limit' * num_travelers.",
             "",
@@ -166,6 +167,7 @@ def create_itinerary_agent(
             "---",
             "**BUDGET-CONSCIOUS PLANNING (Your Core Activity Logic)**:",
             "   • You MUST use these guidelines to set the 'estimated_cost' for activities.",
+            "   • If you retrieve or recall price ranges in USD, convert to VND before comparing with 'daily_spending_limit'.",
             "   • Free/cheap activities: Parks, temples, street walking tours (Cost: 0 - 50k VND - This is a general guide, adjust if {destination} is expensive).",
             "   • Mid-range activities: Museum tickets, guided tours (Cost: 100k-300k VND - Adjust based on local prices).",
             "   • Premium activities: Theme parks, special experiences (Cost: 500k-1M+ VND - Adjust based on local prices).",
@@ -211,7 +213,7 @@ def create_itinerary_agent(
             "}",
             "```",
             "",
-            "⚠️ **CRITICAL: JSON SIZE LIMIT**",
+            "**CRITICAL: JSON SIZE LIMIT**",
             "   • Keep response under 12,000 characters",
             "   • Descriptions: 1-2 sentences max",
             "   • Notes: 1 sentence or empty",
@@ -278,9 +280,9 @@ async def run_itinerary_agent(
     print(f"[ItineraryAgent] Travel style: {travel_style}")
     print(f"[ItineraryAgent] Departure: {departure_date}")
     if available_flights:
-        print(f"[ItineraryAgent] Received flight options for selection")
+        print("[ItineraryAgent] Received flight options for selection")
     if available_accommodations:
-        print(f"[ItineraryAgent] Received accommodation options for selection")
+        print("[ItineraryAgent] Received accommodation options for selection")
 
     # Create structured input
     agent_input = ItineraryAgentInput(
