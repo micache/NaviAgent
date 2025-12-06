@@ -31,8 +31,8 @@ class SuggestionAgent(Agent):
         super().__init__(model=OpenAIChat(id=model, api_key=api_key), markdown=False)
         self.user_id = user_id
         self.session_id = session_id
-        
-        instructions = f"""
+
+        self.instructions = f"""
         You are a travel suggestion agent. You will be received:
         1. A user description of desired travel features.
         2. Top 5 best match suggestion made by my destination retrieval system (if any).
@@ -53,29 +53,36 @@ def get_suggestion_from_text(
     """Get travel destination suggestion based on user description."""
     agent = SuggestionAgent(user_id=user_id, session_id=session_id)
     result = get_top_k_destination_suggestion(description, k=5)
-    
+    print("Retrieved Results:", result)
+
     prompt = f"""
     You are a travel expert. Pick three best destinations from the following retrieved results based on the user description.
-    
+
     User Description: "{description}"
     Retrieved Results: {result}
-    
+
     CRITICAL RULES - YOU MUST FOLLOW THESE:
     1. VERIFY that each destination ACTUALLY HAS the features mentioned in user description
     2. DO NOT suggest destinations based on vague similarity - be specific and accurate
     3. For example: If user asks for cherry blossoms (hoa anh đào), ONLY suggest places that actually have cherry blossoms:
        - Japan (Tokyo, Kyoto, Osaka) - YES, has cherry blossoms
-       - South Korea (Seoul, Jeju) - YES, has cherry blossoms  
+       - South Korea (Seoul, Jeju) - YES, has cherry blossoms
        - Taiwan - YES, has cherry blossoms
        - Da Lat, Vietnam - NO, does NOT have cherry blossoms (has hydrangeas, mimosa)
        - Hue, Vietnam - NO, does NOT have cherry blossoms
        - Hanoi, Vietnam - NO, does NOT have cherry blossoms
+       For example: If user asks for snowy places, ONLY suggest places that actually have snow (Vietnam does NOT have snowy places):
+       - Sapa, Vietnam - NO, does NOT have snow
+       - Japan - YES, has snow
+       - South Korea - YES, has snow
+       - China - YES, has snow
+       - Taiwan - YES, has snow
     4. If the retrieved results don't contain accurate matches, use your knowledge to suggest correct destinations in Vietnam and East Asia
     5. Be honest about what each destination offers - don't invent features
-    
+
     Format your response with markdown EXACTLY like this (in Vietnamese):
     Tôi gợi ý một vài điểm đến phù hợp với yêu cầu của bạn ✨
-    
+
     🌍 **Destination Name, Country**
     Brief ACCURATE description with specific features that match the request.
     (blank line)
@@ -84,14 +91,21 @@ def get_suggestion_from_text(
     (blank line)
     🌍 **Destination Name, Country**
     Brief ACCURATE description with specific features that match the request.
-    
+
     Chúc bạn sớm tìm được điểm đến cho chuyến đi tiếp theo! 🎒
-    
+
     Use emoji 🌍, bold destination, new line between name and description, add a line break between destinations.
     Answer in Vietnamese.
     Return ONLY the markdown text without any JSON formatting.
     """
     response = agent.run(input=prompt, stream=False)
     return response.content.strip()
-        
-    
+
+def main():
+    agent = SuggestionAgent()
+    description = "Muốn đi ngắm tuyết rơi"
+    result = get_suggestion_from_text(description)
+    print("Suggested Destinations:\n", result)
+
+if __name__ == "__main__":
+    main()
