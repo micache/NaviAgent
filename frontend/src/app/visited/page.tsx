@@ -3,6 +3,9 @@ import "@/styles/visited.css";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
+// API URL from environment variable
+const NAVIAGENT_API_URL = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://localhost:8001";
+
 interface Place {
   id: string;
   name: string;
@@ -71,7 +74,7 @@ export default function VisitedPage() {
 
       console.log("Loading trips with token:", token.substring(0, 20) + "...");
 
-      const res = await fetch("http://localhost:8000/trips/", {
+      const res = await fetch(`${NAVIAGENT_API_URL}/trips/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -393,7 +396,7 @@ export default function VisitedPage() {
         return;
       }
 
-      const res = await fetch("http://localhost:8000/trips/", {
+      const res = await fetch(`${NAVIAGENT_API_URL}/trips/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
