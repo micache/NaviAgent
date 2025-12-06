@@ -9,7 +9,7 @@ import passwordHide from "@/images/password-hide.svg";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 // API URLs for different backend services
-const USER_API_URL = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://localhost:8001";
+const NAVIAGENT_API_URL = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://localhost:8000";
 const RECEPTION_API_URL = process.env.NEXT_PUBLIC_RECEPTION_API_URL || "http://localhost:8002";
 const TRAVEL_PLANNER_API_URL = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8003";
 // const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || "http://localhost:8003";
@@ -21,6 +21,7 @@ const MIN_PASSWORD_LENGTH = 6;
 interface AuthUser {
   email: string;
   access_token: string;
+  user_id?: string;
 }
 
 export default function Header() {
@@ -96,7 +97,7 @@ export default function Header() {
           return;
         }
 
-        const response = await fetch(`${USER_API_URL}/auth/register`, {
+        const response = await fetch(`${NAVIAGENT_API_URL}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
@@ -108,7 +109,7 @@ export default function Header() {
         }
 
         // After successful registration, auto login
-        const loginResponse = await fetch(`${USER_API_URL}/auth/login`, {
+        const loginResponse = await fetch(`${NAVIAGENT_API_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
@@ -132,13 +133,15 @@ export default function Header() {
         const newUser: AuthUser = {
           email,
           access_token: loginData.access_token,
+          user_id: loginData.user?.id || loginData.user?.user_id,
         };
+        console.log("📝 Registered user:", newUser);
         localStorage.setItem("user", JSON.stringify(newUser));
         setUser(newUser);
         closeModal();
       } else {
         // Sign In - call /auth/login
-        const response = await fetch(`${USER_API_URL}/auth/login`, {
+        const response = await fetch(`${NAVIAGENT_API_URL}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
@@ -159,7 +162,9 @@ export default function Header() {
         const loggedUser: AuthUser = {
           email,
           access_token: data.access_token,
+          user_id: data.user?.id || data.user?.user_id,
         };
+        console.log("🔐 Logged in user:", loggedUser);
         localStorage.setItem("user", JSON.stringify(loggedUser));
         setUser(loggedUser);
         closeModal();
@@ -200,7 +205,7 @@ export default function Header() {
     if (!user) return;
 
     try {
-      await fetch(`${USER_API_URL}/auth/logout`, {
+      await fetch(`${NAVIAGENT_API_URL}/auth/logout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -232,6 +237,12 @@ export default function Header() {
           <Link href="/explore" className={pathname === "/explore" ? "active" : ""}>{t("explore")}</Link>
           <Link href="/visited" className={pathname === "/visited" ? "active" : ""}>{t("visited")}</Link>
           <Link href="/plan" className={pathname === "/plan" ? "active" : ""}>{t("plan")}</Link>
+          <Link 
+            href="/itinerary" 
+            className={pathname.startsWith("/itinerary") ? "active" : ""}
+          >
+            {language === "vi" ? "Lịch trình" : "Itinerary"}
+          </Link>
           <button
             className="lang-toggle"
             onClick={() => setLanguage(language === "vi" ? "en" : "vi")}

@@ -89,3 +89,31 @@ MIT License - See [LICENSE](LICENSE) file for details
 ## Contributing
 
 Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
+
+## Run Local
+# NaviAgent FastAPI server
+
+```bash
+cd src/naviagent
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# Reception FastAPI server
+```bash
+cd src/reception
+uvicorn main:app --reload --host 0.0.0.0 --port 8002
+```
+
+# Travel Planner FastAPI server
+
+```bash
+cd src/travel_planner
+uvicorn main:app --reload --host 0.0.0.0 --port 8003
+```
+
+# Frontend React server
+
+```bash
+cd frontend
+npm install
+npm start / npm run dev
+```
