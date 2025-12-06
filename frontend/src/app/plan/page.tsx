@@ -214,6 +214,23 @@ export default function PlanPage() {
     return style;
   };
 
+  // Mock data for testing
+  const handleMockData = () => {
+    const mockData: TravelData = {
+      destination: "Ho Chi Minh City, Vietnam",
+      departure_point: "Ha Noi, Vietnam",
+      departure_date: "2025-12-07",
+      trip_duration: "7",
+      num_travelers: "2",
+      budget: "100000000",
+      travel_style: "self-guided",
+      customer_notes: "Tìm hiểu ẩm thực địa phương và tham quan các điểm lịch sử."
+    };
+    setTravelData(mockData);
+    setIsComplete(true);
+    setMessages([{ role: "assistant", content: "✅ Mock data loaded! You can now create itinerary." }]);
+  };
+
   // Handle create itinerary
   const handleCreateItinerary = async () => {
     console.log("🚀 Creating itinerary with travel data:");
@@ -232,8 +249,8 @@ export default function PlanPage() {
         departure_date: travelData.departure_date,
         trip_duration: parseInt(travelData.trip_duration || "1"),
         num_travelers: parseInt(travelData.num_travelers || "1"),
-        budget: parseInt(travelData.budget || "0"),
-        travel_style: travelData.travel_style,
+        budget: parseFloat(travelData.budget || "0"),
+        travel_style: travelData.travel_style === "self-guided" ? "self_guided" : travelData.travel_style,
         customer_notes: travelData.customer_notes || ""
       };
       
@@ -248,7 +265,9 @@ export default function PlanPage() {
       });
       
       if (!response.ok) {
-        throw new Error(`Travel planner API error: ${response.status}`);
+        const errorDetail = await response.json().catch(() => null);
+        console.error("❌ API Error:", errorDetail);
+        throw new Error(`Travel planner API error: ${response.status} - ${JSON.stringify(errorDetail)}`);
       }
       
       const planResult = await response.json();
@@ -365,6 +384,23 @@ export default function PlanPage() {
               <span className="status-text">Connected</span>
             </div>
           )}
+          {/* Test buttons */}
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <button 
+              onClick={handleMockData}
+              style={{
+                padding: '8px 16px',
+                background: '#4CAF50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              🧪 Load Mock Data
+            </button>
+          </div>
         </div>
 
         {/* Chat messages area */}
