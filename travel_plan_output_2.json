@@ -1,0 +1,607 @@
+{
+  "version": "3.0-orchestrated",
+  "request_summary": {
+    "destination": "Seoul, South Korea",
+    "departure_point": "Hanoi",
+    "departure_date": "2026-02-14",
+    "trip_duration": 4,
+    "budget": 30000000.0,
+    "num_travelers": 2,
+    "travel_style": "self_guided",
+    "customer_notes": "Thích ẩm thực Hàn Quốc, Kpop và mua sắm"
+  },
+  "itinerary": {
+    "daily_schedules": [
+      {
+        "day_number": 1,
+        "date": "2026-02-14",
+        "title": "Ngày Đến Seoul - Khám Phá Myeongdong",
+        "activities": [
+          {
+            "time": "07:00 - 07:30",
+            "location_name": "Sân Bay Nội Bài",
+            "address": "Hà Nội, Việt Nam",
+            "activity_type": "transport",
+            "description": "Check-in chuyến bay VietJet Air đến Seoul",
+            "estimated_cost": null,
+            "notes": "Có mặt trước 2 giờ để làm thủ tục"
+          },
+          {
+            "time": "15:30 - 16:00",
+            "location_name": "Sân Bay Quốc Tế Incheon",
+            "address": "Incheon, Hàn Quốc",
+            "activity_type": "transport",
+            "description": "Đến Seoul sau chuyến bay có điểm dừng tại Đài Bắc",
+            "estimated_cost": null,
+            "notes": "Lấy hành lý và đổi tiền Hàn Won"
+          },
+          {
+            "time": "16:30 - 17:30",
+            "location_name": "Xe buýt sân bay đến Myeongdong",
+            "address": "Tuyến 6015 từ Incheon đến Myeongdong",
+            "activity_type": "transport",
+            "description": "Di chuyển đến khách sạn bằng xe buýt sân bay",
+            "estimated_cost": 160000.0,
+            "notes": "Mua vé tại quầy ở sân bay"
+          },
+          {
+            "time": "18:00 - 19:00",
+            "location_name": "Khách Sạn Myeongdong",
+            "address": "Myeongdong, Seoul",
+            "activity_type": "accommodation",
+            "description": "Check-in và nghỉ ngơi sau chuyến bay",
+            "estimated_cost": null,
+            "notes": "Khách sạn 3 sao tại trung tâm Myeongdong"
+          },
+          {
+            "time": "19:30 - 21:00",
+            "location_name": "Chợ Đêm Myeongdong",
+            "address": "Myeongdong, Jung-gu, Seoul",
+            "activity_type": "dining",
+            "description": "Thưởng thức ẩm thực đường phố Hàn Quốc: tteokbokki, hotteok, odeng",
+            "estimated_cost": 300000.0,
+            "notes": "Món ăn đường phố nóng hổi phù hợp mùa đông"
+          }
+        ]
+      },
+      {
+        "day_number": 2,
+        "date": "2026-02-15",
+        "title": "Di Sản Văn Hóa & Ẩm Thực Truyền Thống",
+        "activities": [
+          {
+            "time": "09:00 - 12:00",
+            "location_name": "Cung Điện Gyeongbokgung",
+            "address": "Jongno-gu, Seoul",
+            "activity_type": "sightseeing",
+            "description": "Tham quan cung điện lớn nhất triều đại Joseon, xem nghi lễ đổi gác",
+            "estimated_cost": 120000.0,
+            "notes": "Mặc hanbok được giảm giá vé vào cửa"
+          },
+          {
+            "time": "12:30 - 13:30",
+            "location_name": "Tosokchon Samgyetang",
+            "address": "Jongno-gu, Seoul",
+            "activity_type": "dining",
+            "description": "Thưởng thức samgyetang (gà hầm sâm) nổi tiếng nhất Seoul",
+            "estimated_cost": 400000.0,
+            "notes": "Nhà hàng truyền thống nổi tiếng với món gà hầm"
+          },
+          {
+            "time": "14:30 - 16:30",
+            "location_name": "Làng Bukchon Hanok",
+            "address": "Jongno-gu, Seoul",
+            "activity_type": "cultural",
+            "description": "Dạo bộ qua làng nhà truyền thống Hanok, chụp ảnh với kiến trúc cổ",
+            "estimated_cost": 0.0,
+            "notes": "Khu vực yên tĩnh với cảnh đẹp mùa đông"
+          },
+          {
+            "time": "17:00 - 19:00",
+            "location_name": "Insadong",
+            "address": "Jongno-gu, Seoul",
+            "activity_type": "shopping",
+            "description": "Mua sắm đồ thủ công mỹ nghệ, trà truyền thống và quà lưu niệm",
+            "estimated_cost": 500000.0,
+            "notes": "Thử bánh gạo đường phố và trà Hàn Quốc"
+          },
+          {
+            "time": "19:30 - 21:00",
+            "location_name": "Gwangjang Market",
+            "address": "Jongno-gu, Seoul",
+            "activity_type": "dining",
+            "description": "Ăn tối với món mayak gimbap, bindaetteok và sundae tại chợ truyền thống",
+            "estimated_cost": 300000.0,
+            "notes": "Chợ ẩm thực lâu đời nhất Seoul"
+          }
+        ]
+      },
+      {
+        "day_number": 3,
+        "date": "2026-02-16",
+        "title": "Kpop & Mua Sắm Hiện Đại",
+        "activities": [
+          {
+            "time": "10:00 - 12:00",
+            "location_name": "SMTOWN Coex Artium",
+            "address": "Gangnam-gu, Seoul",
+            "activity_type": "cultural",
+            "description": "Tham quan bảo tàng Kpop, mua merchandise của SM Entertainment",
+            "estimated_cost": 200000.0,
+            "notes": "Thiên đường cho fan Kpop với nhiều hoạt động tương tác"
+          },
+          {
+            "time": "12:30 - 13:30",
+            "location_name": "COEX Mall Food Court",
+            "address": "Gangnam-gu, Seoul",
+            "activity_type": "dining",
+            "description": "Ăn trưa tại trung tâm thương mại lớn nhất Seoul",
+            "estimated_cost": 250000.0,
+            "notes": "Nhiều lựa chọn ẩm thực Hàn Quốc và quốc tế"
+          },
+          {
+            "time": "14:00 - 17:00",
+            "location_name": "COEX Mall & Thư Viện Starfield",
+            "address": "Gangnam-gu, Seoul",
+            "activity_type": "shopping",
+            "description": "Mua sắm tại trung tâm thương mại ngầm lớn nhất thế giới, chụp ảnh tại thư viện sách nổi tiếng",
+            "estimated_cost": 800000.0,
+            "notes": "Khu mua sắm trong nhà lý tưởng cho mùa đông"
+          },
+          {
+            "time": "17:30 - 19:00",
+            "location_name": "Dongdaemun Design Plaza",
+            "address": "Jung-gu, Seoul",
+            "activity_type": "sightseeing",
+            "description": "Tham quan kiến trúc tương lai, xem triển lãm thiết kế",
+            "estimated_cost": 0.0,
+            "notes": "Tòa nhà hình vỏ sò độc đáo, đẹp nhất khi lên đèn"
+          },
+          {
+            "time": "19:30 - 21:00",
+            "location_name": "Khu Ẩm Thực Dongdaemun",
+            "address": "Dongdaemun, Seoul",
+            "activity_type": "dining",
+            "description": "Thử món kalguksu (mì sợi cắt tay) và các món ăn đêm",
+            "estimated_cost": 350000.0,
+            "notes": "Khu vực nhộn nhịp về đêm với nhiều quán ăn"
+          }
+        ]
+      },
+      {
+        "day_number": 4,
+        "date": "2026-02-17",
+        "title": "Núi Namsan & Chuyến Đi Cuối",
+        "activities": [
+          {
+            "time": "09:00 - 11:00",
+            "location_name": "Tháp Namsan Seoul",
+            "address": "Yongsan-gu, Seoul",
+            "activity_type": "sightseeing",
+            "description": "Đi cáp treo lên tháp Namsan, ngắm toàn cảnh Seoul từ trên cao",
+            "estimated_cost": 240000.0,
+            "notes": "Cảnh đẹp mùa đông với tuyết phủ (nếu có)"
+          },
+          {
+            "time": "11:30 - 13:00",
+            "location_name": "Myeongdong Lotte Department Store",
+            "address": "Myeongdong, Seoul",
+            "activity_type": "shopping",
+            "description": "Mua sắm cuối cùng, mua mỹ phẩm Hàn Quốc và quà lưu niệm",
+            "estimated_cost": 600000.0,
+            "notes": "Tầng duty-free cho khách quốc tế"
+          },
+          {
+            "time": "13:30 - 14:30",
+            "location_name": "Nhà Hàng BBQ Hàn Quốc",
+            "address": "Myeongdong, Seoul",
+            "activity_type": "dining",
+            "description": "Bữa trưa thịt nướng Hàn Quốc (samgyeopsal hoặc bulgogi)",
+            "estimated_cost": 450000.0,
+            "notes": "Trải nghiệm nướng thịt tại bàn truyền thống"
+          },
+          {
+            "time": "15:00 - 16:00",
+            "location_name": "Khách Sạn Myeongdong",
+            "address": "Myeongdong, Seoul",
+            "activity_type": "accommodation",
+            "description": "Check-out và gửi hành lý",
+            "estimated_cost": null,
+            "notes": "Chuẩn bị cho chuyến về"
+          },
+          {
+            "time": "16:30 - 18:00",
+            "location_name": "Xe buýt đến sân bay",
+            "address": "Tuyến 6015 từ Myeongdong đến Incheon",
+            "activity_type": "transport",
+            "description": "Di chuyển đến sân bay Incheon cho chuyến bay về",
+            "estimated_cost": 160000.0,
+            "notes": "Xuất phát sớm để có mặt trước 3 giờ"
+          }
+        ]
+      }
+    ],
+    "location_list": [
+      "Sân Bay Nội Bài",
+      "Sân Bay Quốc Tế Incheon",
+      "Xe buýt sân bay đến Myeongdong",
+      "Khách Sạn Myeongdong",
+      "Chợ Đêm Myeongdong",
+      "Cung Điện Gyeongbokgung",
+      "Tosokchon Samgyetang",
+      "Làng Bukchon Hanok",
+      "Insadong",
+      "Gwangjang Market",
+      "SMTOWN Coex Artium",
+      "COEX Mall Food Court",
+      "COEX Mall & Thư Viện Starfield",
+      "Dongdaemun Design Plaza",
+      "Khu Ẩm Thực Dongdaemun",
+      "Tháp Namsan Seoul",
+      "Myeongdong Lotte Department Store",
+      "Nhà Hàng BBQ Hàn Quốc",
+      "Xe buýt đến sân bay"
+    ],
+    "summary": "Hành trình 4 ngày khám phá Seoul mùa đông với ngân sách 30 triệu VND cho 2 người. Trải nghiệm văn hóa Hàn Quốc qua cung điện Gyeongbokgung, làng Hanok truyền thống, thưởng thức ẩm thực đường phố Myeongdong và chợ Gwangjang. Đặc biệt dành cho fan Kpop với SMTOWN Coex Artium và mua sắm tại COEX Mall - trung tâm thương mại ngầm lớn nhất thế giới. Kết thúc với view toàn cảnh Seoul từ tháp Namsan.",
+    "selected_flight": {
+      "airline": "VietJet Air",
+      "outbound_flight": "VJ 850 - 07:00 AM (có điểm dừng tại Đài Bắc)",
+      "return_flight": "VJ 851 - 19:00 PM (ước tính)",
+      "total_cost": 11000000.0
+    },
+    "selected_accommodation": {
+      "name": "Khách Sạn Myeongdong 3 Sao",
+      "area": "Myeongdong, Seoul",
+      "check_in": "2026-02-14",
+      "check_out": "2026-02-17",
+      "total_cost": 3000000.0
+    }
+  },
+  "budget": {
+    "categories": [
+      {
+        "category_name": "Vé Máy Bay",
+        "estimated_cost": 11000000.0,
+        "breakdown": null,
+        "notes": "VietJet Air khứ hồi cho 2 người (có điểm dừng tại Đài Bắc)"
+      },
+      {
+        "category_name": "Khách Sạn",
+        "estimated_cost": 3000000.0,
+        "breakdown": null,
+        "notes": "Khách sạn 3 sao tại Myeongdong cho 3 đêm (14-17/2/2026)"
+      },
+      {
+        "category_name": "Ăn Uống",
+        "estimated_cost": 4100000.0,
+        "breakdown": [
+          {
+            "Chợ Đêm Myeongdong": 600000.0,
+            "Tosokchon Samgyetang": 800000.0,
+            "Gwangjang Market": 600000.0,
+            "COEX Mall Food Court": 500000.0,
+            "Khu Ẩm Thực Dongdaemun": 700000.0,
+            "Nhà Hàng BBQ Hàn Quốc": 900000.0
+          }
+        ],
+        "notes": "Bao gồm 6 bữa ăn chính cho 2 người, tập trung vào ẩm thực Hàn Quốc truyền thống"
+      },
+      {
+        "category_name": "Hoạt Động & Tham Quan",
+        "estimated_cost": 4920000.0,
+        "breakdown": [
+          {
+            "Cung Điện Gyeongbokgung": 240000.0,
+            "Insadong shopping": 1000000.0,
+            "SMTOWN Coex Artium": 400000.0,
+            "COEX Mall shopping": 1600000.0,
+            "Tháp Namsan Seoul": 480000.0,
+            "Myeongdong Lotte Department Store": 1200000.0
+          }
+        ],
+        "notes": "Bao gồm vé tham quan, mua sắm và các hoạt động văn hóa"
+      },
+      {
+        "category_name": "Vận Chuyển Địa Phương",
+        "estimated_cost": 640000.0,
+        "breakdown": [
+          {
+            "Xe buýt sân bay đến Myeongdong": 320000.0,
+            "Xe buýt Myeongdong đến sân bay": 320000.0
+          }
+        ],
+        "notes": "Di chuyển bằng xe buýt sân bay tuyến 6015"
+      },
+      {
+        "category_name": "Quỹ Mua Sắm (Buffer)",
+        "estimated_cost": 1500000.0,
+        "breakdown": null,
+        "notes": "5% tổng ngân sách cho mua sắm và quà lưu niệm phát sinh"
+      },
+      {
+        "category_name": "Quỹ Khẩn Cấp (Buffer)",
+        "estimated_cost": 3000000.0,
+        "breakdown": null,
+        "notes": "10% tổng ngân sách cho chi phí phát sinh và tình huống khẩn cấp"
+      }
+    ],
+    "total_estimated_cost": 28160000.0,
+    "budget_status": "Trong Ngân Sách (Dư 1.840.000 VND)",
+    "recommendations": [
+      "Kế hoạch nằm trong ngân sách với 1.840.000 VND dư ra. Đây là tình huống lý tưởng!",
+      "Có thể sử dụng số tiền dư để nâng cấp trải nghiệm: thêm một bữa ăn cao cấp hoặc mua thêm quà lưu niệm.",
+      "Xem xét mua thẻ T-money cho phương tiện công cộng để tiết kiệm hơn so với vé lẻ.",
+      "Chi phí là ước tính. Luôn mang theo thêm tiền cho các khoản phát sinh ngoài dự kiến.",
+      "Nếu muốn tiết kiệm hơn, có thể thay thế một bữa ăn nhà hàng bằng ẩm thực đường phố."
+    ]
+  },
+  "advisory": {
+    "warnings_and_tips": [
+      "CẢNH BÁO: Seoul là thành phố an toàn nhưng vẫn có trộm cắp ở khu vực đông người như Myeongdong, Dongdaemun và trên tàu điện ngầm. Luôn giữ túi xách trước mặt và không để điện thoại, ví trong túi sau.",
+      "SỨC KHỎE: Tháng 2 Seoul rất lạnh (-6°C đến 4°C). Chuẩn bị áo khoác dày, găng tay, khăn quàng cổ. Da dễ khô nứt trong thời tiết lạnh - mang theo kem dưỡng ẩm và son dưỡng môi.",
+      "VĂN HÓA: Khi vào nhà hàng truyền thống Hàn Quốc, cởi giày trước khi lên sàn. Không cắm đũa thẳng đứng vào bát cơm (giống nghi lễ tang). Tipping không phổ biến ở Hàn Quốc.",
+      "THỰC TẾ: Đổi tiền tại sân bay Incheon hoặc ngân hàng lớn. Học vài từ tiếng Hàn cơ bản: 'Annyeonghaseyo' (xin chào), 'Kamsahamnida' (cảm ơn), 'Eolmayeyo?' (bao nhiêu tiền?).",
+      "BẢO HIỂM DU LỊCH: Bắt buộc mua bảo hiểm du lịch quốc tế bao gồm y tế, tai nạn và hủy chuyến. Seoul có chi phí y tế cao nếu không có bảo hiểm.",
+      "GIAO THÔNG: Tải ứng dụng KakaoMap hoặc Naver Map thay vì Google Maps (Google Maps bị hạn chế ở Hàn Quốc). Mua thẻ T-money cho phương tiện công cộng.",
+      "ẨM THỰC: Nước máy Seoul an toàn để uống nhưng nhiều người vẫn uống nước đóng chai. Thử các món mùa đông: hotteok (bánh kếp ngọt), bungeoppang (bánh cá nhân đậu đỏ), sundae (dồi tiết).",
+      "MUA SẮM: Cửa hàng miễn thuế yêu cầu xuất trình hộ chiếu và vé máy bay. Giữ hóa đơn để hoàn thuế tại sân bay khi về.",
+      "ĐIỆN THOẠI: Mua SIM du lịch tại sân bay Incheon để có kết nối internet ngay lập tức. Pocket WiFi cũng là lựa chọn tốt cho nhiều thiết bị.",
+      "THỜI TIẾT: Kiểm tra dự báo thời tiết hàng ngày. Có thể có tuyết rơi - mang giày chống trơn trượt. Các hoạt động trong nhà như bảo tàng, trung tâm mua sắm là lựa chọn tốt khi trời quá lạnh."
+    ],
+    "location_descriptions": [
+      {
+        "location_name": "Cung Điện Gyeongbokgung",
+        "description": "Cung điện lớn nhất và quan trọng nhất của triều đại Joseon, được xây dựng năm 1395. Nơi đây thể hiện kiến trúc truyền thống Hàn Quốc với các tòa nhà bằng gỗ, sân vườn rộng lớn và bảo tàng quốc gia.",
+        "highlights": [
+          "Nghi lễ đổi gác hoàng gia (11:00, 13:00, 15:00 hàng ngày)",
+          "Thuê hanbok truyền thống để chụp ảnh và được miễn phí vé vào cửa",
+          "Bảo tàng Cung điện Quốc gia Hàn Quốc trong khuôn viên"
+        ]
+      },
+      {
+        "location_name": "Chợ Đêm Myeongdong",
+        "description": "Khu mua sắm và ẩm thực đường phố sầm uất nhất Seoul, nổi tiếng với các quầy thức ăn đường phố, cửa hàng mỹ phẩm và thời trang. Là thiên đường cho người yêu thích ẩm thực và mua sắm.",
+        "highlights": [
+          "Hơn 100 quầy thức ăn đường phố với tteokbokki, gà chiên, bánh kếp",
+          "Mua sắm mỹ phẩm Hàn Quốc với giá tốt và nhiều mẫu mã",
+          "Không khí nhộn nhịp về đêm với đèn neon và âm nhạc"
+        ]
+      },
+      {
+        "location_name": "SMTOWN Coex Artium",
+        "description": "Trung tâm văn hóa Kpop của SM Entertainment, bao gồm bảo tàng, cửa hàng merchandise, rạp chiếu phim và studio. Là điểm đến không thể bỏ qua cho fan Kpop muốn tìm hiểu về các nhóm nhạc nổi tiếng.",
+        "highlights": [
+          "Bảo tàng tương tác với hình ảnh, video của các nghệ sĩ SM",
+          "Cửa hàng merchandise chính thức với sản phẩm độc quyền",
+          "Studio thu âm và phòng tập nhảy để trải nghiệm"
+        ]
+      },
+      {
+        "location_name": "COEX Mall & Thư Viện Starfield",
+        "description": "Trung tâm thương mại ngầm lớn nhất thế giới với hơn 300 cửa hàng, rạp chiếu phim, thủy cung và thư viện sách nổi tiếng. Là địa điểm lý tưởng cho mua sắm và giải trí trong nhà.",
+        "highlights": [
+          "Thư viện Starfield với kệ sách cao 13m - điểm chụp ảnh nổi tiếng",
+          "COEX Aquarium với hơn 40,000 sinh vật biển",
+          "Hàng trăm cửa hàng thời trang, mỹ phẩm và đồ điện tử"
+        ]
+      },
+      {
+        "location_name": "Tháp Namsan Seoul",
+        "description": "Tháp truyền hình và quan sát biểu tượng của Seoul nằm trên đỉnh núi Namsan. Cung cấp tầm nhìn 360 độ toàn cảnh thành phố và là địa điểm lãng mạn nổi tiếng.",
+        "highlights": [
+          "Cáp treo lên núi Namsan với view tuyệt đẹp",
+          "Khóa tình yêu tại hàng rào quanh tháp - truyền thống của các cặp đôi",
+          "Nhà hàng xoay trên đỉnh tháp với view panorama"
+        ]
+      },
+      {
+        "location_name": "Gwangjang Market",
+        "description": "Chợ truyền thống lâu đời nhất Seoul (1905), nổi tiếng với ẩm thực đường phố Hàn Quốc chính hiệu. Là nơi tìm hiểu văn hóa ẩm thực địa phương và mua vải, quần áo truyền thống.",
+        "highlights": [
+          "Mayak gimbap (cơm cuộn 'ma túy' - gọi vì gây nghiện)",
+          "Bindaetteok (bánh kếp đậu xanh) và sundae (dồi tiết)",
+          "Khu vực bán vải và hanbok truyền thống"
+        ]
+      }
+    ],
+    "visa_info": "Công dân Việt Nam CẦN visa để nhập cảnh Hàn Quốc. Yêu cầu: \n1. Hộ chiếu còn hiệu lực ít nhất 6 tháng tính từ ngày nhập cảnh\n2. Đơn xin visa du lịch ngắn hạn (C-3-1)\n3. Ảnh 3.5x4.5cm nền trắng (2 tấm)\n4. Xác nhận đặt vé máy bay khứ hồi\n5. Xác nhận đặt khách sạn\n6. Sao kê tài khoản ngân hàng 3 tháng gần nhất\n7. Lịch trình du lịch chi tiết\n\nNộp hồ sơ tại: \n- Đại sứ quán Hàn Quốc tại Hà Nội: 44 đường Phạm Ngọc Thạch\n- Tổng lãnh sự quán Hàn Quốc tại TP.HCM: 107 đường Nguyễn Du\n\nThời gian xử lý: 5-7 ngày làm việc. Nộp trước chuyến đi ít nhất 2-3 tuần.",
+    "weather_info": "Tháng 2 tại Seoul là thời điểm lạnh nhất trong năm với nhiệt độ trung bình từ -6°C đến 4°C. Du khách có thể gặp tuyết rơi nhẹ hoặc mưa tuyết, đặc biệt vào đầu tháng. Độ ẩm thấp và gió lạnh từ Siberia khiến cảm giác lạnh càng rõ rệt hơn, cần chuẩn bị trang phục giữ ấm kỹ lưỡng.",
+    "sim_and_apps": [
+      "SIM DU LỊCH: Mua tại sân bay Incheon - KT Olleh, SK Telecom, hoặc LG U+ có gói 5-10 ngày (khoảng 30,000-50,000 KRW ~ 600,000-1,000,000 VND) với data không giới hạn hoặc có hạn mức cao.",
+      "ỨNG DỤNG BẮT BUỘC: Naver Map hoặc KakaoMap (Google Maps không hoạt động tốt ở Hàn Quốc), Papago (dịch tiếng Hàn), Kakao T (gọi taxi), Subway Korea (tàu điện ngầm).",
+      "POCKET WIFI: Thuê tại sân bay Incheon (khoảng 5,000-8,000 KRW/ngày ~ 100,000-160,000 VND) - tiện lợi cho nhiều thiết bị cùng kết nối.",
+      "KẾT NỐI MIỄN PHÍ: WiFi miễn phí tại sân bay, trung tâm mua sắm lớn, Starbucks, và nhiều quán cà phê. Tuy nhiên kết nối không ổn định.",
+      "THẺ GIAO THÔNG: Mua thẻ T-money tại cửa hàng tiện lợi (CU, GS25, 7-Eleven) - nạp tiền và sử dụng cho tàu điện ngầm, xe buýt, taxi."
+    ],
+    "safety_tips": [
+      "SỐ ĐIỆN THOẠI KHẨN CẤP: Cảnh sát 112, Cứu thương/Y tế 119, Cứu hỏa 119. Lưu số Đại sứ quán Việt Nam tại Seoul: +82-2-730-6700.",
+      "TRÁNH KHU VỰC: Itaewon về đêm có thể đông đúc và ồn ào. Cẩn thận ở các quán bar/club tại Hongdae và Gangnam. Không đi một mình ở công viên tối.",
+      "SCAM PHỔ BIẾN: 'Taxi giá cao' - chỉ đi taxi màu cam/bạc (taxi thường) hoặc đen (deluxe). Kiểm tra đồng hồ tính tiền bật. Tránh taxi tư nhân không có biển hiệu.",
+      "AN TOÀN TÀI SẢN: Không để điện thoại, ví trên bàn tại quán ăn. Sử dụng túi chống trộm khi đi tàu điện ngầm giờ cao điểm. Khóa vali tại khách sạn.",
+      "AN TOÀN THỰC PHẨM: Seoul có tiêu chuẩn vệ sinh cao. Tuy nhiên, người có dạ dày nhạy cảm nên tránh thức ăn đường phố quá cay hoặc chưa nấu chín kỹ. Uống nước đóng chai nếu lo ngại."
+    ]
+  },
+  "souvenirs": [
+    {
+      "item_name": "Trà Hàn Quốc (Korean Tea)",
+      "description": "Trà truyền thống Hàn Quốc như trà gạo (nokcha), trà lúa mạch (boricha) và trà nhân sâm. Đây là món quà lịch sự và đặc trưng văn hóa Hàn Quốc, thường được đóng gói trong hộp gỗ hoặc giấy truyền thống rất đẹp mắt.",
+      "estimated_price": "50,000-200,000 VND",
+      "where_to_buy": "Cửa hàng trà truyền thống ở Insadong, Lotte Department Store"
+    },
+    {
+      "item_name": "Mỹ phẩm Hàn Quốc (K-Beauty)",
+      "description": "Các sản phẩm chăm sóc da và trang điểm nổi tiếng của Hàn Quốc như mặt nạ giấy, kem dưỡng ẩm, son môi. Đây là những sản phẩm chất lượng cao với giá cả phải chăng, được ưa chuộng toàn cầu.",
+      "estimated_price": "100,000-500,000 VND",
+      "where_to_buy": "Myeongdong, Olive Young, Etude House, Innisfree"
+    },
+    {
+      "item_name": "Bánh gạo Hàn Quốc (Tteok)",
+      "description": "Các loại bánh gạo truyền thống Hàn Quốc với nhiều hương vị và hình dạng khác nhau. Đây là món ăn truyền thống có lịch sử lâu đời, thường được dùng trong các dịp lễ tết và mang ý nghĩa văn hóa sâu sắc.",
+      "estimated_price": "80,000-250,000 VND",
+      "where_to_buy": "Chợ Gwangjang, Insadong, cửa hàng đặc sản tại sân bay"
+    },
+    {
+      "item_name": "Đồ thủ công mỹ nghệ Hanji",
+      "description": "Các sản phẩm làm từ giấy truyền thống Hanji như đèn lồng, hộp đựng, sổ tay. Giấy Hanji được làm thủ công từ vỏ cây dâu tằm, bền đẹp và mang đậm nét văn hóa truyền thống Hàn Quốc.",
+      "estimated_price": "150,000-800,000 VND",
+      "where_to_buy": "Cửa hàng thủ công ở Insadong, Bukchon Hanok Village"
+    },
+    {
+      "item_name": "Rượu Soju đặc biệt",
+      "description": "Các loại rượu Soju cao cấp với hương vị đặc biệt hoặc thiết kế bao bì độc đáo. Soju là thức uống quốc hồn của Hàn Quốc, phiên bản đặc biệt thường có hương trái cây hoặc thảo mộc.",
+      "estimated_price": "200,000-600,000 VND",
+      "where_to_buy": "Cửa hàng rượu ở Myeongdong, Lotte Mart, sân bay Incheon"
+    },
+    {
+      "item_name": "Trang sức Hangul",
+      "description": "Trang sức có chữ cái tiếng Hàn (Hangul) hoặc các biểu tượng văn hóa Hàn Quốc. Những món trang sức này vừa thời trang vừa mang ý nghĩa văn hóa, thường được làm từ bạc hoặc vàng.",
+      "estimated_price": "300,000-1,500,000 VND",
+      "where_to_buy": "Cửa hàng trang sức ở Insadong, Dongdaemun Design Plaza"
+    },
+    {
+      "item_name": "Mặt nạ truyền thống Hahoe",
+      "description": "Mặt nạ gỗ truyền thống từ làng Hahoe, được UNESCO công nhận là di sản văn hóa. Mỗi mặt nạ đại diện cho một nhân vật trong kịch mặt nạ truyền thống Hàn Quốc với ý nghĩa văn hóa sâu sắc.",
+      "estimated_price": "500,000-2,000,000 VND",
+      "where_to_buy": "Cửa hàng đồ lưu niệm ở Insadong, Bảo tàng Quốc gia Hàn Quốc"
+    },
+    {
+      "item_name": "Đồ Kpop Merchandise",
+      "description": "Các sản phẩm liên quan đến nhóm nhạc Kpop yêu thích như album, áo thun, poster, phụ kiện. Đây là món quà lý tưởng cho fan Kpop với nhiều lựa chọn từ các công ty giải trí lớn.",
+      "estimated_price": "200,000-1,000,000 VND",
+      "where_to_buy": "SMTOWN Coex Artium, Myeongdong, cửa hàng chính thức của các công ty giải trí"
+    }
+  ],
+  "logistics": {
+    "flight_options": [
+      {
+        "airline": "Vietnam Airlines",
+        "flight_type": "direct",
+        "departure_time": "08:30 AM",
+        "arrival_time": "02:00 PM",
+        "duration": "5h 30m direct",
+        "price_per_person": 8500000.0,
+        "cabin_class": "Economy",
+        "benefits": [
+          "20kg ký gửi",
+          "Bữa ăn bao gồm",
+          "Lựa chọn chỗ ngồi",
+          "Giải trí trên máy bay"
+        ],
+        "booking_platforms": [
+          "Vietnam Airlines website",
+          "Traveloka",
+          "Skyscanner"
+        ],
+        "notes": "Chuyến bay trực tiếp nhanh nhất từ Hà Nội đến Seoul, phù hợp với lịch trình 4 ngày"
+      },
+      {
+        "airline": "Korean Air",
+        "flight_type": "direct",
+        "departure_time": "11:45 AM",
+        "arrival_time": "05:15 PM",
+        "duration": "5h 30m direct",
+        "price_per_person": 9500000.0,
+        "cabin_class": "Economy",
+        "benefits": [
+          "23kg ký gửi",
+          "Bữa ăn cao cấp",
+          "Lựa chọn chỗ ngồi",
+          "Wi-Fi trên máy bay",
+          "Giải trí đa dạng"
+        ],
+        "booking_platforms": [
+          "Korean Air website",
+          "Trip.com",
+          "Google Flights"
+        ],
+        "notes": "Hãng hàng không 5 sao với dịch vụ xuất sắc, thời gian bay thuận tiện"
+      },
+      {
+        "airline": "T'way Air",
+        "flight_type": "direct",
+        "departure_time": "01:15 AM",
+        "arrival_time": "06:45 AM",
+        "duration": "5h 30m direct",
+        "price_per_person": 6500000.0,
+        "cabin_class": "Economy",
+        "benefits": [
+          "15kg ký gửi",
+          "Bữa ăn nhẹ",
+          "Lựa chọn chỗ ngồi có phí"
+        ],
+        "booking_platforms": [
+          "T'way Air website",
+          "Traveloka",
+          "Skyscanner"
+        ],
+        "notes": "Lựa chọn tiết kiệm nhất với giá tốt, chuyến bay đêm tiết kiệm thời gian"
+      },
+      {
+        "airline": "Asiana Airlines",
+        "flight_type": "direct",
+        "departure_time": "03:30 PM",
+        "arrival_time": "09:00 PM",
+        "duration": "5h 30m direct",
+        "price_per_person": 9000000.0,
+        "cabin_class": "Economy",
+        "benefits": [
+          "23kg ký gửi",
+          "Bữa ăn Hàn Quốc truyền thống",
+          "Lựa chọn chỗ ngồi",
+          "Giải trí trên máy bay"
+        ],
+        "booking_platforms": [
+          "Asiana Airlines website",
+          "Trip.com",
+          "Google Flights"
+        ],
+        "notes": "Dịch vụ chất lượng cao với ẩm thực Hàn Quốc đặc sắc"
+      },
+      {
+        "airline": "VietJet Air",
+        "flight_type": "1 stop",
+        "departure_time": "07:00 AM",
+        "arrival_time": "03:30 PM",
+        "duration": "8h 30m với 1 điểm dừng tại Đài Bắc",
+        "price_per_person": 5500000.0,
+        "cabin_class": "Economy",
+        "benefits": [
+          "7kg xách tay",
+          "Hành lý ký gửi có phí",
+          "Bữa ăn có phí"
+        ],
+        "booking_platforms": [
+          "VietJet Air website",
+          "Traveloka",
+          "Skyscanner"
+        ],
+        "notes": "Lựa chọn giá rẻ nhất nhưng có điểm dừng, phù hợp với ngân sách hạn chế"
+      }
+    ],
+    "recommended_flight": "T'way Air - Lựa chọn tốt nhất với giá 6.500.000 VND/người, phù hợp với ngân sách 6.000.000 VND/người. Chuyến bay đêm giúp tiết kiệm thời gian và chi phí khách sạn, vẫn đảm bảo hành trình trực tiếp đến Seoul.",
+    "average_price": 7800000.0,
+    "booking_tips": [
+      "Đặt vé trước 2-3 tháng để có giá tốt nhất, đặc biệt cho mùa cao điểm tháng 2",
+      "Kiểm tra giá trên nhiều nền tảng: website hãng hàng không, Traveloka, Skyscanner, Trip.com",
+      "Xem xét chuyến bay đêm để tiết kiệm chi phí và thời gian",
+      "Theo dõi khuyến mãi từ các hãng hàng không Hàn Quốc như T'way Air, Jin Air",
+      "Đặt vé khứ hồi cùng hãng thường rẻ hơn đặt riêng lẻ"
+    ],
+    "visa_requirements": "Công dân Việt Nam cần visa du lịch Hàn Quốc. Nộp hồ sơ tại Đại sứ quán Hàn Quốc tại Hà Nội hoặc Lãnh sự quán tại TP.HCM trước chuyến đi ít nhất 2-3 tuần."
+  },
+  "accommodation": {
+    "recommendations": [],
+    "best_areas": [],
+    "average_price_per_night": 0.0,
+    "booking_tips": [
+      "Không thể tìm thấy thông tin khách sạn cho ngày 2026-02-14. Có thể do ngày này quá xa trong tương lai hoặc API không hỗ trợ tìm kiếm cho năm 2026.",
+      "Đề xuất: Thử tìm kiếm trực tiếp trên các trang đặt phòng như Booking.com, Agoda, hoặc Expedia với ngày cụ thể.",
+      "Các khu vực nên tìm ở Seoul: Myeongdong (trung tâm mua sắm), Hongdae (giới trẻ, Kpop), Gangnam (cao cấp), Insadong (văn hóa truyền thống).",
+      "Đặt phòng sớm vì tháng 2 là mùa cao điểm du lịch ở Seoul, đặc biệt nếu trùng với Tết Nguyên Đán (Seollal).",
+      "Kiểm tra chính sách hủy phòng linh hoạt do kế hoạch có thể thay đổi."
+    ],
+    "total_estimated_cost": 0.0
+  },
+  "generated_at": "2025-12-05T13:49:17.015944",
+  "team_full_response": null
+}
