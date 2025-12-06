@@ -1,0 +1,787 @@
+{
+  "version": "3.0-orchestrated",
+  "request_summary": {
+    "destination": "Thái Lan",
+    "departure_point": "Hanoi",
+    "departure_date": "2025-12-15",
+    "trip_duration": 5,
+    "budget": 20000000.0,
+    "num_travelers": 2,
+    "travel_style": "self_guided",
+    "customer_notes": "Thích địa khám phá ẩm thực. Muốn tham quan các địa điểm nổi tiếng và mua sắm."
+  },
+  "itinerary": {
+    "daily_schedules": [
+      {
+        "day_number": 1,
+        "date": "2025-12-15",
+        "title": "Ngày Đến Nơi và Khám Phá Địa Phương",
+        "activities": [
+          {
+            "time": "10:45",
+            "location_name": "Sân bay Suvarnabhumi Bangkok",
+            "address": "Bangkok, Thái Lan",
+            "activity_type": "transport",
+            "description": "Hạ cánh tại sân bay Suvarnabhumi sau chuyến bay VietJet Air từ Việt Nam",
+            "estimated_cost": null,
+            "notes": "Làm thủ tục nhập cảnh và lấy hành lý"
+          },
+          {
+            "time": "11:30 - 12:30",
+            "location_name": "Taxi đến khách sạn",
+            "address": "Từ sân bay đến Bangkok City Hotel",
+            "activity_type": "transport",
+            "description": "Di chuyển bằng taxi từ sân bay đến khách sạn ở quận Pratunam",
+            "estimated_cost": 400000.0,
+            "notes": "Khoảng 45-60 phút tùy giao thông"
+          },
+          {
+            "time": "13:00",
+            "location_name": "Bangkok City Hotel",
+            "address": "Quận Pratunam, Bangkok",
+            "activity_type": "accommodation",
+            "description": "Check-in và nghỉ ngơi tại khách sạn",
+            "estimated_cost": null,
+            "notes": "Nhận phòng và sắp xếp đồ đạc"
+          },
+          {
+            "time": "14:00 - 16:00",
+            "location_name": "Chợ Pratunam",
+            "address": "Quận Pratunam, Bangkok",
+            "activity_type": "shopping",
+            "description": "Khám phá chợ quần áo Pratunam nổi tiếng với giá cả phải chăng",
+            "estimated_cost": 0.0,
+            "notes": "Mặc cả khi mua sắm, chợ có nhiều quần áo thời trang giá rẻ"
+          },
+          {
+            "time": "19:00 - 21:00",
+            "location_name": "Nhà hàng địa phương gần khách sạn",
+            "address": "Quận Pratunam, Bangkok",
+            "activity_type": "dining",
+            "description": "Bữa tối đầu tiên tại Thái Lan với các món ăn địa phương",
+            "estimated_cost": 260000.0,
+            "notes": "Thử các món Thái truyền thống như Pad Thai, Tom Yum"
+          }
+        ]
+      },
+      {
+        "day_number": 2,
+        "date": "2025-12-16",
+        "title": "Khám Phá Cung Điện và Đền Chùa Lịch Sử",
+        "activities": [
+          {
+            "time": "08:00 - 09:00",
+            "location_name": "Bữa sáng tại khách sạn",
+            "address": "Bangkok City Hotel",
+            "activity_type": "dining",
+            "description": "Thưởng thức bữa sáng buffet tại khách sạn",
+            "estimated_cost": 0.0,
+            "notes": "Bao gồm trong giá phòng"
+          },
+          {
+            "time": "09:30 - 12:30",
+            "location_name": "Grand Palace và Wat Phra Kaew",
+            "address": "Phra Nakhon, Bangkok",
+            "activity_type": "sightseeing",
+            "description": "Tham quan Cung điện Hoàng gia và Đền Phật Ngọc - biểu tượng của Thái Lan",
+            "estimated_cost": 500000.0,
+            "notes": "Mặc trang phục kín đáo, mang theo nước uống"
+          },
+          {
+            "time": "13:00 - 14:00",
+            "location_name": "Nhà hàng địa phương gần Grand Palace",
+            "address": "Phra Nakhon, Bangkok",
+            "activity_type": "dining",
+            "description": "Bữa trưa với ẩm thực Thái Lan truyền thống",
+            "estimated_cost": 200000.0,
+            "notes": "Thử các món ăn đường phố đặc trưng"
+          },
+          {
+            "time": "14:30 - 16:30",
+            "location_name": "Wat Pho (Đền Nằm)",
+            "address": "Phra Nakhon, Bangkok",
+            "activity_type": "sightseeing",
+            "description": "Tham quan ngôi đền nổi tiếng với tượng Phật nằm khổng lồ",
+            "estimated_cost": 200000.0,
+            "notes": "Trải nghiệm massage Thái truyền thống tại đây"
+          },
+          {
+            "time": "17:00 - 18:30",
+            "location_name": "Bờ sông Chao Phraya",
+            "address": "Bangkok",
+            "activity_type": "sightseeing",
+            "description": "Đi dạo dọc bờ sông và ngắm hoàng hôn",
+            "estimated_cost": 0.0,
+            "notes": "Cảnh đẹp lãng mạn, nhiều góc chụp ảnh đẹp"
+          },
+          {
+            "time": "19:30 - 21:30",
+            "location_name": "Khu ẩm thực đường phố",
+            "address": "Quận Phra Nakhon, Bangkok",
+            "activity_type": "dining",
+            "description": "Bữa tối với các món ăn đường phố đa dạng",
+            "estimated_cost": 180000.0,
+            "notes": "Thử nhiều món ăn vặt Thái Lan khác nhau"
+          }
+        ]
+      },
+      {
+        "day_number": 3,
+        "date": "2025-12-17",
+        "title": "Mua Sắm và Ẩm Thực Đường Phố",
+        "activities": [
+          {
+            "time": "08:00 - 09:00",
+            "location_name": "Bữa sáng tại khách sạn",
+            "address": "Bangkok City Hotel",
+            "activity_type": "dining",
+            "description": "Bữa sáng buffet trước khi bắt đầu ngày mới",
+            "estimated_cost": 0.0,
+            "notes": "Nạp năng lượng cho ngày mua sắm"
+          },
+          {
+            "time": "09:30 - 12:30",
+            "location_name": "MBK Center",
+            "address": "Quận Pathum Wan, Bangkok",
+            "activity_type": "shopping",
+            "description": "Mua sắm tại trung tâm thương mại lớn với đa dạng sản phẩm",
+            "estimated_cost": 0.0,
+            "notes": "Nhiều tầng với các cửa hàng điện tử, quần áo, đồ lưu niệm"
+          },
+          {
+            "time": "13:00 - 14:00",
+            "location_name": "Food court MBK Center",
+            "address": "Quận Pathum Wan, Bangkok",
+            "activity_type": "dining",
+            "description": "Bữa trưa tại khu ẩm thực với nhiều lựa chọn",
+            "estimated_cost": 150000.0,
+            "notes": "Thử các món ăn từ nhiều vùng miền Thái Lan"
+          },
+          {
+            "time": "14:30 - 17:00",
+            "location_name": "Siam Paragon và Siam Center",
+            "address": "Quận Pathum Wan, Bangkok",
+            "activity_type": "shopping",
+            "description": "Khám phá các trung tâm thương mại cao cấp",
+            "estimated_cost": 0.0,
+            "notes": "Ngắm các cửa hàng thời trang và giải trí"
+          },
+          {
+            "time": "18:00 - 20:00",
+            "location_name": "Chinatown (Yaowarat)",
+            "address": "Quận Samphanthawong, Bangkok",
+            "activity_type": "dining",
+            "description": "Bữa tối tại khu phố Tàu với ẩm thực đường phố phong phú",
+            "estimated_cost": 200000.0,
+            "notes": "Nên đi bộ để khám phá nhiều quán ăn nhỏ"
+          },
+          {
+            "time": "20:30 - 22:00",
+            "location_name": "Đi dạo đêm Chinatown",
+            "address": "Quận Samphanthawong, Bangkok",
+            "activity_type": "sightseeing",
+            "description": "Ngắm cảnh đêm và thưởng thức tráng miệng đường phố",
+            "estimated_cost": 50000.0,
+            "notes": "Thử các món tráng miệng Thái Lan đặc sắc"
+          }
+        ]
+      },
+      {
+        "day_number": 4,
+        "date": "2025-12-18",
+        "title": "Chuyến Đi Một Ngày Đến Ayutthaya",
+        "activities": [
+          {
+            "time": "07:00 - 08:00",
+            "location_name": "Bữa sáng nhanh",
+            "address": "Bangkok City Hotel",
+            "activity_type": "dining",
+            "description": "Bữa sáng nhanh trước khi khởi hành",
+            "estimated_cost": 0.0,
+            "notes": "Bao gồm trong giá phòng"
+          },
+          {
+            "time": "08:30 - 10:30",
+            "location_name": "Di chuyển đến Ayutthaya",
+            "address": "Từ Bangkok đến Ayutthaya",
+            "activity_type": "transport",
+            "description": "Đi xe buýt hoặc tàu đến thành phố cổ Ayutthaya",
+            "estimated_cost": 300000.0,
+            "notes": "Khoảng 2 giờ di chuyển"
+          },
+          {
+            "time": "11:00 - 13:00",
+            "location_name": "Wat Mahathat",
+            "address": "Ayutthaya, Thái Lan",
+            "activity_type": "sightseeing",
+            "description": "Tham quan ngôi đền nổi tiếng với đầu Phật trong rễ cây",
+            "estimated_cost": 100000.0,
+            "notes": "Di sản UNESCO, chụp ảnh tại điểm đầu Phật nổi tiếng"
+          },
+          {
+            "time": "13:00 - 14:00",
+            "location_name": "Bữa trưa địa phương",
+            "address": "Ayutthaya, Thái Lan",
+            "activity_type": "dining",
+            "description": "Thưởng thức ẩm thực địa phương Ayutthaya",
+            "estimated_cost": 150000.0,
+            "notes": "Thử các món ăn truyền thống của vùng"
+          },
+          {
+            "time": "14:30 - 16:00",
+            "location_name": "Wat Phra Si Sanphet",
+            "address": "Ayutthaya, Thái Lan",
+            "activity_type": "sightseeing",
+            "description": "Tham quan ngôi đền quan trọng nhất của Ayutthaya",
+            "estimated_cost": 100000.0,
+            "notes": "Ngắm ba ngọn tháp lớn - biểu tượng của Ayutthaya"
+          },
+          {
+            "time": "16:30 - 18:30",
+            "location_name": "Di chuyển về Bangkok",
+            "address": "Từ Ayutthaya về Bangkok",
+            "activity_type": "transport",
+            "description": "Quay trở lại Bangkok bằng phương tiện công cộng",
+            "estimated_cost": 300000.0,
+            "notes": "Nghỉ ngơi trên đường về"
+          },
+          {
+            "time": "19:30 - 21:00",
+            "location_name": "Bữa tối nhẹ gần khách sạn",
+            "address": "Quận Pratunam, Bangkok",
+            "activity_type": "dining",
+            "description": "Bữa tối đơn giản sau chuyến đi dài",
+            "estimated_cost": 120000.0,
+            "notes": "Thử các món ăn nhẹ địa phương"
+          }
+        ]
+      },
+      {
+        "day_number": 5,
+        "date": "2025-12-19",
+        "title": "Ngày Khởi Hành và Mua Sắm Cuối Cùng",
+        "activities": [
+          {
+            "time": "08:00 - 09:00",
+            "location_name": "Bữa sáng cuối cùng",
+            "address": "Bangkok City Hotel",
+            "activity_type": "dining",
+            "description": "Bữa sáng buffet lần cuối tại khách sạn",
+            "estimated_cost": 0.0,
+            "notes": "Thưởng thức các món ăn Thái Lan một lần nữa"
+          },
+          {
+            "time": "09:30 - 11:00",
+            "location_name": "Mua sắm cuối cùng tại Pratunam",
+            "address": "Quận Pratunam, Bangkok",
+            "activity_type": "shopping",
+            "description": "Mua quà lưu niệm và đồ ăn mang về",
+            "estimated_cost": 0.0,
+            "notes": "Mua các đặc sản Thái Lan làm quà"
+          },
+          {
+            "time": "11:30",
+            "location_name": "Check-out khách sạn",
+            "address": "Bangkok City Hotel",
+            "activity_type": "accommodation",
+            "description": "Trả phòng và chuẩn bị ra sân bay",
+            "estimated_cost": null,
+            "notes": "Kiểm tra lại đồ đạc trước khi rời đi"
+          },
+          {
+            "time": "12:00 - 13:00",
+            "location_name": "Bữa trưa cuối cùng",
+            "address": "Quận Pratunam, Bangkok",
+            "activity_type": "dining",
+            "description": "Bữa trưa cuối cùng tại Thái Lan",
+            "estimated_cost": 150000.0,
+            "notes": "Thử món ăn yêu thích một lần nữa"
+          },
+          {
+            "time": "13:30 - 14:30",
+            "location_name": "Taxi đến sân bay",
+            "address": "Từ khách sạn đến sân bay Suvarnabhumi",
+            "activity_type": "transport",
+            "description": "Di chuyển đến sân bay cho chuyến bay về",
+            "estimated_cost": 400000.0,
+            "notes": "Đến sân bay trước 3-4 giờ so với giờ bay"
+          },
+          {
+            "time": "15:30",
+            "location_name": "Sân bay Suvarnabhumi",
+            "address": "Bangkok, Thái Lan",
+            "activity_type": "transport",
+            "description": "Làm thủ tục check-in và an ninh",
+            "estimated_cost": null,
+            "notes": "Có thời gian mua sắm miễn thuế tại sân bay"
+          }
+        ]
+      }
+    ],
+    "location_list": [
+      "Sân bay Suvarnabhumi Bangkok",
+      "Bangkok City Hotel",
+      "Chợ Pratunam",
+      "Grand Palace và Wat Phra Kaew",
+      "Wat Pho (Đền Nằm)",
+      "Bờ sông Chao Phraya",
+      "MBK Center",
+      "Siam Paragon và Siam Center",
+      "Chinatown (Yaowarat)",
+      "Wat Mahathat",
+      "Wat Phra Si Sanphet"
+    ],
+    "summary": "Hành trình 5 ngày khám phá Bangkok với trọng tâm vào ẩm thực đường phố, mua sắm và di sản văn hóa. Bắt đầu với khám phá địa phương quanh khu Pratunam, tiếp theo là tham quan các đền chùa lịch sử, mua sắm tại các trung tâm thương mại lớn, chuyến đi một ngày đến thành phố cổ Ayutthaya, và kết thúc với mua sắm cuối cùng trước khi trở về.",
+    "selected_flight": {
+      "airline": "VietJet Air",
+      "outbound_flight": "VN404 - 08:30 AM",
+      "return_flight": "VN405 - 16:00 PM",
+      "total_cost": 6400000.0
+    },
+    "selected_accommodation": {
+      "name": "Bangkok City Hotel",
+      "area": "Quận Pratunam, Bangkok",
+      "check_in": "2025-12-15",
+      "check_out": "2025-12-19",
+      "total_cost": 4750000.0
+    }
+  },
+  "budget": {
+    "categories": [
+      {
+        "category_name": "Vé Máy Bay",
+        "estimated_cost": 6400000.0,
+        "breakdown": null,
+        "notes": "VietJet Air - chuyến bay thẳng tiết kiệm"
+      },
+      {
+        "category_name": "Khách Sạn",
+        "estimated_cost": 4750000.0,
+        "breakdown": null,
+        "notes": "Bangkok City Hotel - 5 đêm tại quận Pratunam"
+      },
+      {
+        "category_name": "Ăn Uống",
+        "estimated_cost": 2820000.0,
+        "breakdown": null,
+        "notes": "8 bữa ăn cho 2 người, chủ yếu là ẩm thực đường phố"
+      },
+      {
+        "category_name": "Hoạt Động & Tham Quan",
+        "estimated_cost": 1900000.0,
+        "breakdown": null,
+        "notes": "Vé vào cổng các đền chùa và điểm tham quan"
+      },
+      {
+        "category_name": "Vận Chuyển Địa Phương",
+        "estimated_cost": 2000000.0,
+        "breakdown": null,
+        "notes": "Taxi và phương tiện công cộng trong thành phố"
+      },
+      {
+        "category_name": "Quỹ Mua Sắm (Dự Phòng)",
+        "estimated_cost": 1000000.0,
+        "breakdown": null,
+        "notes": "5% ngân sách cho mua sắm và quà lưu niệm"
+      },
+      {
+        "category_name": "Quỹ Khẩn Cấp (Dự Phòng)",
+        "estimated_cost": 2000000.0,
+        "breakdown": null,
+        "notes": "10% ngân sách cho chi phí phát sinh"
+      }
+    ],
+    "total_estimated_cost": 20870000.0,
+    "budget_status": "Vượt Ngân Sách 870,000 VND",
+    "recommendations": [
+      "Kế hoạch này VƯỢT NGÂN SÁCH 870,000 VND. Đây là tình huống nghiêm trọng. Kế hoạch PHẢI được sửa đổi.",
+      "Đề xuất: Yêu cầu ItineraryAgent thay thế một hoạt động 'cao cấp' bằng hoạt động 'miễn phí', hoặc giảm chi phí 'ăn uống' bằng cách thay thế 2 bữa ăn tầm trung bằng 'thức ăn đường phố'.",
+      "Xem xét sử dụng phương tiện công cộng (BTS/MRT) thay vì taxi để tiết kiệm chi phí vận chuyển địa phương.",
+      "Chi phí là ước tính. Luôn mang theo thêm tiền cho các chi phí phát sinh không lường trước."
+    ]
+  },
+  "advisory": {
+    "warnings_and_tips": [
+      "Cảnh giác với móc túi ở các điểm du lịch đông đúc như Grand Palace, chợ đêm và trung tâm mua sắm - Bangkok được xếp hạng thành phố số 1 thế giới về móc túi năm 2025",
+      "Tránh các trò lừa đảo phổ biến: taxi/tuk-tuk giá cao, đền chùa 'đóng cửa' giả, người bán vé giả, quán bar lừa đảo",
+      "Mặc trang phục kín đáo khi tham quan đền chùa (quần dài, áo có tay, không mặc đồ hở hang)",
+      "Uống nước đóng chai để tránh các vấn đề về tiêu hóa, rửa tay thường xuyên",
+      "Tôn trọng văn hóa địa phương: không chạm vào đầu người Thái, không chỉ chân vào tượng Phật",
+      "Đổi tiền tại các điểm đổi tiền chính thức, tránh đổi trên đường phố",
+      "Học một vài từ tiếng Thái cơ bản như 'xin chào' (Sawasdee), 'cảm ơn' (Khop khun)",
+      "Mang theo bản sao hộ chiếu và để hộ chiếu gốc trong két an toàn tại khách sạn",
+      "Mua bảo hiểm du lịch để đề phòng các trường hợp khẩn cấp về y tế",
+      "Sử dụng ứng dụng Grab để đặt xe thay vì bắt taxi đường phố để tránh bị chặt chém"
+    ],
+    "location_descriptions": [
+      {
+        "location_name": "Grand Palace và Wat Phra Kaew",
+        "description": "Cung điện Hoàng gia và Đền Phật Ngọc là biểu tượng quốc gia của Thái Lan, nơi lưu giữ tượng Phật Ngọc thiêng liêng và kiến trúc hoàng gia tuyệt đẹp. Đây là điểm tham quan không thể bỏ qua khi đến Bangkok.",
+        "highlights": [
+          "Tượng Phật Ngọc thiêng liêng",
+          "Kiến trúc hoàng gia Thái Lan",
+          "Khu vực lịch sử quan trọng"
+        ]
+      },
+      {
+        "location_name": "Wat Pho (Đền Nằm)",
+        "description": "Ngôi đền nổi tiếng với tượng Phật nằm khổng lồ dài 46 mét, được bao phủ bằng vàng lá. Đây cũng là trung tâm đào tạo massage Thái truyền thống.",
+        "highlights": [
+          "Tượng Phật nằm lớn nhất Thái Lan",
+          "Trải nghiệm massage Thái truyền thống",
+          "Kiến trúc Phật giáo cổ"
+        ]
+      },
+      {
+        "location_name": "Chinatown (Yaowarat)",
+        "description": "Khu phố Tàu sầm uất với ẩm thực đường phố phong phú, cửa hàng vàng bạc và không khí nhộn nhịp về đêm. Là thiên đường cho những người yêu thích ẩm thực.",
+        "highlights": [
+          "Ẩm thực đường phố đa dạng",
+          "Không khí sầm uất về đêm",
+          "Cửa hàng vàng bạc truyền thống"
+        ]
+      },
+      {
+        "location_name": "MBK Center",
+        "description": "Trung tâm mua sắm 8 tầng với hàng ngàn cửa hàng bán đủ loại sản phẩm từ điện tử, quần áo đến đồ lưu niệm. Là điểm mua sắm lý tưởng cho du khách.",
+        "highlights": [
+          "Đa dạng sản phẩm giá cả phải chăng",
+          "Khu ẩm thực lớn",
+          "Vị trí thuận tiện gần BTS"
+        ]
+      },
+      {
+        "location_name": "Siam Paragon và Siam Center",
+        "description": "Các trung tâm thương mại cao cấp với các thương hiệu quốc tế, rạp chiếu phim và nhà hàng sang trọng. Là trung tâm mua sắm và giải trí hiện đại.",
+        "highlights": [
+          "Thương hiệu cao cấp quốc tế",
+          "Rạp chiếu phim IMAX",
+          "Nhà hàng và khu ẩm thực đa dạng"
+        ]
+      },
+      {
+        "location_name": "Chợ Pratunam",
+        "description": "Khu chợ quần áo lớn với giá cả phải chăng, nổi tiếng với các sản phẩm thời trang giá rẻ. Lý tưởng cho việc mua sắm quần áo và phụ kiện.",
+        "highlights": [
+          "Quần áo giá rẻ",
+          "Nhiều lựa chọn thời trang",
+          "Vị trí gần khách sạn"
+        ]
+      },
+      {
+        "location_name": "Wat Mahathat",
+        "description": "Ngôi đền cổ ở Ayutthaya nổi tiếng với đầu tượng Phật được bao quanh bởi rễ cây bồ đề. Là di sản UNESCO và điểm chụp ảnh nổi tiếng.",
+        "highlights": [
+          "Đầu Phật trong rễ cây nổi tiếng",
+          "Di sản UNESCO",
+          "Kiến trúc cổ Ayutthaya"
+        ]
+      },
+      {
+        "location_name": "Wat Phra Si Sanphet",
+        "description": "Ngôi đền quan trọng nhất của Ayutthaya với ba ngọn tháp lớn - biểu tượng của thành phố cổ. Từng là ngôi đền hoàng gia chính.",
+        "highlights": [
+          "Ba ngọn tháp lớn biểu tượng",
+          "Đền hoàng gia cổ",
+          "Kiến trúc lịch sử quan trọng"
+        ]
+      }
+    ],
+    "visa_info": "Công dân Việt Nam được miễn thị thực 30 ngày khi nhập cảnh Thái Lan bằng đường hàng không. Tuy nhiên từ ngày 1/5/2025, tất cả du khách phải hoàn thành Thẻ Nhập cảnh Kỹ thuật số Thái Lan (TDAC) trực tuyến trước 3 ngày khi đến Thái Lan. Cần có hộ chiếu còn hiệu lực ít nhất 6 tháng và vé máy bay khứ hồi.",
+    "weather_info": "Thời tiết ở Thái Lan vào tháng 12 thường nắng và khô, với nhiệt độ cao ban ngày khoảng 30-35°C và nhiệt độ thấp ban đêm khoảng 20-25°C. Đây là mùa khô, ít mưa, độ ẩm thấp hơn so với các mùa khác, tạo điều kiện lý tưởng cho các hoạt động ngoài trời. Du khách nên tận hưởng thời tiết dễ chịu này nhưng lưu ý rằng đây là mùa cao điểm du lịch, nên các điểm tham quan có thể đông đúc.",
+    "sim_and_apps": [
+      "SIM du lịch AIS Lucky Tourist: 8 ngày với 15GB data, giá khoảng 299 THB (200,000 VND) - mua tại sân bay hoặc cửa hàng AIS",
+      "SIM dtac Tourist: Gói 8 ngày unlimited data, giá 299 THB - phủ sóng tốt toàn quốc",
+      "eSIM cho du lịch: Các nhà cung cấp như Thailand eSIM cung cấp gói data không giới hạn cho khách du lịch",
+      "Ứng dụng cần thiết: Grab (đặt xe, giao đồ ăn), Google Maps, Google Translate, Traveloka (đặt tour), LINE (nhắn tin phổ biến ở Thái Lan)",
+      "WiFi miễn phí: Có sẵn tại hầu hết khách sạn, trung tâm mua sắm và một số quán cà phê"
+    ],
+    "safety_tips": [
+      "Số điện thoại khẩn cấp: Cảnh sát 191, Cứu thương 1669, Cứu hỏa 199, Cảnh sát du lịch 1155 (có nhân viên nói tiếng Anh)",
+      "Luôn để ý túi xách và ví tiền ở nơi đông người, đặc biệt tại các chợ và điểm tham quan",
+      "Tránh các khu vực biểu tình chính trị và tuân theo hướng dẫn của chính quyền địa phương",
+      "Giữ số điện thoại Đại sứ quán Việt Nam tại Bangkok: +66 2 251 7201 để liên hệ trong trường hợp khẩn cấp",
+      "Chỉ sử dụng taxi có đồng hồ tính tiền hoặc ứng dụng Grab để tránh bị chặt chém"
+    ]
+  },
+  "souvenirs": [
+    {
+      "item_name": "Áo thun Thái Lan thiết kế độc đáo",
+      "description": "Những chiếc áo thun với thiết kế mang đậm văn hóa Thái Lan, thường có hình ảnh chùa chiền, voi, hoặc chữ Thái truyền thống. Đây là món quà lưu niệm phổ biến và thiết thực.",
+      "estimated_price": "150,000-300,000 VND",
+      "where_to_buy": "Chatuchak Weekend Market, Khao San Road, MBK Center"
+    },
+    {
+      "item_name": "Đồ thủ công mỹ nghệ bằng gỗ teak",
+      "description": "Các sản phẩm thủ công từ gỗ teak Thái Lan như tượng Phật, hộp trang trí, hay đồ gia dụng. Gỗ teak là loại gỗ quý của Thái Lan với độ bền cao và vân gỗ đẹp.",
+      "estimated_price": "200,000-800,000 VND",
+      "where_to_buy": "Narai Phand, Chatuchak Market, các cửa hàng thủ công tại Bangkok"
+    },
+    {
+      "item_name": "Trang sức bạc Chiang Mai",
+      "description": "Trang sức bạc tinh xảo được chế tác thủ công tại Chiang Mai, với các họa tiết truyền thống và hiện đại. Đây là đặc sản nổi tiếng của vùng miền Bắc Thái Lan.",
+      "estimated_price": "300,000-1,500,000 VND",
+      "where_to_buy": "Chợ đêm Chiang Mai, các cửa hàng trang sức tại Bangkok"
+    },
+    {
+      "item_name": "Gia vị và nước sốt Thái Lan",
+      "description": "Các loại gia vị đặc trưng như curry paste, nước mắm Thái, và các loại sốt chua ngọt. Giúp bạn mang hương vị Thái Lan về nhà và tự chế biến các món ăn.",
+      "estimated_price": "50,000-200,000 VND",
+      "where_to_buy": "Chợ đầu mối, siêu thị Big C, Tesco Lotus"
+    },
+    {
+      "item_name": "Vải lụa Thái Lan truyền thống",
+      "description": "Vải lụa Thái với hoa văn và màu sắc đặc trưng, thường được dùng làm khăn choàng, áo dài, hoặc vải trang trí. Chất lượng lụa Thái Lan nổi tiếng với độ mềm mại và bền đẹp.",
+      "estimated_price": "250,000-600,000 VND",
+      "where_to_buy": "Jim Thompson Silk, các cửa hàng lụa tại Bangkok"
+    },
+    {
+      "item_name": "Đồ gốm sứ Benjarong",
+      "description": "Gốm sứ Benjarong với hoa văn năm màu truyền thống, thường là bát, đĩa, hay bình trang trí. Đây là nghề thủ công truyền thống lâu đời của Thái Lan.",
+      "estimated_price": "400,000-1,200,000 VND",
+      "where_to_buy": "Các cửa hàng gốm sứ tại Bangkok, Chatuchak Market"
+    },
+    {
+      "item_name": "Bánh kẹo và snack Thái Lan",
+      "description": "Các loại bánh kẹo đặc sản Thái Lan như bánh gạo, kẹo dừa, và các loại snack đặc trưng. Dễ mang về và phù hợp làm quà tặng cho bạn bè, người thân.",
+      "estimated_price": "30,000-150,000 VND",
+      "where_to_buy": "7-Eleven, siêu thị, chợ đêm"
+    },
+    {
+      "item_name": "Túi xách và phụ kiện từ da cá sấu giả",
+      "description": "Các sản phẩm túi xách, ví, thắt lưng làm từ da cá sấu giả chất lượng cao. Thiết kế thời trang và bền đẹp, phù hợp với phong cách self-guided.",
+      "estimated_price": "350,000-900,000 VND",
+      "where_to_buy": "MBK Center, Platinum Fashion Mall, chợ Pratunam"
+    }
+  ],
+  "logistics": {
+    "flight_options": [
+      {
+        "airline": "VietJet Air",
+        "flight_type": "direct",
+        "departure_time": "08:30 AM",
+        "arrival_time": "10:45 AM",
+        "duration": "2h 15m direct",
+        "price_per_person": 3200000.0,
+        "cabin_class": "Economy",
+        "benefits": [
+          "7kg xách tay",
+          "Mua thêm hành lý ký gửi"
+        ],
+        "booking_platforms": [
+          "VietJet Air website",
+          "Traveloka",
+          "Skyscanner"
+        ],
+        "notes": "Lựa chọn giá rẻ nhất, bay thẳng tiết kiệm thời gian"
+      },
+      {
+        "airline": "Vietnam Airlines",
+        "flight_type": "direct",
+        "departure_time": "02:15 PM",
+        "arrival_time": "04:30 PM",
+        "duration": "2h 15m direct",
+        "price_per_person": 4500000.0,
+        "cabin_class": "Economy",
+        "benefits": [
+          "20kg ký gửi",
+          "Bữa ăn nhẹ",
+          "Lựa chọn chỗ ngồi"
+        ],
+        "booking_platforms": [
+          "Vietnam Airlines website",
+          "Trip.com",
+          "Traveloka"
+        ],
+        "notes": "Hãng hàng không quốc gia, dịch vụ tốt, phù hợp cho khám phá ẩm thực và mua sắm"
+      },
+      {
+        "airline": "Thai Airways",
+        "flight_type": "direct",
+        "departure_time": "11:00 AM",
+        "arrival_time": "01:15 PM",
+        "duration": "2h 15m direct",
+        "price_per_person": 4800000.0,
+        "cabin_class": "Economy",
+        "benefits": [
+          "23kg ký gửi",
+          "Bữa ăn đầy đủ",
+          "Giải trí trên máy bay"
+        ],
+        "booking_platforms": [
+          "Thai Airways website",
+          "Skyscanner",
+          "Trip.com"
+        ],
+        "notes": "Hãng hàng không Thái Lan, trải nghiệm ẩm thực địa phương ngay trên chuyến bay"
+      },
+      {
+        "airline": "Air Asia",
+        "flight_type": "1 stop",
+        "departure_time": "06:00 AM",
+        "arrival_time": "11:30 AM",
+        "duration": "5h 30m với 1 điểm dừng tại Kuala Lumpur",
+        "price_per_person": 2800000.0,
+        "cabin_class": "Economy",
+        "benefits": [
+          "7kg xách tay",
+          "Mua thêm hành lý"
+        ],
+        "booking_platforms": [
+          "Air Asia website",
+          "Traveloka",
+          "Skyscanner"
+        ],
+        "notes": "Giá cực rẻ, phù hợp ngân sách thấp nhưng mất thêm thời gian"
+      }
+    ],
+    "recommended_flight": "Vietnam Airlines - Lựa chọn tốt nhất với dịch vụ đầy đủ, hành lý ký gửi 20kg phù hợp cho mua sắm, và thời gian bay thuận tiện cho khám phá ẩm thực ngay khi đến nơi.",
+    "average_price": 3825000.0,
+    "booking_tips": [
+      "Đặt vé trước 2-3 tháng để có giá tốt nhất, đặc biệt vào mùa cao điểm tháng 12",
+      "Kiểm tra website của hãng hàng không thường xuyên để tìm khuyến mãi",
+      "So sánh giá trên nhiều nền tảng như Traveloka, Skyscanner và Trip.com",
+      "Xem xét bay sáng sớm hoặc tối muộn để tiết kiệm chi phí"
+    ],
+    "visa_requirements": "Công dân Việt Nam được miễn visa du lịch Thái Lan trong 30 ngày, chỉ cần hộ chiếu còn hạn ít nhất 6 tháng."
+  },
+  "accommodation": {
+    "recommendations": [
+      {
+        "name": "Ibis Bangkok Siam",
+        "type": "Khách sạn",
+        "area": "Quận Siam, Bangkok",
+        "price_per_night": 850000.0,
+        "rating": 4.0,
+        "amenities": [
+          "Wi-Fi miễn phí",
+          "Máy lạnh",
+          "TV",
+          "Phòng tắm riêng"
+        ],
+        "distance_to_center": "Ngay trung tâm mua sắm Siam",
+        "booking_platforms": [
+          "Booking.com",
+          "Agoda",
+          "Hotels.com"
+        ],
+        "notes": "Vị trí tuyệt vời gần các trung tâm mua sắm lớn, phù hợp cho du khách tự khám phá"
+      },
+      {
+        "name": "Bangkok City Hotel",
+        "type": "Khách sạn",
+        "area": "Quận Pratunam, Bangkok",
+        "price_per_night": 950000.0,
+        "rating": 4.2,
+        "amenities": [
+          "Wi-Fi miễn phí",
+          "Bữa sáng",
+          "Hồ bơi",
+          "Phòng gym"
+        ],
+        "distance_to_center": "5 phút đi bộ đến BTS Ratchathewi",
+        "booking_platforms": [
+          "Booking.com",
+          "Agoda"
+        ],
+        "notes": "Gần chợ Pratunam, thuận tiện cho mua sắm và khám phá ẩm thực đường phố"
+      },
+      {
+        "name": "FuramaXclusive Sukhumvit",
+        "type": "Khách sạn",
+        "area": "Sukhumvit, Bangkok",
+        "price_per_night": 1100000.0,
+        "rating": 4.3,
+        "amenities": [
+          "Wi-Fi miễn phí",
+          "Bữa sáng",
+          "Hồ bơi",
+          "Quán bar"
+        ],
+        "distance_to_center": "Gần BTS Asok và MRT Sukhumvit",
+        "booking_platforms": [
+          "Booking.com",
+          "Agoda",
+          "Hotels.com"
+        ],
+        "notes": "Khu vực sầm uất với nhiều nhà hàng và quán bar, lý tưởng cho ẩm thực"
+      },
+      {
+        "name": "Centre Point Silom",
+        "type": "Căn hộ dịch vụ",
+        "area": "Quận Silom, Bangkok",
+        "price_per_night": 1300000.0,
+        "rating": 4.5,
+        "amenities": [
+          "Wi-Fi miễn phí",
+          "Bếp nhỏ",
+          "Hồ bơi",
+          "Phòng gym",
+          "Máy giặt"
+        ],
+        "distance_to_center": "Gần BTS Saladaeng và MRT Silom",
+        "booking_platforms": [
+          "Booking.com",
+          "Agoda"
+        ],
+        "notes": "Có bếp nhỏ để tự nấu ăn, gần chợ đêm và khu ẩm thực đa dạng"
+      },
+      {
+        "name": "Holiday Inn Express Bangkok Siam",
+        "type": "Khách sạn",
+        "area": "Quận Siam, Bangkok",
+        "price_per_night": 900000.0,
+        "rating": 4.1,
+        "amenities": [
+          "Wi-Fi miễn phí",
+          "Bữa sáng",
+          "Máy lạnh",
+          "TV"
+        ],
+        "distance_to_center": "Ngay trung tâm Siam",
+        "booking_platforms": [
+          "Booking.com",
+          "Agoda",
+          "Hotels.com"
+        ],
+        "notes": "Tiện nghi cơ bản, vị trí hoàn hảo cho mua sắm và tham quan"
+      },
+      {
+        "name": "Adelphi Suites Bangkok",
+        "type": "Căn hộ dịch vụ",
+        "area": "Sukhumvit, Bangkok",
+        "price_per_night": 1200000.0,
+        "rating": 4.4,
+        "amenities": [
+          "Wi-Fi miễn phí",
+          "Bếp đầy đủ",
+          "Hồ bơi",
+          "Phòng gym",
+          "Máy giặt"
+        ],
+        "distance_to_center": "Gần BTS Phrom Phong",
+        "booking_platforms": [
+          "Booking.com",
+          "Agoda"
+        ],
+        "notes": "Không gian rộng rãi, thuận tiện cho việc tự nấu ăn và khám phá ẩm thực địa phương"
+      }
+    ],
+    "best_areas": [
+      "Siam: Trung tâm mua sắm với các trung tâm thương mại lớn như Siam Paragon, MBK Center",
+      "Sukhumvit: Khu vực sầm uất với nhiều nhà hàng, quán bar và cửa hàng đa dạng",
+      "Silom: Khu tài chính với chợ đêm và ẩm thực đường phố phong phú",
+      "Pratunam: Nổi tiếng với chợ quần áo giá rẻ và ẩm thực địa phương"
+    ],
+    "average_price_per_night": 1050000.0,
+    "booking_tips": [
+      "Đặt phòng trước 2-3 tháng để có giá tốt và lựa chọn phòng đa dạng",
+      "Kiểm tra chính sách hủy phòng linh hoạt do mùa cao điểm",
+      "So sánh giá trên nhiều nền tảng như Booking.com, Agoda để tìm ưu đãi tốt nhất",
+      "Xem xét các khách sạn gần trạm BTS hoặc MRT để tiện di chuyển"
+    ],
+    "total_estimated_cost": 5250000.0
+  },
+  "generated_at": "2025-11-17T08:36:52.065311",
+  "team_full_response": null
+}

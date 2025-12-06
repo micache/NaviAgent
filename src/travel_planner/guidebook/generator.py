@@ -153,7 +153,7 @@ class GuidebookGenerator:
 
         Returns:
             Dictionary mapping format names to generated file paths.
-
+    
         Example:
             >>> files = generator.generate_all_formats()
             >>> print(files)
