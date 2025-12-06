@@ -9,9 +9,25 @@ from pathlib import Path
 from agno.db.postgres import PostgresDb
 from dotenv import load_dotenv
 
-# Load environment variables
-env_path = Path(__file__).parent.parent / ".env"
-load_dotenv(env_path, override=True)
+# Load environment variables from root .env (outside travel_planner) with fallback
+def _find_env_file() -> Path | None:
+    candidates = [
+        Path(__file__).resolve().parents[3] / ".env",  # repository root
+        Path(__file__).resolve().parents[2] / ".env",  # src/.env (fallback)
+        Path(__file__).parent.parent / ".env",  # travel_planner/.env (last resort)
+    ]
+    for path in candidates:
+        if path.exists():
+            return path
+    return None
+
+
+env_path = _find_env_file()
+if env_path:
+    load_dotenv(env_path, override=True)
+    print(f"[DatabaseConfig] Loaded environment from {env_path}")
+else:
+    print("[DatabaseConfig] No .env file found; using existing environment")
 
 
 class DatabaseConfig:
@@ -109,11 +125,11 @@ if __name__ == "__main__":
 
     try:
         test_db = get_db()
-        print(f"✅ Database connected successfully")
+        print("✅ Database connected successfully")
         print(f"   URL: {db_config.database_url.split('@')[1]}")  # Hide password
-        print(f"   Memory table: user_memories")
-        print(f"   Session table: agent_sessions")
-        print(f"   Run table: agent_runs")
+        print("   Memory table: user_memories")
+        print("   Session table: agent_sessions")
+        print("   Run table: agent_runs")
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
 

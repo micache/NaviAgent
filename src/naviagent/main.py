@@ -17,10 +17,8 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
-            "http://localhost:3000",  # Next.js dev server
-            "http://127.0.0.1:3000",
-            "http://localhost:8001",
-            "http://127.0.0.1:8001",
+            "http://localhost:8000",  # Next.js dev server
+            "http://127.0.0.1:8000",
         ],
         allow_credentials=True,
         allow_methods=["*"],  # Allow all HTTP methods
@@ -43,3 +41,14 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "naviagent.main:app",
+        host="0.0.0.0",
+        port=8001,
+        reload=True,
+    )

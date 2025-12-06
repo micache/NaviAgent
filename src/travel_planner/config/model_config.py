@@ -11,9 +11,25 @@ from typing import Any, Dict, Optional
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-# Load environment variables
-env_path = Path(__file__).parent.parent / ".env"
-load_dotenv(env_path, override=True)
+# Load environment variables from root .env (outside travel_planner) with fallback
+def _find_env_file() -> Path | None:
+    candidates = [
+        Path(__file__).resolve().parents[3] / ".env",  # repository root
+        Path(__file__).resolve().parents[2] / ".env",  # src/.env (fallback)
+        Path(__file__).parent.parent / ".env",  # travel_planner/.env (last resort)
+    ]
+    for path in candidates:
+        if path.exists():
+            return path
+    return None
+
+
+env_path = _find_env_file()
+if env_path:
+    load_dotenv(env_path, override=True)
+    print(f"[ModelConfig] Loaded environment from {env_path}")
+else:
+    print("[ModelConfig] No .env file found; using existing environment")
 
 
 class ModelProvider(str, Enum):
