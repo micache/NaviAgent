@@ -13,27 +13,6 @@ env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
 # print(f"Loading from: {env_path}")
 load_dotenv(dotenv_path=env_path, override=True)
 
-# Global singleton instance - load model only once
-_retrieval_system_instance = None
-
-def get_retrieval_system() -> RetrievalSystem:
-    """Get or create singleton RetrievalSystem instance"""
-    global _retrieval_system_instance
-    if _retrieval_system_instance is None:
-        print("[INFO] Creating singleton RetrievalSystem instance...")
-        _retrieval_system_instance = RetrievalSystem()
-        # Get or create collection
-        try:
-            _retrieval_system_instance.collection = _retrieval_system_instance.client.get_collection(
-                config.index.collection_name
-            )
-            print(f"[INFO] Collection loaded with {_retrieval_system_instance.collection.count()} docs")
-        except:
-            print("[INFO] Collection not found, creating...")
-            _retrieval_system_instance.create_collection(collection_name=config.index.collection_name)
-        print("[INFO] RetrievalSystem singleton ready")
-    return _retrieval_system_instance
-
 
 class TextDestinationAgent(Agent):
     """An agent that suggests destinations based on text input."""
@@ -59,8 +38,15 @@ class TextDestinationAgent(Agent):
         return response_text
 
     def advanced_suggest_destination(self, description: str):
-        # Use singleton retrieval system
-        retrieval_system = get_retrieval_system()
+        # initialize retrieval system
+        retrieval_system = RetrievalSystem()
+        # Use get_or_create pattern instead of always calling create
+        try:
+            retrieval_system.collection = retrieval_system.client.get_collection(
+                config.index.collection_name
+            )
+        except:
+            retrieval_system.create_collection(collection_name=config.index.collection_name)
 
         # retrieve relevant destinations
         results = retrieval_system.search(
@@ -68,7 +54,7 @@ class TextDestinationAgent(Agent):
             k=config.search.top_k,
             group_by_destination=config.search.group_by_destination,
         )
-        # print("Retrieved Results:", results)
+        print("Retrieved Results:", results)
 
         # run LLM with retrieved results
         results_text = str(results)
@@ -87,10 +73,17 @@ class TextDestinationAgent(Agent):
         response_text = re.sub(r"```json|```", "", response_text).strip()
 
         return response_text
-    
+
     def top_k_suggest_destination(self, description: str, k: int = 5) -> str:
-        # Use singleton retrieval system
-        retrieval_system = get_retrieval_system()
+        # initialize retrieval system
+        retrieval_system = RetrievalSystem()
+        # Use get_or_create pattern instead of always calling create
+        try:
+            retrieval_system.collection = retrieval_system.client.get_collection(
+                config.index.collection_name
+            )
+        except:
+            retrieval_system.create_collection(collection_name=config.index.collection_name)
 
         # retrieve relevant destinations
         results = retrieval_system.search(
@@ -101,7 +94,7 @@ class TextDestinationAgent(Agent):
         # print("Retrieved Results:", results)
 
         results_text = str(results)
-        
+
         return results_text
 
 def get_destination_suggestion(description: str) -> str:
