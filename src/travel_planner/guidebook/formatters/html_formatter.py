@@ -1,8 +1,12 @@
 """
-HTML formatter for guidebook generation.
+Enhanced HTML formatter for guidebook generation with improved styling and images.
 
-This module generates responsive HTML guidebooks with modern CSS styling,
-print-friendly media queries, and interactive elements.
+This module generates responsive, visually appealing HTML guidebooks with:
+- Beautiful hero images and location photos
+- Highlighted schedules with clear time indicators
+- Professional table styling with borders
+- Modern gradient designs
+- Print-friendly layouts
 """
 
 import logging
@@ -23,10 +27,13 @@ logger = logging.getLogger(__name__)
 
 class HTMLFormatter(BaseFormatter):
     """
-    Formatter for generating HTML guidebooks.
+    Enhanced formatter for generating beautiful HTML guidebooks.
 
     Generates responsive HTML with:
-    - Modern CSS styling
+    - Hero images and location photos
+    - Modern CSS styling with gradients
+    - Highlighted schedule items
+    - Professional table designs
     - Print-friendly media queries
     - Interactive collapsible sections
     - Mobile-friendly responsive design
@@ -37,25 +44,30 @@ class HTMLFormatter(BaseFormatter):
         travel_plan: Dict[str, Any],
         output_dir: str = "guidebooks",
         language: str = "vi",
+        image_fetcher=None,
+        search_function=None,
     ):
         """
-        Initialize the HTML formatter.
+        Initialize the Enhanced HTML formatter.
 
         Args:
             travel_plan: Dictionary containing travel plan data.
             output_dir: Directory to save output files.
             language: Language for content (vi or en).
+            image_fetcher: Optional ImageFetcher instance
+            search_function: Optional function for web search
         """
         super().__init__(travel_plan, output_dir, language)
+        self.image_fetcher = image_fetcher
+        self.search_function = search_function
 
-        # Setup Jinja2 environment with fallback to inline template
+        # Setup Jinja2 environment
         try:
             self.env = Environment(
                 loader=PackageLoader("travel_planner.guidebook", "templates"),
                 autoescape=select_autoescape(["html", "xml"]),
             )
         except Exception:
-            # Fallback to inline template if package loader fails
             self.env = None
             logger.debug("Using inline HTML template")
 
@@ -70,7 +82,7 @@ class HTMLFormatter(BaseFormatter):
 
     def generate(self, output_path: Optional[str] = None) -> str:
         """
-        Generate the HTML guidebook.
+        Generate the Enhanced HTML guidebook.
 
         Args:
             output_path: Optional custom output path.
@@ -78,7 +90,7 @@ class HTMLFormatter(BaseFormatter):
         Returns:
             Path to the generated file.
         """
-        logger.info("Generating HTML guidebook...")
+        logger.info("Generating Enhanced HTML guidebook...")
 
         output_file = self.get_output_path(output_path)
         labels = self.get_labels()
@@ -88,35 +100,50 @@ class HTMLFormatter(BaseFormatter):
 
         # Write to file
         output_file.write_text(html_content, encoding="utf-8")
-        logger.info(f"HTML guidebook generated: {output_file}")
+        logger.info(f"Enhanced HTML guidebook generated: {output_file}")
 
         return str(output_file)
 
     def _build_html(self, labels: Dict[str, str]) -> str:
         """Build the complete HTML document."""
-        # Use template if available, otherwise use inline HTML
-        if self.env:
-            try:
-                template = self.env.get_template("guidebook.html")
-                return template.render(
-                    travel_plan=self.travel_plan,
-                    labels=labels,
-                    language=self.language,
-                    format_currency=format_currency,
-                    format_date=format_date,
-                    get_activity_icon=get_activity_icon,
-                    sanitize_text=sanitize_text,
-                )
-            except Exception as e:
-                logger.debug(f"Template rendering failed: {e}, using inline HTML")
+        # Generate inline HTML with enhanced styling
+        return self._generate_enhanced_html(labels)
 
-        # Inline HTML template
-        return self._generate_inline_html(labels)
+    def _get_hero_image(self) -> Optional[str]:
+        """Get hero image for destination."""
+        if not self.image_fetcher or not self.destination:
+            return None
 
-    def _generate_inline_html(self, labels: Dict[str, str]) -> str:
-        """Generate HTML using inline template."""
-        css = self._get_css()
-        body_content = self._generate_body_content(labels)
+        try:
+            image_data = self.image_fetcher.get_destination_hero(
+                self.destination,
+                search_func=self.search_function,
+            )
+            return self.image_fetcher.get_data_uri(image_data)
+        except Exception as e:
+            logger.warning(f"Failed to get hero image: {e}")
+            return None
+
+    def _get_location_image(self, location: str) -> Optional[str]:
+        """Get image for a specific location."""
+        if not self.image_fetcher:
+            return None
+
+        try:
+            image_data = self.image_fetcher.get_location_image(
+                location,
+                destination=self.destination,
+                search_func=self.search_function,
+            )
+            return self.image_fetcher.get_data_uri(image_data)
+        except Exception as e:
+            logger.debug(f"Failed to get location image for {location}: {e}")
+            return None
+
+    def _generate_enhanced_html(self, labels: Dict[str, str]) -> str:
+        """Generate HTML using enhanced inline template with better styling."""
+        css = self._get_enhanced_css()
+        body_content = self._generate_enhanced_body_content(labels)
 
         return f"""<!DOCTYPE html>
 <html lang="{self.language}">
@@ -138,21 +165,41 @@ class HTMLFormatter(BaseFormatter):
             header.addEventListener('click', () => {{
                 header.classList.toggle('collapsed');
                 const content = header.nextElementSibling;
-                content.style.display = content.style.display === 'none' ? 'block' : 'none';
+                if (content) {{
+                    content.style.display = content.style.display === 'none' ? 'block' : 'none';
+                }}
             }});
         }});
 
         // Print button
-        document.getElementById('printBtn')?.addEventListener('click', () => window.print());
+        const printBtn = document.getElementById('printBtn');
+        if (printBtn) {{
+            printBtn.addEventListener('click', () => window.print());
+        }}
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {{
+            anchor.addEventListener('click', function (e) {{
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {{
+                    target.scrollIntoView({{ behavior: 'smooth', block: 'start' }});
+                }}
+            }});
+        }});
     </script>
 </body>
 </html>"""
 
-    def _get_css(self) -> str:
-        """Get the CSS stylesheet."""
+    def _get_enhanced_css(self) -> str:
+        """Get the enhanced CSS stylesheet with modern styling."""
         return """
+/* Enhanced Guidebook Styles - Production Ready */
+
 :root {
     --primary-color: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #3b82f6;
     --secondary-color: #64748b;
     --accent-color: #f59e0b;
     --success-color: #10b981;
@@ -163,6 +210,10 @@ class HTMLFormatter(BaseFormatter):
     --text-color: #1e293b;
     --text-muted: #64748b;
     --border-color: #e2e8f0;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -172,142 +223,303 @@ class HTMLFormatter(BaseFormatter):
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: var(--background-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
     color: var(--text-color);
     line-height: 1.6;
+    padding: 20px 0;
 }
 
 .guidebook {
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0 20px;
 }
 
-/* Cover Page */
+/* ============================================
+   COVER PAGE WITH HERO IMAGE
+   ============================================ */
 .cover-page {
-    background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+    position: relative;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
-    padding: 60px 40px;
-    border-radius: 16px;
-    text-align: center;
+    padding: 0;
+    border-radius: 20px;
     margin-bottom: 30px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cover-hero-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.3;
+}
+
+.cover-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 60px 40px;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    margin: 20px;
 }
 
 .cover-page h1 {
-    font-size: 2.5em;
-    margin-bottom: 10px;
+    font-size: 3.5em;
+    margin-bottom: 15px;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    animation: fadeInDown 1s ease-out;
 }
 
 .cover-page .destination {
-    font-size: 1.8em;
-    margin-bottom: 30px;
+    font-size: 2.2em;
+    margin-bottom: 40px;
     opacity: 0.95;
+    font-weight: 600;
+    animation: fadeInUp 1s ease-out 0.2s both;
 }
 
 .trip-info {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 20px;
-    margin-top: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 25px;
+    margin-top: 40px;
+    animation: fadeIn 1s ease-out 0.4s both;
 }
 
 .trip-info-item {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 15px;
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.trip-info-item:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.25);
 }
 
 .trip-info-item .label {
-    font-size: 0.85em;
+    font-size: 0.9em;
     opacity: 0.9;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
 }
 
 .trip-info-item .value {
-    font-size: 1.3em;
-    font-weight: 600;
+    font-size: 1.5em;
+    font-weight: 700;
 }
 
-/* Sections */
+/* Animations */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   SECTIONS WITH MODERN CARDS
+   ============================================ */
 .section {
     background: var(--card-background);
-    border-radius: 12px;
-    padding: 25px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    padding: 35px;
+    margin-bottom: 25px;
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.section:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
 }
 
 .section-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-size: 1.4em;
-    font-weight: 600;
+    gap: 15px;
+    font-size: 1.8em;
+    font-weight: 700;
     color: var(--primary-color);
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 3px solid var(--primary-color);
     cursor: pointer;
     user-select: none;
+    transition: color 0.3s ease;
 }
 
 .section-header:hover {
-    opacity: 0.8;
+    color: var(--primary-dark);
 }
 
 .section-header.collapsed::after {
     content: '▼';
     margin-left: auto;
-    font-size: 0.7em;
+    font-size: 0.6em;
+    transition: transform 0.3s ease;
 }
 
 .section-header:not(.collapsed)::after {
     content: '▲';
     margin-left: auto;
-    font-size: 0.7em;
+    font-size: 0.6em;
+    transition: transform 0.3s ease;
 }
 
 .section-icon {
-    font-size: 1.2em;
+    font-size: 1.3em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+    border-radius: 12px;
+    color: white;
 }
 
-/* Day Schedule */
+/* ============================================
+   DAY SCHEDULE - HIGHLIGHTED & ENHANCED
+   ============================================ */
 .day-schedule {
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    margin-bottom: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 16px;
+    margin-bottom: 30px;
     overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.day-schedule:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
 }
 
 .day-header {
-    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
-    padding: 15px 20px;
-    font-weight: 600;
+    padding: 20px 25px;
+    font-weight: 700;
+    font-size: 1.3em;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.day-number {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2em;
+    font-weight: 700;
+    border: 2px solid white;
 }
 
 .day-content {
-    padding: 20px;
+    padding: 25px;
+    background: linear-gradient(to bottom, #ffffff, #f8fafc);
 }
 
-/* Activity */
+/* ============================================
+   ACTIVITY CARDS - HIGHLIGHTED TIMES
+   ============================================ */
 .activity {
-    display: flex;
-    gap: 15px;
-    padding: 15px 0;
-    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: 120px 60px 1fr auto;
+    gap: 20px;
+    align-items: start;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    background: white;
+    border: 2px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.activity:hover {
+    border-color: var(--primary-color);
+    transform: translateX(5px);
+    box-shadow: var(--shadow-md);
 }
 
 .activity:last-child {
-    border-bottom: none;
+    margin-bottom: 0;
 }
 
+/* HIGHLIGHTED TIME */
 .activity-time {
+    font-weight: 700;
+    font-size: 1.1em;
+    color: white;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    padding: 12px 15px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: var(--shadow);
     min-width: 100px;
-    font-weight: 500;
-    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .activity-icon {
-    font-size: 1.3em;
+    font-size: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 50%;
+    box-shadow: var(--shadow);
 }
 
 .activity-details {
@@ -315,177 +527,359 @@ body {
 }
 
 .activity-name {
-    font-weight: 600;
-    margin-bottom: 5px;
+    font-weight: 700;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    color: var(--text-color);
 }
 
 .activity-location {
     color: var(--text-muted);
-    font-size: 0.9em;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 10px;
 }
 
 .activity-cost {
     color: var(--success-color);
-    font-weight: 500;
+    font-weight: 700;
+    font-size: 1.1em;
+    background: #f0fdf4;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 2px solid #86efac;
+    white-space: nowrap;
 }
 
 .activity-notes {
-    background: #fef3c7;
-    padding: 10px;
-    border-radius: 6px;
-    margin-top: 10px;
-    font-size: 0.9em;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 0.95em;
+    border-left: 4px solid var(--accent-color);
+    display: flex;
+    align-items: start;
+    gap: 8px;
 }
 
-/* Tables */
+.location-image-container {
+    margin-top: 15px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.location-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.location-image:hover {
+    transform: scale(1.05);
+}
+
+/* ============================================
+   TABLES WITH CLEAR BORDERS
+   ============================================ */
 table {
     width: 100%;
-    border-collapse: collapse;
-    margin: 15px 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 20px 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
 }
 
 th, td {
-    padding: 12px 15px;
+    padding: 15px 20px;
     text-align: left;
-    border-bottom: 1px solid var(--border-color);
+    border: 2px solid var(--border-color);
 }
 
 th {
-    background: var(--background-color);
-    font-weight: 600;
-    color: var(--text-muted);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    font-weight: 700;
+    font-size: 1.05em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Cards */
+td {
+    background: white;
+}
+
+tr:nth-child(even) td {
+    background: #f8fafc;
+}
+
+tr:hover td {
+    background: #e0f2fe;
+    transition: background 0.3s ease;
+}
+
+tbody tr:first-child td {
+    border-top: none;
+}
+
+tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+}
+
+tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
+}
+
+/* ============================================
+   CARDS WITH IMAGES
+   ============================================ */
 .card {
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: white;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-content {
     padding: 20px;
-    margin-bottom: 15px;
 }
 
 .card-header {
-    font-weight: 600;
-    font-size: 1.1em;
-    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: 1.3em;
+    margin-bottom: 12px;
+    color: var(--primary-color);
 }
 
 .card-badge {
     display: inline-block;
-    background: var(--accent-color);
+    background: linear-gradient(135deg, var(--accent-color), #f97316);
     color: white;
-    padding: 3px 10px;
-    border-radius: 15px;
-    font-size: 0.8em;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
     margin-left: 10px;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
 }
 
-/* Lists */
+/* ============================================
+   LISTS
+   ============================================ */
 .tip-list, .warning-list {
     list-style: none;
     padding: 0;
 }
 
 .tip-list li, .warning-list li {
-    padding: 10px 0 10px 30px;
+    padding: 15px 15px 15px 50px;
     position: relative;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    background: white;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.tip-list li:hover, .warning-list li:hover {
+    background: #f0fdf4;
+    transform: translateX(5px);
 }
 
 .tip-list li::before {
     content: '💡';
     position: absolute;
-    left: 0;
+    left: 15px;
+    font-size: 1.5em;
 }
 
 .warning-list li::before {
     content: '⚠️';
     position: absolute;
-    left: 0;
+    left: 15px;
+    font-size: 1.5em;
 }
 
-/* Budget */
+/* ============================================
+   BUDGET VISUALIZATION
+   ============================================ */
 .budget-chart {
-    margin: 20px 0;
+    margin: 25px 0;
 }
 
 .budget-bar {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    gap: 15px;
 }
 
 .budget-bar-label {
-    min-width: 150px;
-    font-weight: 500;
+    min-width: 180px;
+    font-weight: 600;
+    color: var(--text-color);
 }
 
 .budget-bar-track {
     flex: 1;
-    height: 20px;
+    height: 30px;
     background: var(--border-color);
-    border-radius: 10px;
+    border-radius: 15px;
     overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .budget-bar-fill {
     height: 100%;
-    background: var(--primary-color);
-    border-radius: 10px;
+    background: linear-gradient(90deg, var(--primary-light), var(--primary-color));
+    border-radius: 15px;
+    transition: width 0.6s ease;
+    box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
 }
 
 .budget-bar-value {
-    min-width: 100px;
+    min-width: 140px;
     text-align: right;
-    font-weight: 500;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.1em;
 }
 
 .budget-total {
-    font-size: 1.3em;
-    font-weight: 600;
+    font-size: 1.5em;
+    font-weight: 700;
     text-align: right;
-    padding-top: 15px;
-    border-top: 2px solid var(--primary-color);
+    padding: 25px;
+    margin-top: 20px;
+    border-top: 3px solid var(--primary-color);
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    border-radius: 12px;
 }
 
-/* Footer */
+/* ============================================
+   FOOTER
+   ============================================ */
 .footer {
     text-align: center;
-    padding: 30px;
-    color: var(--text-muted);
-    font-size: 0.9em;
+    padding: 40px;
+    color: white;
+    font-size: 0.95em;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    margin-top: 30px;
 }
 
-/* Actions */
+/* ============================================
+   ACTIONS BAR
+   ============================================ */
 .actions {
     display: flex;
-    gap: 10px;
+    gap: 15px;
     justify-content: center;
-    margin: 20px 0;
+    margin: 25px 0;
+    flex-wrap: wrap;
 }
 
 .btn {
-    padding: 12px 24px;
+    padding: 14px 28px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s;
+    font-weight: 600;
+    font-size: 1.05em;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .btn-primary {
-    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: white;
 }
 
 .btn-primary:hover {
-    background: #1d4ed8;
+    background: linear-gradient(135deg, var(--primary-dark), #1e40af);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
 }
 
-/* Print styles */
+.btn-secondary {
+    background: linear-gradient(135deg, var(--secondary-color), #475569);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #475569, #334155);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ============================================
+   HIGHLIGHTS AND BADGES
+   ============================================ */
+.highlight-box {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    border-left: 4px solid var(--primary-color);
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-right: 5px;
+}
+
+.badge-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.badge-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.badge-warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
 @media print {
     body {
         background: white;
+        padding: 0;
     }
 
     .guidebook {
@@ -495,31 +889,43 @@ th {
 
     .cover-page {
         page-break-after: always;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 
     .section {
         page-break-inside: avoid;
         box-shadow: none;
-        border: 1px solid #ddd;
+        border: 2px solid #ddd;
     }
 
     .actions, .btn {
-        display: none;
+        display: none !important;
     }
 
     .section-header::after {
         display: none;
     }
-}
 
-/* Mobile responsive */
-@media (max-width: 768px) {
-    .cover-page {
-        padding: 40px 20px;
+    .day-schedule {
+        page-break-inside: avoid;
     }
 
+    .activity {
+        page-break-inside: avoid;
+    }
+}
+
+/* ============================================
+   MOBILE RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
     .cover-page h1 {
-        font-size: 1.8em;
+        font-size: 2em;
+    }
+
+    .cover-page .destination {
+        font-size: 1.5em;
     }
 
     .trip-info {
@@ -527,59 +933,98 @@ th {
     }
 
     .activity {
-        flex-direction: column;
-        gap: 10px;
+        grid-template-columns: 1fr;
+        gap: 15px;
     }
 
     .activity-time {
-        min-width: auto;
+        justify-self: start;
     }
 
     table {
         display: block;
         overflow-x: auto;
     }
-}"""
 
-    def _generate_body_content(self, labels: Dict[str, str]) -> str:
-        """Generate the body content."""
+    .budget-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .budget-bar-label,
+    .budget-bar-value {
+        min-width: auto;
+        text-align: left;
+    }
+}
+
+@media (max-width: 480px) {
+    .guidebook {
+        padding: 0 10px;
+    }
+
+    .section {
+        padding: 20px 15px;
+    }
+
+    .trip-info {
+        grid-template-columns: 1fr;
+    }
+
+    .section-header {
+        font-size: 1.4em;
+    }
+}
+"""
+
+    def _generate_enhanced_body_content(self, labels: Dict[str, str]) -> str:
+        """Generate the enhanced body content with images and styling."""
         sections = [
-            self._generate_cover_page_html(labels),
+            self._generate_enhanced_cover_page(labels),
             self._generate_actions_html(),
-            self._generate_summary_section_html(labels),
-            self._generate_itinerary_section_html(labels),
-            self._generate_flights_section_html(labels),
-            self._generate_accommodation_section_html(labels),
-            self._generate_budget_section_html(labels),
-            self._generate_advisory_section_html(labels),
-            self._generate_souvenirs_section_html(labels),
+            self._generate_enhanced_summary_section(labels),
+            self._generate_enhanced_itinerary_section(labels),
+            self._generate_enhanced_flights_section(labels),
+            self._generate_enhanced_accommodation_section(labels),
+            self._generate_enhanced_budget_section(labels),
+            self._generate_enhanced_advisory_section(labels),
+            self._generate_enhanced_souvenirs_section(labels),
             self._generate_footer_html(labels),
         ]
 
         return "\n".join(filter(None, sections))
 
-    def _generate_cover_page_html(self, labels: Dict[str, str]) -> str:
-        """Generate cover page HTML."""
+    def _generate_enhanced_cover_page(self, labels: Dict[str, str]) -> str:
+        """Generate enhanced cover page with hero image."""
         days_label = "ngày" if self.language == "vi" else "days"
         travelers_label = "người" if self.language == "vi" else "travelers"
 
+        # Get hero image
+        hero_image = self._get_hero_image()
+        hero_image_html = ""
+        if hero_image:
+            hero_image_html = f'<img src="{hero_image}" alt="{sanitize_text(self.destination)}" class="cover-hero-image">'
+
         return f"""
         <div class="cover-page">
-            <h1>🗺️ {labels['title']}</h1>
-            <div class="destination">{sanitize_text(self.destination)}</div>
+            {hero_image_html}
+            <div class="cover-content">
+                <h1>🗺️ {labels['title']}</h1>
+                <div class="destination">{sanitize_text(self.destination)}</div>
 
-            <div class="trip-info">
-                <div class="trip-info-item">
-                    <div class="label">{labels['duration']}</div>
-                    <div class="value">{self.trip_duration} {days_label}</div>
-                </div>
-                <div class="trip-info-item">
-                    <div class="label">{labels['travelers']}</div>
-                    <div class="value">{self.num_travelers} {travelers_label}</div>
-                </div>
-                <div class="trip-info-item">
-                    <div class="label">{labels['budget_label']}</div>
-                    <div class="value">{format_currency(self.budget_amount)}</div>
+                <div class="trip-info">
+                    <div class="trip-info-item">
+                        <div class="label">{labels['duration']}</div>
+                        <div class="value">{self.trip_duration} {days_label}</div>
+                    </div>
+                    <div class="trip-info-item">
+                        <div class="label">{labels['travelers']}</div>
+                        <div class="value">{self.num_travelers} {travelers_label}</div>
+                    </div>
+                    <div class="trip-info-item">
+                        <div class="label">{labels['budget_label']}</div>
+                        <div class="value">{format_currency(self.budget_amount)}</div>
+                    </div>
                 </div>
             </div>
         </div>"""
@@ -588,27 +1033,35 @@ th {
         """Generate actions bar HTML."""
         return """
         <div class="actions">
-            <button class="btn btn-primary" id="printBtn">🖨️ Print</button>
+            <button class="btn btn-primary" id="printBtn">🖨️ In Guidebook</button>
         </div>"""
 
-    def _generate_summary_section_html(self, labels: Dict[str, str]) -> str:
-        """Generate executive summary section HTML."""
+    def _generate_enhanced_summary_section(self, labels: Dict[str, str]) -> str:
+        """Generate enhanced executive summary section."""
         summary = self.itinerary.get("summary", "") if self.itinerary else ""
         location_list = self.itinerary.get("location_list", []) if self.itinerary else []
 
         locations_html = ""
         if location_list:
-            locations_items = "".join(f"<li>{sanitize_text(loc)}</li>" for loc in location_list[:5])
-            locations_html = f"<ul>{locations_items}</ul>"
+            locations_items = "".join(
+                f'<li><span class="badge badge-primary">📍</span> {sanitize_text(loc)}</li>'
+                for loc in location_list[:5]
+            )
+            locations_html = f"""
+            <h3 style="color: var(--primary-color); margin-top: 25px; margin-bottom: 15px;">📍 Highlights</h3>
+            <ul style="list-style: none; padding: 0;">{locations_items}</ul>"""
 
         budget_info = ""
         if self.budget:
             total = format_currency(self.budget.get("total_estimated_cost", 0))
             status = self.budget.get("budget_status", "N/A")
             budget_info = f"""
-            <div style="margin-top: 20px;">
-                <strong>{labels['total_cost']}:</strong> {total}<br>
-                <strong>{labels['status']}:</strong> {status}
+            <div class="highlight-box" style="margin-top: 25px;">
+                <h3 style="color: var(--primary-color); margin-bottom: 10px;">💵 Tóm Tắt Ngân Sách</h3>
+                <p style="font-size: 1.1em; margin: 8px 0;"><strong>{labels['total_cost']}:</strong> {total}</p>
+                <p style="font-size: 1.1em; margin: 8px 0;"><strong>{labels['status']}:</strong> 
+                    <span class="badge badge-success">{status}</span>
+                </p>
             </div>"""
 
         return f"""
@@ -618,14 +1071,14 @@ th {
                 {labels['executive_summary']}
             </h2>
             <div class="section-content">
-                <p>{sanitize_text(summary)}</p>
+                <p style="font-size: 1.1em; line-height: 1.8; margin-bottom: 20px;">{sanitize_text(summary)}</p>
                 {locations_html}
                 {budget_info}
             </div>
         </div>"""
 
-    def _generate_itinerary_section_html(self, labels: Dict[str, str]) -> str:
-        """Generate itinerary section HTML."""
+    def _generate_enhanced_itinerary_section(self, labels: Dict[str, str]) -> str:
+        """Generate enhanced itinerary section with highlighted schedules."""
         if not self.itinerary:
             return ""
 
@@ -637,11 +1090,13 @@ th {
             title = day.get("title", "")
             date_str = day.get("date", "")
 
-            header = f"{labels['day']} {day_num}"
+            header_text = f"{labels['day']} {day_num}"
             if title:
-                header += f": {sanitize_text(title)}"
+                header_text += f": {sanitize_text(title)}"
+
+            date_badge = ""
             if date_str:
-                header += f" ({format_date(date_str)})"
+                date_badge = f'<span class="badge badge-warning">📅 {format_date(date_str)}</span>'
 
             activities_html = ""
             for activity in day.get("activities", []):
@@ -657,6 +1112,20 @@ th {
                 if notes:
                     notes_html = f'<div class="activity-notes">💡 {sanitize_text(notes)}</div>'
 
+                cost_html = ""
+                if cost_str:
+                    cost_html = f'<div class="activity-cost">{cost_str}</div>'
+
+                # Get location image
+                location_image_html = ""
+                if self.image_fetcher and location:
+                    image_url = self._get_location_image(location)
+                    if image_url:
+                        location_image_html = f"""
+                        <div class="location-image-container">
+                            <img src="{image_url}" alt="{location}" class="location-image">
+                        </div>"""
+
                 activities_html += f"""
                 <div class="activity">
                     <div class="activity-time">{time}</div>
@@ -665,13 +1134,20 @@ th {
                         <div class="activity-name">{name}</div>
                         <div class="activity-location">📍 {location}</div>
                         {notes_html}
+                        {location_image_html}
                     </div>
-                    <div class="activity-cost">{cost_str}</div>
+                    {cost_html}
                 </div>"""
 
             days_html += f"""
             <div class="day-schedule">
-                <div class="day-header">{header}</div>
+                <div class="day-header">
+                    <div class="day-number">{day_num}</div>
+                    <div style="flex: 1;">
+                        <div>{header_text}</div>
+                        {date_badge}
+                    </div>
+                </div>
                 <div class="day-content">{activities_html}</div>
             </div>"""
 
@@ -686,8 +1162,8 @@ th {
             </div>
         </div>"""
 
-    def _generate_flights_section_html(self, labels: Dict[str, str]) -> str:
-        """Generate flights section HTML."""
+    def _generate_enhanced_flights_section(self, labels: Dict[str, str]) -> str:
+        """Generate enhanced flights section with images."""
         if not self.logistics:
             return ""
 
@@ -697,7 +1173,7 @@ th {
 
         flights_html = ""
         for i, flight in enumerate(flight_options):
-            badge = '<span class="card-badge">Recommended</span>' if i == 0 else ""
+            badge = '<span class="card-badge">⭐ Recommended</span>' if i == 0 else ""
             airline = sanitize_text(flight.get("airline", "Unknown"))
             flight_type = flight.get("flight_type", "")
             departure = flight.get("departure_time", "")
@@ -708,18 +1184,34 @@ th {
 
             benefits_html = ""
             if benefits:
-                benefits_items = ", ".join(sanitize_text(b) for b in benefits)
-                benefits_html = f"<p><strong>Benefits:</strong> {benefits_items}</p>"
+                benefits_items = "".join(
+                    f'<span class="badge badge-success">{sanitize_text(b)}</span> '
+                    for b in benefits
+                )
+                benefits_html = f"<p style='margin-top: 12px;'><strong>Benefits:</strong> {benefits_items}</p>"
 
             flights_html += f"""
             <div class="card">
-                <div class="card-header">{airline} {badge}</div>
-                <p><strong>Type:</strong> {flight_type}</p>
-                <p><strong>Departure:</strong> {departure}</p>
-                <p><strong>Duration:</strong> {duration}</p>
-                <p><strong>Price:</strong> {price}/person</p>
-                <p><strong>Class:</strong> {cabin}</p>
-                {benefits_html}
+                <div class="card-content">
+                    <div class="card-header">✈️ {airline} {badge}</div>
+                    <table style="box-shadow: none; margin: 15px 0;">
+                        <tr>
+                            <th>Type</th>
+                            <th>Departure</th>
+                            <th>Duration</th>
+                            <th>Price</th>
+                            <th>Class</th>
+                        </tr>
+                        <tr>
+                            <td>{flight_type}</td>
+                            <td>{departure}</td>
+                            <td>{duration}</td>
+                            <td><strong>{price}</strong>/person</td>
+                            <td>{cabin}</td>
+                        </tr>
+                    </table>
+                    {benefits_html}
+                </div>
             </div>"""
 
         # Booking tips
@@ -728,7 +1220,7 @@ th {
         if tips:
             tips_items = "".join(f"<li>{sanitize_text(tip)}</li>" for tip in tips)
             tips_html = f"""
-            <h3 style="margin-top: 20px;">💡 {labels['booking_tips']}</h3>
+            <h3 style="color: var(--primary-color); margin-top: 30px; margin-bottom: 15px;">💡 {labels['booking_tips']}</h3>
             <ul class="tip-list">{tips_items}</ul>"""
 
         return f"""
@@ -743,8 +1235,8 @@ th {
             </div>
         </div>"""
 
-    def _generate_accommodation_section_html(self, labels: Dict[str, str]) -> str:
-        """Generate accommodation section HTML."""
+    def _generate_enhanced_accommodation_section(self, labels: Dict[str, str]) -> str:
+        """Generate enhanced accommodation section."""
         if not self.accommodation:
             return ""
 
@@ -768,17 +1260,31 @@ th {
 
             amenities_html = ""
             if amenities:
-                amenities_str = ", ".join(sanitize_text(a) for a in amenities)
-                amenities_html = f"<p><strong>{labels['amenities']}:</strong> {amenities_str}</p>"
+                amenities_badges = "".join(
+                    f'<span class="badge badge-primary">{sanitize_text(a)}</span> '
+                    for a in amenities
+                )
+                amenities_html = f"<p style='margin-top: 10px;'><strong>{labels['amenities']}:</strong><br>{amenities_badges}</p>"
 
             hotels_html += f"""
             <div class="card">
-                <div class="card-header">🏨 {name}</div>
-                <p><strong>Type:</strong> {hotel_type}</p>
-                <p><strong>Area:</strong> {area}</p>
-                <p><strong>Price:</strong> {price} {labels['per_night']}</p>
-                {rating_html}
-                {amenities_html}
+                <div class="card-content">
+                    <div class="card-header">🏨 {name}</div>
+                    <table style="box-shadow: none; margin: 15px 0;">
+                        <tr>
+                            <th>Type</th>
+                            <th>Area</th>
+                            <th>Price</th>
+                        </tr>
+                        <tr>
+                            <td>{hotel_type}</td>
+                            <td>{area}</td>
+                            <td><strong>{price}</strong> {labels['per_night']}</td>
+                        </tr>
+                    </table>
+                    {rating_html}
+                    {amenities_html}
+                </div>
             </div>"""
 
         return f"""
@@ -792,8 +1298,8 @@ th {
             </div>
         </div>"""
 
-    def _generate_budget_section_html(self, labels: Dict[str, str]) -> str:
-        """Generate budget section HTML."""
+    def _generate_enhanced_budget_section(self, labels: Dict[str, str]) -> str:
+        """Generate enhanced budget section with visualizations."""
         if not self.budget:
             return ""
 
@@ -801,6 +1307,36 @@ th {
         total = self.budget.get("total_estimated_cost", 0)
         status = self.budget.get("budget_status", "N/A")
 
+        # Create table
+        table_html = ""
+        if categories:
+            table_rows = ""
+            for cat in categories:
+                name = sanitize_text(cat.get("category_name", ""))
+                cost = format_currency(cat.get("estimated_cost", 0))
+                notes = sanitize_text(cat.get("notes", ""), max_length=40) or "-"
+                table_rows += f"""
+                <tr>
+                    <td><strong>{name}</strong></td>
+                    <td style="text-align: right;"><strong>{cost}</strong></td>
+                    <td>{notes}</td>
+                </tr>"""
+
+            table_html = f"""
+            <table>
+                <thead>
+                    <tr>
+                        <th>{labels['category']}</th>
+                        <th style="text-align: right;">{labels['estimated']}</th>
+                        <th>{labels['notes']}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {table_rows}
+                </tbody>
+            </table>"""
+
+        # Budget bars visualization
         budget_bars_html = ""
         if categories and total > 0:
             for cat in categories:
@@ -823,7 +1359,7 @@ th {
         if recommendations:
             items = "".join(f"<li>{sanitize_text(r)}</li>" for r in recommendations)
             recommendations_html = f"""
-            <h3 style="margin-top: 20px;">💡 {labels['recommendations']}</h3>
+            <h3 style="color: var(--primary-color); margin-top: 30px; margin-bottom: 15px;">💡 {labels['recommendations']}</h3>
             <ul class="tip-list">{items}</ul>"""
 
         return f"""
@@ -833,21 +1369,23 @@ th {
                 {labels['budget']}
             </h2>
             <div class="section-content">
+                {table_html}
                 <div class="budget-chart">
+                    <h3 style="color: var(--primary-color); margin: 25px 0 20px;">📊 Budget Visualization</h3>
                     {budget_bars_html}
                 </div>
                 <div class="budget-total">
                     {labels['total_cost']}: {format_currency(total)}<br>
-                    <span style="font-size: 0.8em; color: var(--text-muted);">
-                        {labels['status']}: {status}
+                    <span style="font-size: 0.7em; color: var(--text-muted);">
+                        {labels['status']}: <span class="badge badge-success">{status}</span>
                     </span>
                 </div>
                 {recommendations_html}
             </div>
         </div>"""
 
-    def _generate_advisory_section_html(self, labels: Dict[str, str]) -> str:
-        """Generate advisory section HTML."""
+    def _generate_enhanced_advisory_section(self, labels: Dict[str, str]) -> str:
+        """Generate enhanced advisory section."""
         if not self.advisory:
             return ""
 
@@ -856,30 +1394,34 @@ th {
         if warnings:
             items = "".join(f"<li>{sanitize_text(w)}</li>" for w in warnings)
             warnings_html = f"""
-            <h3>📢 {labels['warnings']}</h3>
+            <h3 style="color: var(--danger-color); margin-bottom: 15px;">📢 {labels['warnings']}</h3>
             <ul class="warning-list">{items}</ul>"""
 
         visa_info = self.advisory.get("visa_info", "")
         visa_html = ""
         if visa_info:
             visa_html = f"""
-            <h3>🛂 {labels['visa_info']}</h3>
-            <p>{sanitize_text(visa_info)}</p>"""
+            <div class="highlight-box" style="margin-top: 25px;">
+                <h3 style="color: var(--primary-color); margin-bottom: 10px;">🛂 {labels['visa_info']}</h3>
+                <p style="line-height: 1.8;">{sanitize_text(visa_info)}</p>
+            </div>"""
 
         weather_info = self.advisory.get("weather_info", "")
         weather_html = ""
         if weather_info:
             weather_html = f"""
-            <h3>🌤️ {labels['weather_info']}</h3>
-            <p>{sanitize_text(weather_info)}</p>"""
+            <div class="highlight-box" style="margin-top: 25px; background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
+                <h3 style="color: var(--primary-color); margin-bottom: 10px;">🌤️ {labels['weather_info']}</h3>
+                <p style="line-height: 1.8;">{sanitize_text(weather_info)}</p>
+            </div>"""
 
         safety_tips = self.advisory.get("safety_tips", [])
         safety_html = ""
         if safety_tips:
             items = "".join(f"<li>{sanitize_text(t)}</li>" for t in safety_tips)
             safety_html = f"""
-            <h3>🛡️ {labels['safety_tips']}</h3>
-            <ul>{items}</ul>"""
+            <h3 style="color: var(--success-color); margin-top: 25px; margin-bottom: 15px;">🛡️ {labels['safety_tips']}</h3>
+            <ul class="tip-list">{items}</ul>"""
 
         return f"""
         <div class="section">
@@ -895,8 +1437,8 @@ th {
             </div>
         </div>"""
 
-    def _generate_souvenirs_section_html(self, labels: Dict[str, str]) -> str:
-        """Generate souvenirs section HTML."""
+    def _generate_enhanced_souvenirs_section(self, labels: Dict[str, str]) -> str:
+        """Generate enhanced souvenirs section."""
         if not self.souvenirs:
             return ""
 
@@ -907,19 +1449,26 @@ th {
             price = souvenir.get("estimated_price", "")
             where = souvenir.get("where_to_buy", "")
 
-            price_html = f"<p><strong>{labels['price']}:</strong> {price}</p>" if price else ""
+            price_html = (
+                f"<p style='margin: 10px 0;'><strong>{labels['price']}:</strong> "
+                f"<span class='badge badge-success'>{price}</span></p>"
+                if price
+                else ""
+            )
             where_html = (
-                f"<p><strong>{labels['where_to_buy']}:</strong> {sanitize_text(where)}</p>"
+                f"<p style='margin: 10px 0;'><strong>{labels['where_to_buy']}:</strong> {sanitize_text(where)}</p>"
                 if where
                 else ""
             )
 
             souvenirs_html += f"""
             <div class="card">
-                <div class="card-header">🛍️ {name}</div>
-                <p>{description}</p>
-                {price_html}
-                {where_html}
+                <div class="card-content">
+                    <div class="card-header">🛍️ {name}</div>
+                    <p style="line-height: 1.8; margin-bottom: 15px;">{description}</p>
+                    {price_html}
+                    {where_html}
+                </div>
             </div>"""
 
         return f"""
@@ -939,6 +1488,7 @@ th {
 
         return f"""
         <div class="footer">
-            <p>{labels['generated_at']}: {generated_date}</p>
-            <p>NaviAgent Travel Guidebook v{self.version}</p>
+            <p style="margin-bottom: 10px; font-size: 1.1em;">✨ {labels['generated_at']}: {generated_date}</p>
+            <p style="opacity: 0.8;">NaviAgent Travel Guidebook v{self.version}</p>
+            <p style="margin-top: 15px; opacity: 0.7;">Made with ❤️ for your perfect journey</p>
         </div>"""
