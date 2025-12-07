@@ -62,14 +62,22 @@ class ReceptionistAgent(Agent):
             "IMPORTANT: Always respond to customers in Vietnamese, friendly and natural.",
             "",
             "INFORMATION TO COLLECT (in order):",
-            "1. destination - If customer doesn't know → ask preferences to suggest",
-            "2. departure_point - Where they depart from",
+            "1. destination - Where customer WANTS TO GO (điểm đến) - If customer doesn't know → ask preferences to suggest",
+            "2. departure_point - Where customer STARTS FROM (nơi xuất phát/khởi hành)",
             "3. departure_date - When they want to depart",
             "4. trip_duration - How many days",
             "5. num_travelers - Number of people",
             "6. budget - Budget amount in VND",
             "7. travel_style - Ask if they want 'tự túc' or 'tour' (internally saved as 'self-guided' or 'tour')",
             "8. customer_notes - Any special requests or notes (optional)",
+            "",
+            "⚠️ CRITICAL - DO NOT CONFUSE:",
+            "- destination = nơi muốn ĐẾN (where to go) → use save_destination()",
+            "- departure_point = nơi KHỞI HÀNH/XUẤT PHÁT (where from) → use save_departure()",
+            "Examples:",
+            "  - 'Tôi muốn đi Seoul' → save_destination('Seoul')",
+            "  - 'Khởi hành từ Hà Nội' → save_departure('Hà Nội')",
+            "  - 'Xuất phát từ TP.HCM' → save_departure('TP.HCM')",
             "",
             "RULES:",
             "- Ask ONE piece of information at a time, DON'T ask multiple at once",
@@ -90,8 +98,8 @@ class ReceptionistAgent(Agent):
             "USING TOOLS:",
             "- ALWAYS use suggest_from_text() when customer describes their ideal trip",
             "- ALWAYS use suggest_from_image() when customer provides an image URL",
-            "- ALWAYS use save_destination() IMMEDIATELY when customer mentions destination",
-            "- ALWAYS use save_departure() IMMEDIATELY when customer mentions departure point",
+            "- ALWAYS use save_destination() for nơi muốn ĐẾN (destination/điểm đến)",
+            "- ALWAYS use save_departure() for nơi KHỞI HÀNH (departure point/điểm xuất phát)",
             "- ALWAYS use save_dates() IMMEDIATELY when customer mentions dates and duration",
             "- ALWAYS use save_travelers() IMMEDIATELY when customer mentions number of people",
             "- ALWAYS use save_budget() IMMEDIATELY when customer mentions budget",
@@ -379,45 +387,61 @@ class ReceptionistAgent(Agent):
         Returns:
             Confirmation message
         """
-
-        # Use LLM to validate budget reasonableness if we have destination info
-        if self.travel_data.get("destination"):
-            validation_prompt = (
-                f"Đánh giá ngân sách du lịch:\n"
-                f"- Ngân sách: {budget}\n"
-                f"- Điểm đến: {self.travel_data['destination']}\n"
-                f"- Số người: {self.travel_data.get('num_travelers', 'chưa rõ')}\n"
-                f"- Thời gian: {self.travel_data.get('trip_duration', 'chưa rõ')}\n\n"
-                f"Hãy đánh giá ngân sách này có hợp lý không. Nếu quá thấp, đưa ra cảnh báo và gợi ý ngân sách tối thiểu.\n"
-                f"Trả về CHỈ MỘT trong hai định dạng:\n"
-                f"1. Nếu OK: '✓ Đã lưu ngân sách: [budget]'\n"
-                f"2. Nếu thấp: '⚠️ Ngân sách [budget] có vẻ thấp cho chuyến đi... Bạn có chắc chắn muốn tiếp tục với ngân sách này không?'\n\n"
-                f"Lưu ý: Chỉ trả về text tiếng Việt, KHÔNG giải thích thêm."
-            )
-
-            try:
-                response = self.run(validation_prompt)
-                validation_result = response.content.strip()
-
-                # If validation passes (contains ✓), save and return
-                if "✓" in validation_result:
-                    self.travel_data["budget"] = budget
-                    return validation_result
-                # If warning (contains ⚠️), return warning WITHOUT saving
-                elif "⚠️" in validation_result:
-                    return validation_result
-                else:
-                    # Fallback if LLM returns unexpected format
-                    self.travel_data["budget"] = budget
-                    return f"✓ Đã lưu ngân sách: {budget}"
-            except Exception:
-                # If LLM fails, just save without validation
-                self.travel_data["budget"] = budget
-                return f"✓ Đã lưu ngân sách: {budget}"
+        # Convert budget to VND number
+        converted_budget = self._convert_budget_to_vnd(budget)
+        
+        if converted_budget > 0:
+            self.travel_data["budget"] = int(converted_budget)
+            return f"✓ Đã lưu ngân sách: {budget}"
         else:
-            # No destination yet, just save
+            # If conversion fails, save as-is
             self.travel_data["budget"] = budget
             return f"✓ Đã lưu ngân sách: {budget}"
+
+    def _convert_budget_to_vnd(self, budget: str) -> float:
+        """Convert budget string to VND amount.
+        
+        Args:
+            budget: Budget string like "10 triệu", "5tr", "10-15 triệu", "10 million", "1000$"
+            
+        Returns:
+            VND amount as float, or 0 if cannot parse
+        """
+        import re
+        
+        budget_lower = budget.lower().strip()
+        
+        # Handle currency conversion
+        if '$' in budget_lower or 'usd' in budget_lower:
+            # Extract number
+            numbers = re.findall(r'[\d,\.]+', budget_lower)
+            if numbers:
+                try:
+                    amount = float(numbers[0].replace(',', ''))
+                    return amount * 26000  # 1 USD ≈ 26,000 VND
+                except ValueError:
+                    pass
+        
+        # Extract numbers
+        numbers = re.findall(r'[\d,\.]+', budget_lower)
+        if not numbers:
+            return 0
+        
+        # Get first number (ignore range for now)
+        try:
+            amount = float(numbers[0].replace(',', '').replace('.', ''))
+        except ValueError:
+            return 0
+        
+        # Detect multiplier
+        if any(x in budget_lower for x in ['triệu', 'tr', 'củ', 'million', 'm ']):
+            amount *= 1_000_000
+        elif any(x in budget_lower for x in ['tỷ', 'billion', 'b ']):
+            amount *= 1_000_000_000
+        elif any(x in budget_lower for x in ['nghìn', 'ngàn', 'k', 'thousand']):
+            amount *= 1_000
+        
+        return amount
 
     def _save_style(self, travel_style: str) -> str:
         """Save travel style preference.
