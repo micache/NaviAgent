@@ -26,6 +26,14 @@ interface TravelData {
   customer_notes?: string;
 }
 
+interface SessionItem {
+  session_id: string;
+  user_id: string;
+  created_at: string;
+  update_at: string;
+  title?: string;
+}
+
 export default function PlanPage() {
   const { t } = useLanguage();
   const router = useRouter();
@@ -37,6 +45,11 @@ export default function PlanPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Sidebar states
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [sessions, setSessions] = useState<SessionItem[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
 
   // Auto scroll to bottom when messages change
   useEffect(() => {
@@ -48,56 +61,132 @@ export default function PlanPage() {
     const token = localStorage.getItem("user");
     setIsAuthenticated(!!token);
     console.log("🔐 Authentication status:", !!token);
+    
+    // Load sessions when authenticated and auto-load latest session
+    if (token) {
+      loadUserSessions();
+    }
   }, []);
 
-  // Auto start chat session when page loads
-  useEffect(() => {
-    const initializeChat = async () => {
-      // Check if already has session or not authenticated
-      if (sessionId || !isAuthenticated) {
-        return;
-      }
+  // Load user sessions
+  const loadUserSessions = async () => {
+    try {
+      const token = localStorage.getItem("user");
+      if (!token) return;
 
+      const user = JSON.parse(token);
+      const userId = user.user_id;
+
+      setLoadingSessions(true);
+      const response = await fetch(`${RECEPTION_API_URL}/sessions/${userId}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Map 'id' from database to 'session_id' for frontend
+        const mappedSessions = (data.sessions || []).map((session: any) => ({
+          session_id: session.id, // Map 'id' to 'session_id'
+          user_id: session.user_id,
+          created_at: session.created_at,
+          update_at: session.update_at,
+          title: session.title
+        }));
+        setSessions(mappedSessions);
+        console.log("📋 Loaded sessions:", mappedSessions);
+        
+        // Auto-load the latest session if exists and no current session
+        if (mappedSessions.length > 0 && !sessionId) {
+          const latestSession = mappedSessions[0]; // Sessions are ordered by created_at DESC
+          console.log("🔄 Auto-loading latest session:", latestSession.session_id);
+          await loadSessionMessages(latestSession.session_id);
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error loading sessions:", error);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  // Load a specific session's messages
+  const loadSessionMessages = async (selectedSessionId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${RECEPTION_API_URL}/sessions/${selectedSessionId}/messages`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Map messages from API response
+        const loadedMessages = (data.messages || []).map((msg: any) => ({
+          role: msg.role === "user" ? "user" : "assistant",
+          content: msg.content
+        }));
+        
+        setMessages(loadedMessages);
+        setSessionId(selectedSessionId);
+        
+        // Update travel_data from API response
+        if (data.travel_data) {
+          setTravelData(data.travel_data);
+          setIsComplete(data.is_complete || false);
+          
+          console.log("📋 Travel data loaded:", data.travel_data);
+          console.log("✅ Is complete:", data.is_complete);
+        } else {
+          setTravelData({});
+          setIsComplete(false);
+        }
+        
+        console.log("💬 Loaded messages for session:", selectedSessionId);
+      }
+    } catch (error) {
+      console.error("❌ Error loading session messages:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Create new chat session
+  const handleNewChat = async () => {
+    try {
       const token = localStorage.getItem("user");
       if (!token) {
-        console.error("❌ Not authenticated");
+        alert("Please sign in first!");
         return;
       }
 
-      try {
-        const user = JSON.parse(token);
-        const userId = user.user_id;
-        
-        console.log("🆕 Auto-initializing chat session...");
-        setIsLoading(true);
+      const user = JSON.parse(token);
+      const userId = user.user_id;
 
-        const startResponse = await fetch(`${RECEPTION_API_URL}/start_chat`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user_id: userId }),
-        });
+      setIsLoading(true);
+      const response = await fetch(`${RECEPTION_API_URL}/start_chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: userId }),
+      });
 
-        if (!startResponse.ok) {
-          throw new Error("Failed to start chat session");
-        }
-
-        const startData = await startResponse.json();
-        console.log("✅ Auto-start chat response:", startData);
+      if (response.ok) {
+        const data = await response.json();
+        setSessionId(data.session_id);
+        setMessages([{ role: "assistant", content: data.message }]);
+        setTravelData({});
+        setIsComplete(false);
         
-        setSessionId(startData.session_id);
-        setMessages([{ role: "assistant", content: startData.message }]);
+        // Reload sessions list
+        await loadUserSessions();
         
-      } catch (error) {
-        console.error("❌ Error initializing chat:", error);
-      } finally {
-        setIsLoading(false);
+        console.log("✅ New chat session created:", data.session_id);
       }
-    };
+    } catch (error) {
+      console.error("❌ Error creating new chat:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    initializeChat();
-  }, [isAuthenticated, sessionId]);
+  // Removed auto-start chat session - now loads latest session instead
 
   const handleSendChat = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -397,6 +486,59 @@ export default function PlanPage() {
 
   return (
     <section className="plan-layout">
+      {/* ===== SIDEBAR: Chat Sessions ===== */}
+      <div className={`chat-sidebar ${isSidebarOpen ? 'open' : 'collapsed'}`}>
+        <div className="sidebar-header">
+          <button 
+            className="sidebar-toggle"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            title={isSidebarOpen ? "Collapse" : "Expand"}
+          >
+            {isSidebarOpen ? '◀' : '▶'}
+          </button>
+          {isSidebarOpen && (
+            <button 
+              className="new-chat-btn"
+              onClick={handleNewChat}
+              disabled={isLoading}
+            >
+              ➕ New Chat
+            </button>
+          )}
+        </div>
+
+        {isSidebarOpen && (
+          <div className="sessions-list">
+            {loadingSessions ? (
+              <div className="loading-sessions">Loading...</div>
+            ) : sessions.length === 0 ? (
+              <div className="no-sessions">No chat history</div>
+            ) : (
+              sessions.map((session) => (
+                <div
+                  key={session.session_id}
+                  className={`session-item ${session.session_id === sessionId ? 'active' : ''}`}
+                  onClick={() => loadSessionMessages(session.session_id)}
+                >
+                  <div className="session-title">
+                    💬 {session.title || `Chat ${new Date(session.update_at).toLocaleDateString()}`}
+                  </div>
+                  <div className="session-date">
+                    {new Date(session.update_at).toLocaleString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
       {/* ===== LEFT: Travel Data Summary ===== */}
       <div className="plan-left">
         <h1 className="plan-title">{t("travelPlans")}</h1>

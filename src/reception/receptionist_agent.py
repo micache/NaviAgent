@@ -565,6 +565,68 @@ class ReceptionistAgent(Agent):
             f"Chúc bạn có một chuyến đi tuyệt vời! 🌏✈️"
         )
 
+    def reconstruct_travel_data_from_history(self) -> Dict[str, Any]:
+        """Reconstruct travel_data by analyzing conversation history.
+        
+        This is called when loading an existing session to rebuild the travel_data
+        from past messages instead of starting from scratch.
+        
+        Returns:
+            Reconstructed travel data dictionary
+        """
+        try:
+            # Use LLM to analyze conversation history and extract travel data
+            analysis_prompt = """
+Analyze the conversation history above and extract ALL travel information that was collected.
+
+Return ONLY a valid JSON object with these exact fields (use null if not mentioned):
+{
+  "destination": "City, Country format or null",
+  "departure_point": "City name or null",
+  "departure_date": "YYYY-MM-DD or DD/MM/YYYY format or null",
+  "trip_duration": "number of days as string or null",
+  "num_travelers": "number as string or null",
+  "budget": "amount in VND as number or null",
+  "travel_style": "self-guided or tour or null",
+  "customer_notes": "any special notes or null"
+}
+
+CRITICAL RULES:
+- destination = where customer WANTS TO GO (điểm đến)
+- departure_point = where customer STARTS FROM (điểm xuất phát)
+- budget must be a number in VND (convert if needed: "10 triệu" = 10000000)
+- travel_style must be exactly "self-guided" or "tour"
+- Return ONLY the JSON, no markdown, no explanation
+"""
+            
+            response = self.run(analysis_prompt)
+            content = response.content.strip()
+            
+            # Remove markdown code blocks if present
+            if content.startswith("```"):
+                content = content.split("```")[1]
+                if content.startswith("json"):
+                    content = content[4:]
+                content = content.strip()
+            
+            # Parse JSON
+            reconstructed_data = json.loads(content)
+            
+            # Update travel_data with reconstructed values
+            for key in self.travel_data.keys():
+                if key in reconstructed_data and reconstructed_data[key] is not None:
+                    self.travel_data[key] = reconstructed_data[key]
+            
+            print("✅ Reconstructed travel_data from history:")
+            print(json.dumps(self.travel_data, ensure_ascii=False, indent=2))
+            
+            return self.travel_data.copy()
+            
+        except Exception as e:
+            print(f"⚠️ Failed to reconstruct travel_data: {e}")
+            # Return current travel_data as fallback
+            return self.travel_data.copy()
+
     def get_travel_data(self) -> Dict[str, Any]:
         """Get the collected travel data.
 

@@ -74,7 +74,8 @@ def save_chat_message(
         "content": content,
         "created_at": datetime.utcnow().isoformat(),
     }
-
+    update_session_timestamp(session_id)
+    print("Updating session timestamp for session:", session_id)
     response = supabase.table("chat_messages").insert(data).execute()
     return response.data[0] if response.data else data
 
@@ -102,13 +103,13 @@ def get_session_messages(session_id: str) -> List[Dict[str, Any]]:
 
 
 def get_user_sessions(user_id: str) -> List[Dict[str, Any]]:
-    """Get all sessions for a user.
+    """Get all sessions for a user, ordered by last update time.
 
     Args:
         user_id: User ID
 
     Returns:
-        List of sessions
+        List of sessions sorted by update_at (most recent first)
     """
     supabase = get_supabase_client()
 
@@ -116,7 +117,7 @@ def get_user_sessions(user_id: str) -> List[Dict[str, Any]]:
         supabase.table("chat_sessions")
         .select("*")
         .eq("user_id", user_id)
-        .order("created_at", desc=True)
+        .order("update_at", desc=True)
         .execute()
     )
 

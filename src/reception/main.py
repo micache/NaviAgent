@@ -1,6 +1,7 @@
 """FastAPI application for NaviAgent Receptionist service."""
 
 import json
+from urllib import request
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -94,6 +95,8 @@ class MessageListResponse(BaseModel):
     """Response model for message list."""
 
     messages: List[Dict[str, Any]]
+    travel_data: Optional[Dict[str, Any]] = None
+    is_complete: Optional[bool] = False
 
 
 @app.get("/")
@@ -330,11 +333,48 @@ async def get_messages(session_id: str):
         session_id: Session ID
 
     Returns:
-        List of messages
+        List of messages with travel data
     """
     try:
+        # Get messages first to check count
         messages = get_session_messages(session_id)
-        return MessageListResponse(messages=messages)
+        travel_data = {}
+        # Get or create agent from cache to retrieve travel_data
+        if session_id not in _agent_cache:
+            agent = ReceptionistAgent(
+                session_id=session_id,
+            )
+            _agent_cache[session_id] = agent
+            travel_data = agent.get_travel_data()
+            if travel_data.get("destination") is None:
+                # Only reconstruct if there are enough messages (>= 3)
+                if len(messages) >= 3:
+                    print(f"🔄 Reconstructing travel_data for session: {session_id} ({len(messages)} messages)")
+                    agent.reconstruct_travel_data_from_history()
+                    travel_data = agent.get_travel_data()
+                else:
+                    print(f"⏭️ Skipping reconstruction (only {len(messages)} messages)")
+        else:
+            agent = _agent_cache[session_id]
+        
+        # Check if complete
+        required_fields = [
+            "destination",
+            "departure_point",
+            "departure_date",
+            "trip_duration",
+            "num_travelers",
+            "budget",
+            "travel_style",
+        ]
+        is_complete = all(travel_data.get(field) is not None for field in required_fields)
+        
+        return MessageListResponse(
+            messages=messages,
+            travel_data=travel_data,
+            is_complete=is_complete
+        )
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
