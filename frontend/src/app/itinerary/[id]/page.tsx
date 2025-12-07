@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import "@/styles/itinerary-detail.css";
-import ReactMarkdown from "react-markdown";
 
 interface TravelPlan {
   id: string;
@@ -17,14 +16,9 @@ interface TravelPlan {
     travel_style: string;
     customer_notes?: string;
   };
-  plan: {
-    itinerary?: any;
-    accommodation?: any;
-    flights?: any;
-    budget_breakdown?: any;
-    souvenirs?: any;
-    travel_advisory?: any;
-  };
+  plan: any; // Full travel plan JSON
+  guidebook_id?: string; // Guidebook ID from plan creation
+  guidebook_files?: { [key: string]: string }; // Guidebook file paths
   created_at: string;
 }
 
@@ -34,8 +28,9 @@ export default function ItineraryDetailPage() {
   const id = params?.id as string;
 
   const [plan, setPlan] = useState<TravelPlan | null>(null);
+  const [guidebookHtml, setGuidebookHtml] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<string>("itinerary");
+  const [isGeneratingGuidebook, setIsGeneratingGuidebook] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -43,11 +38,22 @@ export default function ItineraryDetailPage() {
     }
   }, [id]);
 
-  const loadPlanDetail = (planId: string) => {
+  const loadPlanDetail = async (planId: string) => {
     try {
       const savedPlan = localStorage.getItem(`travel_plan_${planId}`);
       if (savedPlan) {
-        setPlan(JSON.parse(savedPlan));
+        const planData = JSON.parse(savedPlan);
+        setPlan(planData);
+        
+        // Check if guidebook already exists
+        if (planData.guidebook_id && planData.guidebook_files?.html) {
+          console.log("📚 Guidebook already exists, loading...");
+          console.log("  - Guidebook ID:", planData.guidebook_id);
+          await loadExistingGuidebook(planData.guidebook_id);
+        } else {
+          console.log("📚 No guidebook found, generating new one...");
+          await generateGuidebook(planData.plan, planId);
+        }
       } else {
         alert("Không tìm thấy lịch trình!");
         router.push('/itinerary');
@@ -56,6 +62,82 @@ export default function ItineraryDetailPage() {
       console.error("Error loading plan:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadExistingGuidebook = async (guidebookId: string) => {
+    setIsGeneratingGuidebook(true);
+    try {
+      const TRAVEL_PLANNER_API = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8003";
+      
+      console.log("📥 Loading existing guidebook HTML...");
+      const htmlResponse = await fetch(`${TRAVEL_PLANNER_API}/api/v1/guidebook/${guidebookId}/download?format=html`);
+        
+      if (htmlResponse.ok) {
+        const htmlContent = await htmlResponse.text();
+        setGuidebookHtml(htmlContent);
+        console.log("✅ Guidebook loaded successfully");
+      } else {
+        throw new Error(`Failed to load guidebook: ${htmlResponse.status}`);
+      }
+    } catch (error) {
+      console.error("❌ Error loading guidebook:", error);
+      setGuidebookHtml("<p style='color: red;'>Lỗi khi tải guidebook. Vui lòng tải lại trang.</p>");
+    } finally {
+      setIsGeneratingGuidebook(false);
+    }
+  };
+
+  const generateGuidebook = async (travelPlanData: any, planId: string) => {
+    setIsGeneratingGuidebook(true);
+    try {
+      const TRAVEL_PLANNER_API = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8003";
+      
+      console.log("📚 Generating new guidebook...");
+      
+      const response = await fetch(`${TRAVEL_PLANNER_API}/api/v1/generate_guidebook`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          travel_plan: travelPlanData,
+          formats: ["html"],
+          language: "vi"
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate guidebook: ${response.status}`);
+      }
+
+      const guidebookResponse = await response.json();
+      console.log("✅ Guidebook generated:", guidebookResponse);
+
+      // Update localStorage with guidebook info
+      const savedPlan = localStorage.getItem(`travel_plan_${planId}`);
+      if (savedPlan) {
+        const planData = JSON.parse(savedPlan);
+        planData.guidebook_id = guidebookResponse.guidebook_id;
+        planData.guidebook_files = guidebookResponse.files || {};
+        localStorage.setItem(`travel_plan_${planId}`, JSON.stringify(planData));
+        console.log("💾 Updated plan with guidebook info");
+      }
+
+      // Fetch the HTML file content
+      if (guidebookResponse.files?.html) {
+        const htmlResponse = await fetch(`${TRAVEL_PLANNER_API}/api/v1/guidebook/${guidebookResponse.guidebook_id}/download?format=html`);
+        
+        if (htmlResponse.ok) {
+          const htmlContent = await htmlResponse.text();
+          setGuidebookHtml(htmlContent);
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error generating guidebook:", error);
+      setGuidebookHtml("<p style='color: red;'>Lỗi khi tạo guidebook. Vui lòng thử lại.</p>");
+    } finally {
+      setIsGeneratingGuidebook(false);
     }
   };
 
@@ -72,36 +154,6 @@ export default function ItineraryDetailPage() {
       month: '2-digit',
       year: 'numeric'
     });
-  };
-
-  const tabs = [
-    { id: 'itinerary', label: '📅 Lịch trình', icon: '📅' },
-    { id: 'accommodation', label: '🏨 Khách sạn', icon: '🏨' },
-    { id: 'flights', label: '✈️ Chuyến bay', icon: '✈️' },
-    { id: 'budget', label: '💰 Chi phí', icon: '💰' },
-    { id: 'souvenirs', label: '🎁 Quà lưu niệm', icon: '🎁' },
-    { id: 'advisory', label: '⚠️ Lưu ý', icon: '⚠️' },
-  ];
-
-  const renderContent = () => {
-    if (!plan?.plan) return <p>Không có dữ liệu</p>;
-
-    switch(activeTab) {
-      case 'itinerary':
-        return <ReactMarkdown>{plan.plan.itinerary || 'Chưa có lịch trình'}</ReactMarkdown>;
-      case 'accommodation':
-        return <ReactMarkdown>{plan.plan.accommodation || 'Chưa có thông tin khách sạn'}</ReactMarkdown>;
-      case 'flights':
-        return <ReactMarkdown>{plan.plan.flights || 'Chưa có thông tin chuyến bay'}</ReactMarkdown>;
-      case 'budget':
-        return <ReactMarkdown>{plan.plan.budget_breakdown || 'Chưa có phân tích chi phí'}</ReactMarkdown>;
-      case 'souvenirs':
-        return <ReactMarkdown>{plan.plan.souvenirs || 'Chưa có gợi ý quà'}</ReactMarkdown>;
-      case 'advisory':
-        return <ReactMarkdown>{plan.plan.travel_advisory || 'Chưa có lưu ý đặc biệt'}</ReactMarkdown>;
-      default:
-        return <p>Tab không hợp lệ</p>;
-    }
   };
 
   if (isLoading) {
@@ -148,25 +200,23 @@ export default function ItineraryDetailPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="tabs-container">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            className={`tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
-          >
-            <span className="tab-icon">{tab.icon}</span>
-            <span className="tab-label">{tab.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
+      {/* Guidebook Content */}
       <div className="content-container">
-        <div className="markdown-content">
-          {renderContent()}
-        </div>
+        {isGeneratingGuidebook ? (
+          <div className="loading">
+            <div className="spinner"></div>
+            <p>Đang tạo guidebook...</p>
+          </div>
+        ) : guidebookHtml ? (
+          <div 
+            className="guidebook-content"
+            dangerouslySetInnerHTML={{ __html: guidebookHtml }}
+          />
+        ) : (
+          <div className="empty-state">
+            <p>Chưa có guidebook</p>
+          </div>
+        )}
       </div>
 
       {/* Actions */}

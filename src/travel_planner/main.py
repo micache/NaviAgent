@@ -236,6 +236,17 @@ async def plan_trip(request: TravelRequest):
         if user_id:
             print(f"  - Session saved to database for user: {user_id}")
 
+        # 🔍 DEBUG: Print full JSON response structure
+        try:
+            response_dict = travel_plan.model_dump() if hasattr(travel_plan, 'model_dump') else travel_plan.dict()
+            print(f"\n{'='*80}")
+            print(f"📋 FULL JSON RESPONSE STRUCTURE:")
+            print(f"{'='*80}")
+            print(json.dumps(response_dict, indent=2, default=str, ensure_ascii=False))
+            print(f"{'='*80}\n")
+        except Exception as debug_error:
+            print(f"⚠️  Debug serialization error: {debug_error}")
+
         return travel_plan
 
     except Exception as e:

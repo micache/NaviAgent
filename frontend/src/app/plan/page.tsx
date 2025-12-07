@@ -220,7 +220,7 @@ export default function PlanPage() {
       destination: "Ho Chi Minh City, Vietnam",
       departure_point: "Ha Noi, Vietnam",
       departure_date: "2025-12-07",
-      trip_duration: "7",
+      trip_duration: "2",
       num_travelers: "2",
       budget: "100000000",
       travel_style: "self-guided",
@@ -273,12 +273,46 @@ export default function PlanPage() {
       const planResult = await response.json();
       console.log("✅ Received plan from travel planner:", planResult);
       
-      // Save to localStorage
+      // 📚 STEP 2: Generate guidebook immediately after receiving travel plan
+      console.log("📚 Step 2: Generating guidebook from travel plan...");
+      let guidebookId = null;
+      let guidebookFiles = {};
+      
+      try {
+        const guidebookResponse = await fetch(`${PLANNER_API_URL}/api/v1/generate_guidebook`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            travel_plan: planResult,
+            formats: ["html"],
+            language: "vi"
+          }),
+        });
+
+        if (guidebookResponse.ok) {
+          const guidebookData = await guidebookResponse.json();
+          guidebookId = guidebookData.guidebook_id;
+          guidebookFiles = guidebookData.files || {};
+          console.log("✅ Guidebook generated successfully!");
+          console.log("  - Guidebook ID:", guidebookId);
+          console.log("  - Files:", guidebookFiles);
+        } else {
+          console.warn("⚠️ Guidebook generation failed, will retry on detail page");
+        }
+      } catch (guidebookError) {
+        console.warn("⚠️ Guidebook generation error:", guidebookError);
+      }
+      
+      // Save to localStorage with guidebook info
       const planId = Date.now().toString();
       const completePlan = {
         id: planId,
         travel_data: travelData,
         plan: planResult,
+        guidebook_id: guidebookId,
+        guidebook_files: guidebookFiles,
         created_at: new Date().toISOString()
       };
       
