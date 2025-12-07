@@ -50,6 +50,55 @@ export default function PlanPage() {
     console.log("🔐 Authentication status:", !!token);
   }, []);
 
+  // Auto start chat session when page loads
+  useEffect(() => {
+    const initializeChat = async () => {
+      // Check if already has session or not authenticated
+      if (sessionId || !isAuthenticated) {
+        return;
+      }
+
+      const token = localStorage.getItem("user");
+      if (!token) {
+        console.error("❌ Not authenticated");
+        return;
+      }
+
+      try {
+        const user = JSON.parse(token);
+        const userId = user.user_id;
+        
+        console.log("🆕 Auto-initializing chat session...");
+        setIsLoading(true);
+
+        const startResponse = await fetch(`${RECEPTION_API_URL}/start_chat`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ user_id: userId }),
+        });
+
+        if (!startResponse.ok) {
+          throw new Error("Failed to start chat session");
+        }
+
+        const startData = await startResponse.json();
+        console.log("✅ Auto-start chat response:", startData);
+        
+        setSessionId(startData.session_id);
+        setMessages([{ role: "assistant", content: startData.message }]);
+        
+      } catch (error) {
+        console.error("❌ Error initializing chat:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeChat();
+  }, [isAuthenticated, sessionId]);
+
   const handleSendChat = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     

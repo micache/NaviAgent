@@ -87,6 +87,7 @@ export default function ExplorePage() {
       'ha noi': 'Hanoi_Vietnam.png',
       'hoi an': 'Hoi_An_Vietnam.jpg',
       'hoian': 'Hoi_An_Vietnam.jpg',
+      'harbin': 'Harbin_China.jpg',
       'hue': 'Hue_Vietnam.jpg',
       'nha trang': 'Nha_Trang_Vietnam.jpg',
       'nhatrang': 'Nha_Trang_Vietnam.jpg',
@@ -154,15 +155,36 @@ export default function ExplorePage() {
     return `UNSPLASH:${cityName}`;
   };
 
-  // Fetch image from Unsplash
+  // Fetch image from Unsplash API
   const fetchUnsplashImage = async (cityName: string): Promise<string> => {
     try {
-      const query = encodeURIComponent(cityName);
-      const response = await fetch(`https://source.unsplash.com/1600x900/?${query},travel,landscape`);
-      return response.url;
+      const query = encodeURIComponent(`${cityName} travel landmark`);
+      const accessKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 'YOUR_ACCESS_KEY';
+      
+      const response = await fetch(
+        `https://api.unsplash.com/search/photos?query=${query}&per_page=1&orientation=landscape`,
+        {
+          headers: {
+            'Authorization': `Client-ID ${accessKey}`,
+            'Accept-Version': 'v1'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Unsplash API error');
+      }
+
+      const data = await response.json();
+      if (data.results && data.results.length > 0) {
+        // Return the regular size image URL
+        return data.results[0].urls.regular;
+      }
+
+      return '/images/destination.jpg';
     } catch (error) {
       console.error('Failed to fetch Unsplash image:', error);
-      return '/images/destination.jpg'; // Ultimate fallback
+      return '/images/destination.jpg';
     }
   };
 
