@@ -345,17 +345,19 @@ async def get_messages(session_id: str):
                 session_id=session_id,
             )
             _agent_cache[session_id] = agent
-            travel_data = agent.get_travel_data()
-            if travel_data.get("destination") is None:
-                # Only reconstruct if there are enough messages (>= 3)
-                if len(messages) >= 3:
-                    print(f"🔄 Reconstructing travel_data for session: {session_id} ({len(messages)} messages)")
-                    agent.reconstruct_travel_data_from_history()
-                    travel_data = agent.get_travel_data()
-                else:
-                    print(f"⏭️ Skipping reconstruction (only {len(messages)} messages)")
+            
+            # Only reconstruct if there are enough messages (>= 3)
+            if len(messages) >= 3:
+                print(f"🔄 Reconstructing travel_data for session: {session_id} ({len(messages)} messages)")
+                agent.reconstruct_travel_data_from_history()
+                travel_data = agent.get_travel_data()
+            else:
+                print(f"⏭️ Skipping reconstruction (only {len(messages)} messages)")
         else:
             agent = _agent_cache[session_id]
+            travel_data = agent.get_travel_data()
+            print(f"destination: {travel_data.get('destination')}")
+
         
         # Check if complete
         required_fields = [
