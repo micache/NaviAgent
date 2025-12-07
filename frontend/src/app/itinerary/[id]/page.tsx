@@ -22,6 +22,8 @@ interface TravelPlan {
   created_at: string;
 }
 
+const TRAVEL_PLANNER_API = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8003";
+
 export default function ItineraryDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -68,16 +70,20 @@ export default function ItineraryDetailPage() {
   const loadExistingGuidebook = async (guidebookId: string) => {
     setIsGeneratingGuidebook(true);
     try {
-      const TRAVEL_PLANNER_API = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8003";
       
-      console.log("📥 Loading existing guidebook HTML...");
-      const htmlResponse = await fetch(`${TRAVEL_PLANNER_API}/api/v1/guidebook/${guidebookId}/download?format=html`);
+      const downloadUrl = `${TRAVEL_PLANNER_API}/v1/guidebook/${guidebookId}/download?format=html`;
+      console.log("📥 Loading existing guidebook HTML from:", downloadUrl);
+      const htmlResponse = await fetch(downloadUrl);
+      
+      console.log("📡 Download response status:", htmlResponse.status);
         
       if (htmlResponse.ok) {
         const htmlContent = await htmlResponse.text();
         setGuidebookHtml(htmlContent);
         console.log("✅ Guidebook loaded successfully");
       } else {
+        const errorText = await htmlResponse.text();
+        console.error("❌ Failed to load guidebook:", htmlResponse.status, errorText);
         throw new Error(`Failed to load guidebook: ${htmlResponse.status}`);
       }
     } catch (error) {
@@ -90,12 +96,12 @@ export default function ItineraryDetailPage() {
 
   const generateGuidebook = async (travelPlanData: any, planId: string) => {
     setIsGeneratingGuidebook(true);
-    try {
-      const TRAVEL_PLANNER_API = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8003";
-      
+    try {  
+      const generateUrl = `${TRAVEL_PLANNER_API}/v1/generate_guidebook`;
       console.log("📚 Generating new guidebook...");
+      console.log("📡 API URL:", generateUrl);
       
-      const response = await fetch(`${TRAVEL_PLANNER_API}/api/v1/generate_guidebook`, {
+      const response = await fetch(generateUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -107,7 +113,11 @@ export default function ItineraryDetailPage() {
         }),
       });
 
+      console.log("📡 Generate response status:", response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Generate failed:", response.status, errorText);
         throw new Error(`Failed to generate guidebook: ${response.status}`);
       }
 
@@ -126,11 +136,19 @@ export default function ItineraryDetailPage() {
 
       // Fetch the HTML file content
       if (guidebookResponse.files?.html) {
-        const htmlResponse = await fetch(`${TRAVEL_PLANNER_API}/api/v1/guidebook/${guidebookResponse.guidebook_id}/download?format=html`);
+        const downloadUrl = `${TRAVEL_PLANNER_API}/v1/guidebook/${guidebookResponse.guidebook_id}/download?format=html`;
+        console.log("📥 Downloading HTML from:", downloadUrl);
+        const htmlResponse = await fetch(downloadUrl);
+        
+        console.log("📡 HTML download status:", htmlResponse.status);
         
         if (htmlResponse.ok) {
           const htmlContent = await htmlResponse.text();
           setGuidebookHtml(htmlContent);
+          console.log("✅ HTML content loaded");
+        } else {
+          const errorText = await htmlResponse.text();
+          console.error("❌ HTML download failed:", htmlResponse.status, errorText);
         }
       }
     } catch (error) {

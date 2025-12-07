@@ -11,7 +11,7 @@ from pathlib import Path
 import uvicorn
 from agents.orchestrator_agent import OrchestratorAgent
 from config import ModelProvider, model_settings, settings
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -330,16 +330,16 @@ _guidebook_storage: dict = {}
     },
 )
 async def generate_guidebook(
-    travel_plan: TravelPlan = None,
-    formats: list = None,
-    language: str = "vi",
+    travel_plan: TravelPlan = Body(..., description="Travel plan data"),
+    formats: list = Body(default=["html"], description="Output formats"),
+    language: str = Body(default="vi", description="Language"),
 ):
     """
     Generate travel guidebook from a TravelPlan.
 
     Args:
         travel_plan: TravelPlan object with travel data
-        formats: List of formats to generate (pdf, html, markdown). Default: all
+        formats: List of formats to generate (pdf, html, markdown). Default: html
         language: Language for content (vi or en). Default: vi
 
     Returns:
@@ -349,11 +349,12 @@ async def generate_guidebook(
 
     from travel_planner.guidebook import GuidebookGenerator
 
-    if formats is None:
-        formats = ["pdf", "html", "markdown"]
-
-    if travel_plan is None:
-        raise HTTPException(status_code=400, detail="travel_plan is required")
+    # Debug logging
+    print(f"\n[API] 📚 Generate guidebook endpoint called")
+    print(f"  - travel_plan type: {type(travel_plan)}")
+    print(f"  - travel_plan version: {travel_plan.version if travel_plan else 'None'}")
+    print(f"  - formats: {formats}")
+    print(f"  - language: {language}")
 
     try:
         print(f"\n[API] Generating guidebook...")

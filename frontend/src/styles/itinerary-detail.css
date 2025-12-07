@@ -321,7 +321,7 @@
 }
 
 .guidebook-content h1 {
-  color: var(--primary);
+  color: white;
   font-size: 2.4rem;
   margin-bottom: 24px;
   border-bottom: 3px solid var(--primary);

@@ -9,6 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import ReactMarkdown from "react-markdown";
 
 const RECEPTION_API_URL = process.env.NEXT_PUBLIC_RECEPTION_API_URL || "http://localhost:8002";
+const TRAVEL_PLANNER_API_URL = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8003";
 
 interface Message {
   role: string;
@@ -352,23 +353,6 @@ export default function PlanPage() {
     return style;
   };
 
-  // Mock data for testing
-  const handleMockData = () => {
-    const mockData: TravelData = {
-      destination: "Ho Chi Minh City, Vietnam",
-      departure_point: "Ha Noi, Vietnam",
-      departure_date: "2025-12-07",
-      trip_duration: "2",
-      num_travelers: "2",
-      budget: "100000000",
-      travel_style: "self-guided",
-      customer_notes: "Tìm hiểu ẩm thực địa phương và tham quan các điểm lịch sử."
-    };
-    setTravelData(mockData);
-    setIsComplete(true);
-    setMessages([{ role: "assistant", content: "✅ Mock data loaded! You can now create itinerary." }]);
-  };
-
   // Handle create itinerary
   const handleCreateItinerary = async () => {
     console.log("🚀 Creating itinerary with travel data:");
@@ -376,10 +360,7 @@ export default function PlanPage() {
     
     setIsLoading(true);
     
-    try {
-      // Call travel planner API
-      const PLANNER_API_URL = "http://localhost:8003";
-      
+    try {      
       // Prepare data according to travel_planner schema
       const plannerRequest = {
         departure_point: travelData.departure_point,
@@ -394,7 +375,7 @@ export default function PlanPage() {
       
       console.log("📤 Sending to travel planner:", plannerRequest);
       
-      const response = await fetch(`${PLANNER_API_URL}/v1/plan_trip`, {
+      const response = await fetch(`${TRAVEL_PLANNER_API_URL}/v1/plan_trip`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -417,7 +398,10 @@ export default function PlanPage() {
       let guidebookFiles = {};
       
       try {
-        const guidebookResponse = await fetch(`${PLANNER_API_URL}/api/v1/generate_guidebook`, {
+        const guidebookUrl = `${TRAVEL_PLANNER_API_URL}/v1/generate_guidebook`;
+        console.log("📡 Calling guidebook API:", guidebookUrl);
+        
+        const guidebookResponse = await fetch(guidebookUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -429,6 +413,8 @@ export default function PlanPage() {
           }),
         });
 
+        console.log("📡 Guidebook response status:", guidebookResponse.status);
+        
         if (guidebookResponse.ok) {
           const guidebookData = await guidebookResponse.json();
           guidebookId = guidebookData.guidebook_id;
@@ -437,10 +423,11 @@ export default function PlanPage() {
           console.log("  - Guidebook ID:", guidebookId);
           console.log("  - Files:", guidebookFiles);
         } else {
-          console.warn("⚠️ Guidebook generation failed, will retry on detail page");
+          const errorText = await guidebookResponse.text();
+          console.error("❌ Guidebook generation failed:", guidebookResponse.status, errorText);
         }
       } catch (guidebookError) {
-        console.warn("⚠️ Guidebook generation error:", guidebookError);
+        console.error("❌ Guidebook generation error:", guidebookError);
       }
       
       // Save to localStorage with guidebook info
@@ -482,6 +469,119 @@ export default function PlanPage() {
       setIsLoading(false);
     }
     alert("Tính năng tạo lịch trình đang được phát triển!\n\nTravel Data:\n" + JSON.stringify(travelData, null, 2));
+  };
+
+  // 🧪 TEST GUIDEBOOK with mock data
+  const handleTestGuidebook = async () => {
+    console.log("🧪 Testing guidebook with mock data...");
+    setIsLoading(true);
+    
+    try {
+      // Load mock travel plan from JSON file in parent directory
+      // Since file is at NaviAgent/travel_plan_output_1.json
+      // We need to fetch from backend or use relative path
+      
+      // Option 1: Load from backend endpoint (if served)
+      // Option 2: Import directly if copied to public
+      
+      console.log("📂 Loading mock data from parent directory...");
+      
+      // For now, use a mock data object directly
+      const mockPlanResponse = await fetch('/travel_plan_output_1.json');
+      
+      if (!mockPlanResponse.ok) {
+        console.error("❌ Failed to load from /travel_plan_output_1.json");
+        console.log("💡 Please copy travel_plan_output_1.json to frontend/public/ folder");
+        throw new Error("Failed to load mock data. Please copy travel_plan_output_1.json to frontend/public/ folder");
+      }
+      
+      const mockPlan = await mockPlanResponse.json();
+      console.log("✅ Loaded mock travel plan:", mockPlan);
+      console.log("📋 Mock plan keys:", Object.keys(mockPlan));
+      console.log("📋 Mock plan version:", mockPlan.version);
+      
+      const guidebookUrl = `${TRAVEL_PLANNER_API_URL}/v1/generate_guidebook`;
+      
+      console.log("📚 Calling guidebook API with mock data...");
+      console.log("🔗 URL:", guidebookUrl);
+      
+      const requestBody = {
+        travel_plan: mockPlan,
+        formats: ["html"],
+        language: "vi"
+      };
+      
+      console.log("📤 Request body structure:", {
+        has_travel_plan: !!requestBody.travel_plan,
+        travel_plan_version: requestBody.travel_plan?.version,
+        formats: requestBody.formats,
+        language: requestBody.language
+      });
+      
+      const guidebookResponse = await fetch(guidebookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log("📡 Response status:", guidebookResponse.status);
+      
+      if (!guidebookResponse.ok) {
+        const errorText = await guidebookResponse.text();
+        console.error("❌ Guidebook generation failed:", errorText);
+        throw new Error(`Failed: ${guidebookResponse.status}`);
+      }
+
+      const guidebookData = await guidebookResponse.json();
+      console.log("✅ Guidebook generated successfully!");
+      console.log("📋 Guidebook data:", guidebookData);
+      
+      // Save mock plan to localStorage and navigate
+      const planId = `mock_${Date.now()}`;
+      const completePlan = {
+        id: planId,
+        travel_data: {
+          destination: mockPlan.request_summary.destination,
+          departure_point: mockPlan.request_summary.departure_point,
+          departure_date: mockPlan.request_summary.departure_date,
+          trip_duration: mockPlan.request_summary.trip_duration,
+          num_travelers: mockPlan.request_summary.num_travelers,
+          budget: mockPlan.request_summary.budget,
+          travel_style: mockPlan.request_summary.travel_style,
+          customer_notes: mockPlan.request_summary.customer_notes
+        },
+        plan: mockPlan,
+        guidebook_id: guidebookData.guidebook_id,
+        guidebook_files: guidebookData.files || {},
+        created_at: new Date().toISOString()
+      };
+      
+      localStorage.setItem(`travel_plan_${planId}`, JSON.stringify(completePlan));
+      
+      // Update list
+      const existingPlans = JSON.parse(localStorage.getItem('travel_plans_list') || '[]');
+      existingPlans.push({
+        id: planId,
+        destination: completePlan.travel_data.destination,
+        departure_date: completePlan.travel_data.departure_date,
+        trip_duration: completePlan.travel_data.trip_duration,
+        num_travelers: completePlan.travel_data.num_travelers,
+        budget: completePlan.travel_data.budget,
+        created_at: new Date().toISOString()
+      });
+      localStorage.setItem('travel_plans_list', JSON.stringify(existingPlans));
+      
+      alert("✅ Test guidebook thành công! Chuyển đến trang xem guidebook...");
+      router.push(`/itinerary/${planId}`);
+      
+    } catch (error) {
+      console.error("❌ Test guidebook error:", error);
+      alert(`Lỗi test guidebook: ${error}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -553,6 +653,26 @@ export default function PlanPage() {
               <button className="create-itinerary-btn" onClick={handleCreateItinerary}>
                 Tạo lịch trình
               </button>
+              <button 
+                className="test-guidebook-btn" 
+                onClick={handleTestGuidebook}
+                title="Click to test guidebook generation with pre-made travel plan (travel_plan_output_1.json)"
+                style={{
+                  marginLeft: "12px",
+                  background: "#28a745",
+                  border: "none",
+                  color: "white",
+                  padding: "12px 24px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = "#218838"}
+                onMouseOut={(e) => e.currentTarget.style.background = "#28a745"}
+              >
+                🧪 Test Guidebook
+              </button>
             </div>
           </div>
         )}
@@ -609,23 +729,6 @@ export default function PlanPage() {
               <span className="status-text">Connected</span>
             </div>
           )}
-          {/* Test buttons */}
-          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-            <button 
-              onClick={handleMockData}
-              style={{
-                padding: '8px 16px',
-                background: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
-              🧪 Load Mock Data
-            </button>
-          </div>
         </div>
 
         {/* Chat messages area */}
@@ -678,6 +781,37 @@ export default function PlanPage() {
               <Image src={sendIcon} alt="Send" width={24} height={24} />
             </button>
           </form>
+          
+          {/* Test Guidebook Button - Always Visible */}
+          <div style={{ 
+            marginTop: "16px", 
+            display: "flex", 
+            justifyContent: "center",
+            paddingBottom: "16px"
+          }}>
+            <button 
+              className="test-guidebook-btn" 
+              onClick={handleTestGuidebook}
+              disabled={isLoading}
+              title="Click to test guidebook generation with pre-made travel plan (travel_plan_output_1.json)"
+              style={{
+                background: isLoading ? "#ccc" : "#28a745",
+                border: "none",
+                color: "white",
+                padding: "12px 24px",
+                borderRadius: "8px",
+                fontWeight: "600",
+                cursor: isLoading ? "not-allowed" : "pointer",
+                transition: "all 0.2s ease",
+                fontSize: "14px",
+                boxShadow: "0 2px 8px rgba(40, 167, 69, 0.3)"
+              }}
+              onMouseOver={(e) => !isLoading && (e.currentTarget.style.background = "#218838")}
+              onMouseOut={(e) => !isLoading && (e.currentTarget.style.background = "#28a745")}
+            >
+              🧪 Test Guidebook with Mock Data
+            </button>
+          </div>
         </div>
       </div>
     </section>
