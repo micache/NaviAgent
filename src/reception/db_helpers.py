@@ -13,6 +13,7 @@ env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path, override=True)
 supabase_url = os.getenv("SUPABASE_URL")
 supabase_key = os.getenv("SUPABASE_KEY")
+AGENT_NAME = "receptionist"
 
 
 def get_supabase_client() -> Client:
@@ -45,6 +46,7 @@ def create_chat_session(user_id: str, session_id: str, title: str = "New Chat") 
         "title": title,
         "created_at": datetime.utcnow().isoformat(),
         "update_at": datetime.utcnow().isoformat(),
+        "agent_name": AGENT_NAME,
     }
 
     response = supabase.table("chat_sessions").insert(data).execute()
@@ -117,6 +119,7 @@ def get_user_sessions(user_id: str) -> List[Dict[str, Any]]:
         supabase.table("chat_sessions")
         .select("*")
         .eq("user_id", user_id)
+        .eq("agent_name", AGENT_NAME)
         .order("update_at", desc=True)
         .execute()
     )
