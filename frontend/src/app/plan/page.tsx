@@ -468,7 +468,6 @@ export default function PlanPage() {
     } finally {
       setIsLoading(false);
     }
-    alert("Tính năng tạo lịch trình đang được phát triển!\n\nTravel Data:\n" + JSON.stringify(travelData, null, 2));
   };
 
   // 🧪 TEST GUIDEBOOK with mock data
@@ -652,26 +651,6 @@ export default function PlanPage() {
               <span className="banner-text">{t("planComplete")}</span>
               <button className="create-itinerary-btn" onClick={handleCreateItinerary}>
                 Tạo lịch trình
-              </button>
-              <button 
-                className="test-guidebook-btn" 
-                onClick={handleTestGuidebook}
-                title="Click to test guidebook generation with pre-made travel plan (travel_plan_output_1.json)"
-                style={{
-                  marginLeft: "12px",
-                  background: "#28a745",
-                  border: "none",
-                  color: "white",
-                  padding: "12px 24px",
-                  borderRadius: "8px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease"
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = "#218838"}
-                onMouseOut={(e) => e.currentTarget.style.background = "#28a745"}
-              >
-                🧪 Test Guidebook
               </button>
             </div>
           </div>

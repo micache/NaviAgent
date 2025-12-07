@@ -139,9 +139,9 @@
 
 /* Content */
 .content-container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 40px 20px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .markdown-content {
@@ -313,11 +313,11 @@
 /* Guidebook Content Styles */
 .guidebook-content {
   background: white;
-  border-radius: 12px;
   padding: 40px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   line-height: 1.8;
-  max-width: 100%;
+  width: 100%;
+  min-height: calc(100vh - 300px);
 }
 
 .guidebook-content h1 {
