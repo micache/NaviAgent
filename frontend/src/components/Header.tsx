@@ -40,9 +40,18 @@ export default function Header() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // Clear user session on page load - require login every time
-    localStorage.removeItem("user");
-    setUser(null);
+    // Load user session from localStorage on mount
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        console.log("🔄 Restored user session:", parsedUser.email);
+      } catch (error) {
+        console.error("❌ Failed to parse saved user:", error);
+        localStorage.removeItem("user");
+      }
+    }
   }, []);
 
   useEffect(() => {

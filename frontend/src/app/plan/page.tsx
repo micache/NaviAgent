@@ -10,6 +10,7 @@ import ReactMarkdown from "react-markdown";
 
 const RECEPTION_API_URL = process.env.NEXT_PUBLIC_RECEPTION_API_URL || "http://localhost:8002";
 const TRAVEL_PLANNER_API_URL = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8003";
+const NAVIAGENT_API_URL = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://localhost:8001";
 
 interface Message {
   role: string;
@@ -361,11 +362,19 @@ export default function PlanPage() {
     setIsLoading(true);
     
     try {      
+      // Convert date from DD/MM/YYYY to YYYY-MM-DD format
+      let formattedDate = travelData.departure_date;
+      if (formattedDate && formattedDate.includes('/')) {
+        const [day, month, year] = formattedDate.split('/');
+        formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        console.log("📅 Converted date format:", travelData.departure_date, "→", formattedDate);
+      }
+      
       // Prepare data according to travel_planner schema
       const plannerRequest = {
         departure_point: travelData.departure_point,
         destination: travelData.destination,
-        departure_date: travelData.departure_date,
+        departure_date: formattedDate,
         trip_duration: parseInt(travelData.trip_duration || "1"),
         num_travelers: parseInt(travelData.num_travelers || "1"),
         budget: parseFloat(travelData.budget || "0"),
@@ -396,6 +405,7 @@ export default function PlanPage() {
       console.log("📚 Step 2: Generating guidebook from travel plan...");
       let guidebookId = null;
       let guidebookFiles = {};
+      let guidebookHtmlContent = "";
       
       try {
         const guidebookUrl = `${TRAVEL_PLANNER_API_URL}/v1/generate_guidebook`;
@@ -422,6 +432,18 @@ export default function PlanPage() {
           console.log("✅ Guidebook generated successfully!");
           console.log("  - Guidebook ID:", guidebookId);
           console.log("  - Files:", guidebookFiles);
+          
+          // Download HTML content for database storage
+          if (guidebookId) {
+            const downloadUrl = `${TRAVEL_PLANNER_API_URL}/v1/guidebook/${guidebookId}/download?format=html`;
+            console.log("📥 Downloading HTML content from:", downloadUrl);
+            const htmlResponse = await fetch(downloadUrl);
+            
+            if (htmlResponse.ok) {
+              guidebookHtmlContent = await htmlResponse.text();
+              console.log("✅ HTML content downloaded, length:", guidebookHtmlContent.length);
+            }
+          }
         } else {
           const errorText = await guidebookResponse.text();
           console.error("❌ Guidebook generation failed:", guidebookResponse.status, errorText);
@@ -430,8 +452,83 @@ export default function PlanPage() {
         console.error("❌ Guidebook generation error:", guidebookError);
       }
       
-      // Save to localStorage with guidebook info
-      const planId = Date.now().toString();
+      // 💾 STEP 3: Save to database (NaviAgent API)
+      console.log("💾 Step 3: Saving plan to database...");
+      let databasePlanId = null;
+      
+      try {
+        const token = localStorage.getItem("user");
+        console.log("🔑 Token exists:", !!token);
+        
+        if (token) {
+          const user = JSON.parse(token);
+          console.log("👤 User data:", {
+            user_id: user.user_id,
+            has_access_token: !!user.access_token
+          });
+          
+          // Validate access token exists
+          if (!user.access_token) {
+            console.error("❌ No access token found in user data");
+            alert("⚠️ Session expired. Please login again.");
+            return;
+          }
+          
+          const savePlanRequest = {
+            destination: travelData.destination,
+            departure: travelData.departure_point || "",
+            start_date: formattedDate,
+            duration: parseInt(travelData.trip_duration || "1"),
+            number_of_travelers: parseInt(travelData.num_travelers || "1"),
+            budget: parseInt(travelData.budget || "0"),
+            travel_style: travelData.travel_style,
+            notes: travelData.customer_notes || "",
+            guidebook: guidebookHtmlContent // Save HTML content
+          };
+          
+          console.log("📤 Saving plan to database:");
+          console.log("  - API URL:", `${NAVIAGENT_API_URL}/plans`);
+          console.log("  - Authorization header:", `Bearer ${user.access_token.substring(0, 20)}...`);
+          console.log("  - Request data:", {
+            ...savePlanRequest,
+            guidebook: guidebookHtmlContent ? `[HTML content, ${guidebookHtmlContent.length} chars]` : null
+          });
+          
+          const saveResponse = await fetch(`${NAVIAGENT_API_URL}/plans`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${user.access_token}`
+            },
+            body: JSON.stringify(savePlanRequest),
+          });
+          
+          console.log("📡 Save response status:", saveResponse.status);
+          
+          if (saveResponse.ok) {
+            const savedPlan = await saveResponse.json();
+            databasePlanId = savedPlan.id;
+            console.log("✅ Plan saved to database with ID:", databasePlanId);
+            console.log("📋 Guidebook URL in Storage:", savedPlan.guidebook);
+            alert("✅ Lịch trình đã được lưu vào database và Storage!");
+          } else {
+            const errorText = await saveResponse.text();
+            console.error("❌ Failed to save to database:", saveResponse.status, errorText);
+            alert(`⚠️ Không thể lưu vào database: ${saveResponse.status}\n${errorText}`);
+            // Continue even if database save fails
+          }
+        } else {
+          console.log("⚠️ User not authenticated, skipping database save");
+          alert("⚠️ Bạn chưa đăng nhập, lịch trình chỉ lưu ở localStorage!");
+        }
+      } catch (dbError) {
+        console.error("❌ Database save error:", dbError);
+        alert(`❌ Lỗi khi lưu database: ${dbError}`);
+        // Continue even if database save fails
+      }
+      
+      // Save to localStorage with guidebook info (as backup)
+      const planId = databasePlanId || Date.now().toString();
       const completePlan = {
         id: planId,
         travel_data: travelData,
@@ -537,8 +634,88 @@ export default function PlanPage() {
       console.log("✅ Guidebook generated successfully!");
       console.log("📋 Guidebook data:", guidebookData);
       
-      // Save mock plan to localStorage and navigate
-      const planId = `mock_${Date.now()}`;
+      // Download HTML content for database storage
+      let guidebookHtmlContent = "";
+      if (guidebookData.guidebook_id) {
+        const downloadUrl = `${TRAVEL_PLANNER_API_URL}/v1/guidebook/${guidebookData.guidebook_id}/download?format=html`;
+        console.log("📥 Downloading HTML content from:", downloadUrl);
+        const htmlResponse = await fetch(downloadUrl);
+        
+        if (htmlResponse.ok) {
+          guidebookHtmlContent = await htmlResponse.text();
+          console.log("✅ HTML content downloaded, length:", guidebookHtmlContent.length);
+        }
+      }
+      
+      // 💾 Save mock plan to database (if authenticated)
+      console.log("💾 Saving mock plan to database...");
+      let databasePlanId = null;
+      
+      try {
+        const token = localStorage.getItem("user");
+        if (token) {
+          const user = JSON.parse(token);
+          
+          // Validate access token exists
+          if (!user.access_token) {
+            console.error("❌ No access token found in user data");
+            alert("⚠️ Session expired. Please login again.");
+            return;
+          }
+          
+          // Convert date to YYYY-MM-DD format
+          let formattedDate = mockPlan.request_summary.departure_date;
+          if (formattedDate && formattedDate.includes('/')) {
+            const [day, month, year] = formattedDate.split('/');
+            formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+          }
+          
+          const savePlanRequest = {
+            destination: mockPlan.request_summary.destination,
+            departure: mockPlan.request_summary.departure_point,
+            start_date: formattedDate,
+            duration: mockPlan.request_summary.trip_duration,
+            number_of_travelers: mockPlan.request_summary.num_travelers,
+            budget: mockPlan.request_summary.budget,
+            travel_style: mockPlan.request_summary.travel_style,
+            notes: mockPlan.request_summary.customer_notes || "",
+            guidebook: guidebookHtmlContent // Save HTML content
+          };
+          
+          console.log("📤 Saving mock plan to database:");
+          console.log("  - Authorization header:", `Bearer ${user.access_token.substring(0, 20)}...`);
+          console.log("  - Request data:", {
+            ...savePlanRequest,
+            guidebook: guidebookHtmlContent ? `[HTML content, ${guidebookHtmlContent.length} chars]` : null
+          });
+          
+          const saveResponse = await fetch(`${NAVIAGENT_API_URL}/plans`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${user.access_token}`
+            },
+            body: JSON.stringify(savePlanRequest),
+          });
+          
+          if (saveResponse.ok) {
+            const savedPlan = await saveResponse.json();
+            databasePlanId = savedPlan.id;
+            console.log("✅ Mock plan saved to database with ID:", databasePlanId);
+            console.log("📋 Guidebook URL in Storage:", savedPlan.guidebook);
+          } else {
+            const errorText = await saveResponse.text();
+            console.error("⚠️ Failed to save mock plan to database:", saveResponse.status, errorText);
+          }
+        } else {
+          console.log("⚠️ User not authenticated, skipping database save");
+        }
+      } catch (dbError) {
+        console.error("⚠️ Database save error:", dbError);
+      }
+      
+      // Save mock plan to localStorage (as backup)
+      const planId = databasePlanId || `mock_${Date.now()}`;
       const completePlan = {
         id: planId,
         travel_data: {
@@ -572,7 +749,13 @@ export default function PlanPage() {
       });
       localStorage.setItem('travel_plans_list', JSON.stringify(existingPlans));
       
-      alert("✅ Test guidebook thành công! Chuyển đến trang xem guidebook...");
+      console.log("💾 Mock plan saved to localStorage with ID:", planId);
+      
+      if (databasePlanId) {
+        alert("✅ Test guidebook thành công! Mock plan đã được lưu vào database và Storage. Chuyển đến trang xem guidebook...");
+      } else {
+        alert("✅ Test guidebook thành công! Mock plan đã được lưu vào localStorage. Chuyển đến trang xem guidebook...");
+      }
       router.push(`/itinerary/${planId}`);
       
     } catch (error) {

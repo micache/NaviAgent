@@ -9,7 +9,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 import uvicorn
-from agents.orchestrator_agent import OrchestratorAgent
+from travel_planner.agents.orchestrator_agent import OrchestratorAgent
 from config import ModelProvider, model_settings, settings
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware

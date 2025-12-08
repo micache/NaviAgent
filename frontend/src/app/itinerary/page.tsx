@@ -15,6 +15,8 @@ interface SavedItinerary {
   created_at: string;
 }
 
+const NAVIAGENT_API = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://localhost:8001";
+
 export default function ItineraryListPage() {
   const { t } = useLanguage();
   const router = useRouter();
@@ -25,16 +27,67 @@ export default function ItineraryListPage() {
     loadItineraries();
   }, []);
 
-  const loadItineraries = () => {
+  const loadItineraries = async () => {
     try {
-      // Load từ localStorage
+      console.log("🔍 Loading itineraries...");
+      
+      // Try loading from database first (if user is authenticated)
+      const token = localStorage.getItem("user");
+      let plans: SavedItinerary[] = [];
+      
+      if (token) {
+        try {
+          const user = JSON.parse(token);
+          console.log("👤 User authenticated, loading from database...");
+          
+          const response = await fetch(`${NAVIAGENT_API}/plans`, {
+            headers: {
+              "Authorization": `Bearer ${user.access_token}`
+            }
+          });
+          
+          if (response.ok) {
+            const dbPlans = await response.json();
+            console.log("✅ Loaded plans from database:", dbPlans.length);
+            
+            // Transform database plans to SavedItinerary format
+            plans = dbPlans.map((dbPlan: any) => ({
+              id: dbPlan.id,
+              destination: dbPlan.destination,
+              departure_date: dbPlan.start_date,
+              trip_duration: dbPlan.duration,
+              num_travelers: dbPlan.number_of_travelers,
+              budget: dbPlan.budget || 0,
+              created_at: dbPlan.start_date // Use start_date as created_at fallback
+            }));
+            
+            setItineraries(plans);
+            setIsLoading(false);
+            return; // Exit early if database load successful
+          } else {
+            console.log("⚠️ Failed to load from database:", response.status);
+          }
+        } catch (dbError) {
+          console.error("⚠️ Database load error:", dbError);
+        }
+      } else {
+        console.log("⚠️ User not authenticated, skipping database load");
+      }
+      
+      // Fallback to localStorage if database load failed
+      console.log("💾 Falling back to localStorage...");
       const savedPlans = localStorage.getItem('travel_plans_list');
       if (savedPlans) {
-        const plans = JSON.parse(savedPlans);
+        plans = JSON.parse(savedPlans);
+        console.log("✅ Loaded plans from localStorage:", plans.length);
         setItineraries(plans);
+      } else {
+        console.log("ℹ️ No plans found in localStorage");
+        setItineraries([]);
       }
     } catch (error) {
-      console.error("Error loading itineraries:", error);
+      console.error("❌ Error loading itineraries:", error);
+      setItineraries([]);
     } finally {
       setIsLoading(false);
     }
@@ -44,14 +97,67 @@ export default function ItineraryListPage() {
     router.push(`/itinerary/${id}`);
   };
 
-  const handleDeleteItinerary = (id: string) => {
-    if (confirm("Bạn có chắc muốn xóa lịch trình này?")) {
+  const handleDeleteItinerary = async (id: string) => {
+    if (!confirm("Bạn có chắc muốn xóa lịch trình này?")) {
+      return;
+    }
+    
+    try {
+      console.log("🗑️ Deleting itinerary:", id);
+      
+      // Check if this is a mock plan
+      const isMockPlan = id.startsWith('mock_');
+      
+      // Try deleting from database first (if authenticated and NOT a mock plan)
+      const token = localStorage.getItem("user");
+      let deletedFromDB = false;
+      
+      if (token && !isMockPlan) {
+        try {
+          const user = JSON.parse(token);
+          console.log("👤 Deleting from database...");
+          
+          const response = await fetch(`${NAVIAGENT_API}/plans/${id}`, {
+            method: "DELETE",
+            headers: {
+              "Authorization": `Bearer ${user.access_token}`
+            }
+          });
+          
+          if (response.ok || response.status === 204) {
+            console.log("✅ Deleted from database");
+            deletedFromDB = true;
+          } else if (response.status === 404) {
+            console.log("ℹ️ Plan not found in database (may be localStorage only)");
+          } else {
+            console.log("⚠️ Failed to delete from database:", response.status);
+          }
+        } catch (dbError) {
+          console.error("⚠️ Database delete error:", dbError);
+        }
+      } else if (isMockPlan) {
+        console.log("🧪 Mock plan detected, skipping database deletion");
+      }
+      
+      // Also delete from localStorage (regardless of database result)
+      console.log("💾 Deleting from localStorage...");
       const updatedPlans = itineraries.filter(plan => plan.id !== id);
       localStorage.setItem('travel_plans_list', JSON.stringify(updatedPlans));
-      setItineraries(updatedPlans);
-      
-      // Xóa chi tiết plan
       localStorage.removeItem(`travel_plan_${id}`);
+      
+      setItineraries(updatedPlans);
+      console.log("✅ Itinerary deleted successfully");
+      
+      if (deletedFromDB) {
+        alert("Đã xóa lịch trình khỏi database và localStorage!");
+      } else if (isMockPlan) {
+        alert("Đã xóa mock plan khỏi localStorage!");
+      } else {
+        alert("Đã xóa lịch trình khỏi localStorage!");
+      }
+    } catch (error) {
+      console.error("❌ Error deleting itinerary:", error);
+      alert("Lỗi khi xóa lịch trình!");
     }
   };
 

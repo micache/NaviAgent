@@ -23,6 +23,7 @@ interface TravelPlan {
 }
 
 const TRAVEL_PLANNER_API = process.env.NEXT_PUBLIC_TRAVEL_PLANNER_API_URL || "http://localhost:8003";
+const NAVIAGENT_API = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://localhost:8001";
 
 export default function ItineraryDetailPage() {
   const router = useRouter();
@@ -42,26 +43,125 @@ export default function ItineraryDetailPage() {
 
   const loadPlanDetail = async (planId: string) => {
     try {
-      const savedPlan = localStorage.getItem(`travel_plan_${planId}`);
-      if (savedPlan) {
-        const planData = JSON.parse(savedPlan);
-        setPlan(planData);
-        
-        // Check if guidebook already exists
-        if (planData.guidebook_id && planData.guidebook_files?.html) {
-          console.log("📚 Guidebook already exists, loading...");
-          console.log("  - Guidebook ID:", planData.guidebook_id);
-          await loadExistingGuidebook(planData.guidebook_id);
-        } else {
-          console.log("📚 No guidebook found, generating new one...");
-          await generateGuidebook(planData.plan, planId);
+      console.log("🔍 Loading plan:", planId);
+      
+      // Check if this is a mock plan (starts with "mock_")
+      const isMockPlan = planId.startsWith('mock_');
+      
+      // Try loading from database first (if user is authenticated and NOT a mock plan)
+      const token = localStorage.getItem("user");
+      let planData = null;
+      
+      if (token && !isMockPlan) {
+        try {
+          const user = JSON.parse(token);
+          console.log("👤 User authenticated, loading from database...");
+          
+          const response = await fetch(`${NAVIAGENT_API}/plans/${planId}`, {
+            headers: {
+              "Authorization": `Bearer ${user.access_token}`
+            }
+          });
+          
+          if (response.ok) {
+            const dbPlan = await response.json();
+            console.log("✅ Loaded plan from database:", dbPlan);
+            
+            // Transform database plan to TravelPlan format
+            planData = {
+              id: dbPlan.id,
+              travel_data: {
+                destination: dbPlan.destination,
+                departure_point: dbPlan.departure,
+                departure_date: dbPlan.start_date,
+                trip_duration: dbPlan.duration,
+                num_travelers: dbPlan.number_of_travelers,
+                budget: dbPlan.budget,
+                travel_style: dbPlan.travel_style,
+                customer_notes: dbPlan.notes
+              },
+              plan: null, // Not stored in DB
+              guidebook_id: undefined,
+              guidebook_files: undefined,
+              created_at: new Date().toISOString()
+            };
+            
+            setPlan(planData);
+            
+            // Load guidebook HTML from database (guidebook field contains URL or HTML)
+            if (dbPlan.guidebook) {
+              console.log("📚 Guidebook found in database");
+              
+              // Check if it's a URL or HTML content
+              if (dbPlan.guidebook.startsWith('http')) {
+                // It's a Storage URL - fetch the content
+                console.log("📥 Fetching guidebook from Storage URL:", dbPlan.guidebook);
+                const htmlResponse = await fetch(dbPlan.guidebook);
+                if (htmlResponse.ok) {
+                  const htmlContent = await htmlResponse.text();
+                  setGuidebookHtml(htmlContent);
+                  console.log("✅ Guidebook loaded from Storage");
+                } else {
+                  console.error("❌ Failed to fetch guidebook from Storage");
+                  setGuidebookHtml("<p style='color: red;'>Lỗi khi tải guidebook từ Storage.</p>");
+                }
+              } else {
+                // It's HTML content directly
+                console.log("📄 Using guidebook HTML from database");
+                setGuidebookHtml(dbPlan.guidebook);
+              }
+              
+              setIsLoading(false);
+              return; // Exit early, we have everything we need
+            } else {
+              console.log("⚠️ No guidebook in database");
+            }
+          } else {
+            console.log("⚠️ Failed to load from database:", response.status);
+          }
+        } catch (dbError) {
+          console.error("⚠️ Database load error:", dbError);
         }
       } else {
-        alert("Không tìm thấy lịch trình!");
-        router.push('/itinerary');
+        if (isMockPlan) {
+          console.log("🧪 Mock plan detected, skipping database lookup");
+        } else {
+          console.log("⚠️ User not authenticated, skipping database load");
+        }
+      }
+      
+      // Fallback to localStorage if database load failed or no guidebook
+      if (!planData) {
+        console.log("💾 Falling back to localStorage...");
+        const savedPlan = localStorage.getItem(`travel_plan_${planId}`);
+        if (savedPlan) {
+          planData = JSON.parse(savedPlan);
+          setPlan(planData);
+          console.log("✅ Loaded plan from localStorage");
+        } else {
+          console.error("❌ Plan not found in localStorage");
+          alert("Không tìm thấy lịch trình!");
+          router.push('/itinerary');
+          return;
+        }
+      }
+      
+      // Check if guidebook already exists in localStorage data
+      if (planData && planData.guidebook_id && planData.guidebook_files?.html) {
+        console.log("📚 Guidebook exists in localStorage, loading...");
+        console.log("  - Guidebook ID:", planData.guidebook_id);
+        await loadExistingGuidebook(planData.guidebook_id);
+      } else if (planData && planData.plan) {
+        console.log("📚 No guidebook found, generating new one...");
+        await generateGuidebook(planData.plan, planId);
+      } else {
+        console.log("⚠️ No travel plan data available for guidebook generation");
+        setGuidebookHtml("<p style='color: orange;'>Không có dữ liệu để tạo guidebook.</p>");
       }
     } catch (error) {
-      console.error("Error loading plan:", error);
+      console.error("❌ Error loading plan:", error);
+      alert("Lỗi khi tải lịch trình!");
+      router.push('/itinerary');
     } finally {
       setIsLoading(false);
     }

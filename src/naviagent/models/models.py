@@ -59,3 +59,20 @@ class ChatMessage(Base):
     role = Column(String, nullable=False)
     content = Column(Text, nullable=False)
     created_at = Column(DateTime(timezone=True))
+
+class PlanModel(Base):
+    """Bảng plans - Kế hoạch du lịch của người dùng."""
+
+    __tablename__ = "plans"
+
+    id = Column(UUID(as_uuid=False), primary_key=True)
+    user_id = Column(UUID(as_uuid=False), ForeignKey("users.user_id"), nullable=False)
+    destination = Column(String, nullable=False)
+    departure = Column(String, nullable=False)
+    start_date = Column(Date, nullable=False)
+    duration = Column(Integer, nullable=False)
+    number_of_travelers = Column(Integer, nullable=False)
+    budget = Column(Integer, nullable=True)
+    travel_style = Column(String, nullable=True)
+    notes = Column(Text, nullable=True)
+    guidebook = Column(Text, nullable=True)

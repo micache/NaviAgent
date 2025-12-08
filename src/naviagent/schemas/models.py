@@ -44,7 +44,7 @@ class ChatMessage(BaseModel):
     content: str
     created_at: Optional[datetime] = None
 
-class Plans(BaseModel):
+class Plan(BaseModel):
     id : Optional[str] = None
     user_id : str
     destination : str
@@ -55,7 +55,7 @@ class Plans(BaseModel):
     budget : Optional[int] = None
     travel_style : Optional[str] = None
     notes: Optional[str] = None
-    guide_book: Optional[str] = None
+    guidebook: Optional[str] = None
     
 # API request/response models
 
@@ -87,3 +87,15 @@ class CreateTripRequest(BaseModel):
 class CreateMessageRequest(BaseModel):
     role: str
     content: str
+
+class CreatePlanRequest(BaseModel):
+    destination: str
+    departure: str
+    start_date: date
+    duration: int
+    number_of_travelers: int
+    budget: Optional[int] = None
+    travel_style: Optional[str] = None
+    notes: Optional[str] = None
+    guidebook: Optional[str] = None
+    
