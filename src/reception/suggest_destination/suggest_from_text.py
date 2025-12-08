@@ -88,7 +88,7 @@ class TextDestinationAgent(Agent):
         # retrieve relevant destinations
         results = retrieval_system.search(
             description,
-            k=config.search.top_k,
+            k=k,
             group_by_destination=config.search.group_by_destination,
         )
         # print("Retrieved Results:", results)
