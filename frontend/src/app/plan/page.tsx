@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import sendIcon from "@/images/send.svg";
+import menuIcon from "@/images/menu.svg";
+import newchatIcon from "@/images/newchat.svg";
 import "@/styles/plan.css";
 import { useLanguage } from "@/contexts/LanguageContext";
 import ReactMarkdown from "react-markdown";
@@ -567,264 +569,16 @@ export default function PlanPage() {
     }
   };
 
-  // 🧪 TEST GUIDEBOOK with mock data
-  const handleTestGuidebook = async () => {
-    console.log("🧪 Testing guidebook with mock data...");
-    setIsLoading(true);
-    
-    try {
-      // Load mock travel plan from JSON file in parent directory
-      // Since file is at NaviAgent/travel_plan_output_1.json
-      // We need to fetch from backend or use relative path
-      
-      // Option 1: Load from backend endpoint (if served)
-      // Option 2: Import directly if copied to public
-      
-      console.log("📂 Loading mock data from parent directory...");
-      
-      // For now, use a mock data object directly
-      const mockPlanResponse = await fetch('/travel_plan_output_1.json');
-      
-      if (!mockPlanResponse.ok) {
-        console.error("❌ Failed to load from /travel_plan_output_1.json");
-        console.log("💡 Please copy travel_plan_output_1.json to frontend/public/ folder");
-        throw new Error("Failed to load mock data. Please copy travel_plan_output_1.json to frontend/public/ folder");
-      }
-      
-      const mockPlan = await mockPlanResponse.json();
-      console.log("✅ Loaded mock travel plan:", mockPlan);
-      console.log("📋 Mock plan keys:", Object.keys(mockPlan));
-      console.log("📋 Mock plan version:", mockPlan.version);
-      
-      const guidebookUrl = `${TRAVEL_PLANNER_API_URL}/v1/generate_guidebook`;
-      
-      console.log("📚 Calling guidebook API with mock data...");
-      console.log("🔗 URL:", guidebookUrl);
-      
-      const requestBody = {
-        travel_plan: mockPlan,
-        formats: ["html"],
-        language: "vi"
-      };
-      
-      console.log("📤 Request body structure:", {
-        has_travel_plan: !!requestBody.travel_plan,
-        travel_plan_version: requestBody.travel_plan?.version,
-        formats: requestBody.formats,
-        language: requestBody.language
-      });
-      
-      const guidebookResponse = await fetch(guidebookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
 
-      console.log("📡 Response status:", guidebookResponse.status);
-      
-      if (!guidebookResponse.ok) {
-        const errorText = await guidebookResponse.text();
-        console.error("❌ Guidebook generation failed:", errorText);
-        throw new Error(`Failed: ${guidebookResponse.status}`);
-      }
-
-      const guidebookData = await guidebookResponse.json();
-      console.log("✅ Guidebook generated successfully!");
-      console.log("📋 Guidebook data:", guidebookData);
-      
-      // Download HTML content for database storage
-      let guidebookHtmlContent = "";
-      if (guidebookData.guidebook_id) {
-        const downloadUrl = `${TRAVEL_PLANNER_API_URL}/v1/guidebook/${guidebookData.guidebook_id}/download?format=html`;
-        console.log("📥 Downloading HTML content from:", downloadUrl);
-        const htmlResponse = await fetch(downloadUrl);
-        
-        if (htmlResponse.ok) {
-          guidebookHtmlContent = await htmlResponse.text();
-          console.log("✅ HTML content downloaded, length:", guidebookHtmlContent.length);
-        }
-      }
-      
-      // 💾 Save mock plan to database (if authenticated)
-      console.log("💾 Saving mock plan to database...");
-      let databasePlanId = null;
-      
-      try {
-        const token = localStorage.getItem("user");
-        if (token) {
-          const user = JSON.parse(token);
-          
-          // Validate access token exists
-          if (!user.access_token) {
-            console.error("❌ No access token found in user data");
-            alert("⚠️ Session expired. Please login again.");
-            return;
-          }
-          
-          // Convert date to YYYY-MM-DD format
-          let formattedDate = mockPlan.request_summary.departure_date;
-          if (formattedDate && formattedDate.includes('/')) {
-            const [day, month, year] = formattedDate.split('/');
-            formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-          }
-          
-          const savePlanRequest = {
-            destination: mockPlan.request_summary.destination,
-            departure: mockPlan.request_summary.departure_point,
-            start_date: formattedDate,
-            duration: mockPlan.request_summary.trip_duration,
-            number_of_travelers: mockPlan.request_summary.num_travelers,
-            budget: mockPlan.request_summary.budget,
-            travel_style: mockPlan.request_summary.travel_style,
-            notes: mockPlan.request_summary.customer_notes || "",
-            guidebook: guidebookHtmlContent // Save HTML content
-          };
-          
-          console.log("📤 Saving mock plan to database:");
-          console.log("  - Authorization header:", `Bearer ${user.access_token.substring(0, 20)}...`);
-          console.log("  - Request data:", {
-            ...savePlanRequest,
-            guidebook: guidebookHtmlContent ? `[HTML content, ${guidebookHtmlContent.length} chars]` : null
-          });
-          
-          const saveResponse = await fetch(`${NAVIAGENT_API_URL}/plans`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${user.access_token}`
-            },
-            body: JSON.stringify(savePlanRequest),
-          });
-          
-          if (saveResponse.ok) {
-            const savedPlan = await saveResponse.json();
-            databasePlanId = savedPlan.id;
-            console.log("✅ Mock plan saved to database with ID:", databasePlanId);
-            console.log("📋 Guidebook URL in Storage:", savedPlan.guidebook);
-          } else {
-            const errorText = await saveResponse.text();
-            console.error("⚠️ Failed to save mock plan to database:", saveResponse.status, errorText);
-          }
-        } else {
-          console.log("⚠️ User not authenticated, skipping database save");
-        }
-      } catch (dbError) {
-        console.error("⚠️ Database save error:", dbError);
-      }
-      
-      // Save mock plan to localStorage (as backup)
-      const planId = databasePlanId || `mock_${Date.now()}`;
-      const completePlan = {
-        id: planId,
-        travel_data: {
-          destination: mockPlan.request_summary.destination,
-          departure_point: mockPlan.request_summary.departure_point,
-          departure_date: mockPlan.request_summary.departure_date,
-          trip_duration: mockPlan.request_summary.trip_duration,
-          num_travelers: mockPlan.request_summary.num_travelers,
-          budget: mockPlan.request_summary.budget,
-          travel_style: mockPlan.request_summary.travel_style,
-          customer_notes: mockPlan.request_summary.customer_notes
-        },
-        plan: mockPlan,
-        guidebook_id: guidebookData.guidebook_id,
-        guidebook_files: guidebookData.files || {},
-        created_at: new Date().toISOString()
-      };
-      
-      localStorage.setItem(`travel_plan_${planId}`, JSON.stringify(completePlan));
-      
-      // Update list
-      const existingPlans = JSON.parse(localStorage.getItem('travel_plans_list') || '[]');
-      existingPlans.push({
-        id: planId,
-        destination: completePlan.travel_data.destination,
-        departure_date: completePlan.travel_data.departure_date,
-        trip_duration: completePlan.travel_data.trip_duration,
-        num_travelers: completePlan.travel_data.num_travelers,
-        budget: completePlan.travel_data.budget,
-        created_at: new Date().toISOString()
-      });
-      localStorage.setItem('travel_plans_list', JSON.stringify(existingPlans));
-      
-      console.log("💾 Mock plan saved to localStorage with ID:", planId);
-      
-      if (databasePlanId) {
-        alert("✅ Test guidebook thành công! Mock plan đã được lưu vào database và Storage. Chuyển đến trang xem guidebook...");
-      } else {
-        alert("✅ Test guidebook thành công! Mock plan đã được lưu vào localStorage. Chuyển đến trang xem guidebook...");
-      }
-      router.push(`/itinerary/${planId}`);
-      
-    } catch (error) {
-      console.error("❌ Test guidebook error:", error);
-      alert(`Lỗi test guidebook: ${error}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <section className="plan-layout">
-      {/* ===== SIDEBAR: Chat Sessions ===== */}
-      <div className={`chat-sidebar ${isSidebarOpen ? 'open' : 'collapsed'}`}>
-        <div className="sidebar-header">
-          <button 
-            className="sidebar-toggle"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            title={isSidebarOpen ? "Collapse" : "Expand"}
-          >
-            {isSidebarOpen ? '◀' : '▶'}
-          </button>
-          {isSidebarOpen && (
-            <button 
-              className="new-chat-btn"
-              onClick={handleNewChat}
-              disabled={isLoading}
-            >
-              ➕ New Chat
-            </button>
-          )}
-        </div>
-
-        {isSidebarOpen && (
-          <div className="sessions-list">
-            {loadingSessions ? (
-              <div className="loading-sessions">Loading...</div>
-            ) : sessions.length === 0 ? (
-              <div className="no-sessions">No chat history</div>
-            ) : (
-              sessions.map((session) => (
-                <div
-                  key={session.session_id}
-                  className={`session-item ${session.session_id === sessionId ? 'active' : ''}`}
-                  onClick={() => loadSessionMessages(session.session_id)}
-                >
-                  <div className="session-title">
-                    💬 {session.title || `Chat ${new Date(session.update_at).toLocaleDateString()}`}
-                  </div>
-                  <div className="session-date">
-                    {new Date(session.update_at).toLocaleString('vi-VN', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-
       {/* ===== LEFT: Travel Data Summary ===== */}
       <div className="plan-left">
-        <h1 className="plan-title">{t("travelPlans")}</h1>
-        <p className="plan-subtext">
+        <div className="plan-header center">
+          <h1 className="plan-title">{t("travelPlans")}</h1>
+        </div>
+        <p className="plan-subtext center">
           {t("managePlans")}
         </p>
 
@@ -882,16 +636,76 @@ export default function PlanPage() {
 
       {/* ===== RIGHT: Chatbot Assistant ===== */}
       <div className="plan-right">
-        <div className="chat-header">
-          <h2>{t("tripPlanner")}</h2>
-          <p>{t("tripPlannerDesc")}</p>
+        {/* Collapsible sidebar for chat history (always present) */}
+        <div className={`chat-history-sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
+          <button 
+            className="menu-toggle-btn"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            title={isSidebarOpen ? "Ẩn lịch sử" : "Hiện lịch sử"}
+          >
+            <Image src={menuIcon} alt="Menu" width={24} height={24} />
+          </button>
+
+          {!isSidebarOpen && (
+            <button
+              className="new-chat-icon-btn"
+              onClick={handleNewChat}
+              disabled={isLoading}
+              title="Tạo đoạn chat mới"
+            >
+              <Image src={newchatIcon} alt="New Chat" width={22} height={22} className="icon-white" />
+            </button>
+          )}
+
+          {isSidebarOpen && (
+            <>
+              <button 
+                className="new-chat-btn expanded"
+                onClick={handleNewChat}
+                disabled={isLoading}
+              >
+                <Image src={newchatIcon} alt="New Chat" width={24} height={24} />
+                <span>Tạo đoạn chat mới</span>
+              </button>
+
+              <div className="sessions-list">
+                {loadingSessions ? (
+                  <div className="loading-sessions">Loading...</div>
+                ) : sessions.length === 0 ? (
+                  <div className="no-sessions">No chat history</div>
+                ) : (
+                  sessions.map((session) => (
+                    <div
+                      key={session.session_id}
+                      className={`session-item ${session.session_id === sessionId ? 'active' : ''}`}
+                      onClick={() => loadSessionMessages(session.session_id)}
+                    >
+                      <div className="session-title">
+                        {session.title || `Chat ${new Date(session.update_at).toLocaleDateString()}`}
+                      </div>
+                      <div className="session-date">
+                        {new Date(session.update_at).toLocaleString()}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+        </div>
+        
+        {/* Chat content */}
+        <div className="chat-content">
+          <div className="chat-header center">
+            <h2>{t("tripPlanner")}</h2>
+          </div>
+          <p className="chat-subtext">{t("tripPlannerDesc")}</p>
           {sessionId && (
             <div className="session-indicator">
               <span className="status-dot"></span>
               <span className="status-text">Connected</span>
             </div>
           )}
-        </div>
 
         {/* Chat messages area */}
         <div className="chat-messages">
@@ -943,37 +757,7 @@ export default function PlanPage() {
               <Image src={sendIcon} alt="Send" width={24} height={24} />
             </button>
           </form>
-          
-          {/* Test Guidebook Button - Always Visible */}
-          <div style={{ 
-            marginTop: "16px", 
-            display: "flex", 
-            justifyContent: "center",
-            paddingBottom: "16px"
-          }}>
-            <button 
-              className="test-guidebook-btn" 
-              onClick={handleTestGuidebook}
-              disabled={isLoading}
-              title="Click to test guidebook generation with pre-made travel plan (travel_plan_output_1.json)"
-              style={{
-                background: isLoading ? "#ccc" : "#28a745",
-                border: "none",
-                color: "white",
-                padding: "12px 24px",
-                borderRadius: "8px",
-                fontWeight: "600",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                transition: "all 0.2s ease",
-                fontSize: "14px",
-                boxShadow: "0 2px 8px rgba(40, 167, 69, 0.3)"
-              }}
-              onMouseOver={(e) => !isLoading && (e.currentTarget.style.background = "#218838")}
-              onMouseOut={(e) => !isLoading && (e.currentTarget.style.background = "#28a745")}
-            >
-              🧪 Test Guidebook with Mock Data
-            </button>
-          </div>
+        </div>
         </div>
       </div>
     </section>

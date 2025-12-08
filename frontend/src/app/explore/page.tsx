@@ -12,8 +12,6 @@ const NAVIAGENT_API_URL = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://l
 
 export default function ExplorePage() {
   const { t } = useLanguage();
-  const [mode, setMode] = useState<"gallery" | "weather">("gallery");
-  const [showLeftPanel, setShowLeftPanel] = useState(true);
 
   // Chat state
   const [chatInput, setChatInput] = useState("");
@@ -268,42 +266,11 @@ export default function ExplorePage() {
   return (
     <section className="explore-layout">
       {/* ========== LEFT PANEL ========== */}
-      {showLeftPanel && (
-        <div className="explore-left">
-          <div className="panel-header">
-            <div className="mode-switch">
-              <button
-                className={mode === "gallery" ? "active" : ""}
-                onClick={() => setMode("gallery")}
-              >
-                {t("gallery")}
-              </button>
-              <button
-                className={mode === "weather" ? "active" : ""}
-                onClick={() => setMode("weather")}
-              >
-                {t("weather")}
-              </button>
-            </div>
-            <button 
-              className="close-panel-btn"
-              onClick={() => setShowLeftPanel(false)}
-              title={t("closePanel")}
-            >
-              ✕
-            </button>
-          </div>
-
-          <AnimatePresence mode="wait">
-            {mode === "gallery" ? (
-            <motion.div
-              key="gallery"
-              className="explore-gallery"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-            >
+      <div className="explore-left">
+        <div className="gallery-header">
+          <h2>Khám Phá Địa Điểm Du Lịch</h2>
+        </div>
+        <div className="explore-gallery">
               <AnimatePresence mode="wait">
                 <motion.img
                   key={index}
@@ -323,65 +290,16 @@ export default function ExplorePage() {
                 ❯
               </button>
 
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={index}
-                  className="explore-caption"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <h2>{current.name}</h2>
-                </motion.div>
-              </AnimatePresence>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="weather"
-              className="explore-weather"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <h1 className="explore-title">{t("weatherOverview")}</h1>
-              <p className="explore-subtext">
-                {t("weatherSubtext")}
-              </p>
-
-              <div className="explore-grid">
-                <div className="explore-card">
-                  <h2>Hà Nội</h2>
-                  <p>🌤 30°C | {t("clearSky")}</p>
-                </div>
-                <div className="explore-card">
-                  <h2>Đà Nẵng</h2>
-                  <p>☀️ 32°C | {t("sunny")}</p>
-                </div>
-                <div className="explore-card">
-                  <h2>TP. HCM</h2>
-                  <p>🌧 28°C | {t("rainy")}</p>
-                </div>
+              <div className="explore-caption">
+                <h2>{current.name}</h2>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          </div>
         </div>
-      )}
 
       {/* ========== RIGHT PANEL (CHATBOT + CHAT INPUT) ========== */}
-      <div className={`explore-right ${!showLeftPanel ? "full-width" : ""}}`}>
-        <div className="chat-header">
+      <div className="explore-right">
+        <div className="chat-header center">
           <h2>{t("travelAssistantTitle")}</h2>
-          {!showLeftPanel && (
-            <button 
-              className="show-panel-btn"
-              onClick={() => setShowLeftPanel(true)}
-            >
-              Show Gallery & Weather
-            </button>
-          )}
         </div>
         {/* Hiển thị tin nhắn chat */}
         <div className="chat-messages">

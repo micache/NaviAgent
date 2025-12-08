@@ -2,6 +2,8 @@
 import "@/styles/visited.css";
 import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import Image from "next/image";
+import sendIcon from "@/images/send.svg";
 
 // API URL from environment variable
 const NAVIAGENT_API_URL = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://localhost:8001";
@@ -516,30 +518,31 @@ export default function VisitedPage() {
       </div>
 
       <div className="visited-right">
-        <h2>💬 {t("travelAssistant")}</h2>
-        <p>{t("tellUsPlaces")}</p>
-        <div className="chat-box">
-          <div className="chat-messages">
-            {chatMessages.map((msg, i) => (
-              <div key={i} className={`chat-message ${msg.role}`}>
-                {msg.content}
-              </div>
-            ))}
-            {isLoading && <div className="chat-message bot">⏳ Đang xử lý...</div>}
-          </div>
-          <div className="chat-input">
+        <div className="chat-header center">
+          <h2>{t("travelAssistant")}</h2>
+        </div>
+        <div className="chat-messages">
+          {chatMessages.map((msg, i) => (
+            <div key={i} className={`chat-message ${msg.role}`}>
+              {msg.content}
+            </div>
+          ))}
+          {isLoading && <div className="chat-message bot">⏳ Đang xử lý...</div>}
+        </div>
+        <div className="chat-input-container">
+          <form className="chat-input-row" onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
             <input
               type="text"
+              className="chat-input"
               placeholder={t("enterPlaceName")}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
               disabled={isLoading}
             />
-            <button onClick={handleSendMessage} disabled={isLoading}>
-              {t("send")}
+            <button type="submit" className="chat-send-btn" title={t("send")} disabled={isLoading}>
+              <Image src={sendIcon} alt="Send" width={24} height={24} />
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </section>
