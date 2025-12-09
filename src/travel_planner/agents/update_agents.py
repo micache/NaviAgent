@@ -30,7 +30,8 @@ def update_agent_file(filepath: Path, agent_name: str):
         config_import = re.search(r"from config import settings", content)
         if config_import:
             content = content.replace(
-                "from config import settings", "from config import settings, model_settings"
+                "from config import settings",
+                "from config import settings, model_settings",
             )
 
     # Step 2: Update function signature
@@ -38,7 +39,9 @@ def update_agent_file(filepath: Path, agent_name: str):
     # NEW: def create_xxx_agent(agent_name: str = "xxx") -> Agent:
 
     func_pattern = rf'def create_{agent_name}_agent\(model: str = "[^"]+"\) -> Agent:'
-    func_replacement = f'def create_{agent_name}_agent(agent_name: str = "{agent_name}") -> Agent:'
+    func_replacement = (
+        f'def create_{agent_name}_agent(agent_name: str = "{agent_name}") -> Agent:'
+    )
 
     content = re.sub(func_pattern, func_replacement, content)
 

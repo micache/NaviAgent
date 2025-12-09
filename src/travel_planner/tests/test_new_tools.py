@@ -12,11 +12,17 @@ from dotenv import load_dotenv
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Load .env from parent directory
-env_path = Path(__file__).parent.parent / ".env"
+# Load .env from repository root
+env_path = Path(__file__).resolve().parents[3] / ".env"
+if not env_path.exists():
+    env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
-from tools.external_api_tools import create_flight_tools, create_hotel_tools, create_weather_tools
+from tools.external_api_tools import (
+    create_flight_tools,
+    create_hotel_tools,
+    create_weather_tools,
+)
 
 
 def test_weather_tools():

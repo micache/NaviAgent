@@ -45,14 +45,14 @@ def test_plan_trip(user_id: str = None):
 
     # Sample request with only user_id (session_id is auto-generated internally)
     request_data = {
-        "departure_point": "Hanoi",
+        "departure_point": "Hanoi, Vietnam",
         "destination": "Seoul, South Korea",
         "departure_date": "2026-02-14",
-        "budget": 30000000,
+        "budget": 50000000,
         "num_travelers": 2,
         "trip_duration": 4,
         "travel_style": "self_guided",
-        "customer_notes": "Thích ẩm thực Hàn Quốc, Kpop và mua sắm",
+        "customer_notes": "Thích ẩm thực Hàn Quốc, thích K-pop đặc biệt là BlackPink",
         "user_id": user_id,  # Only user_id needed
     }
 
@@ -87,18 +87,26 @@ def test_plan_trip(user_id: str = None):
             # Itinerary summary
             if travel_plan.get("itinerary"):
                 itinerary = travel_plan["itinerary"]
-                print(f"\n✓ Itinerary: {len(itinerary['daily_schedules'])} days planned")
+                print(
+                    f"\n✓ Itinerary: {len(itinerary['daily_schedules'])} days planned"
+                )
                 print(f"  Main locations: {', '.join(itinerary['location_list'][:5])}")
                 if itinerary.get("selected_flight"):
-                    print(f"  Selected Flight: {itinerary['selected_flight']['airline']}")
+                    print(
+                        f"  Selected Flight: {itinerary['selected_flight']['airline']}"
+                    )
                 if itinerary.get("selected_accommodation"):
-                    print(f"  Selected Hotel: {itinerary['selected_accommodation']['name']}")
+                    print(
+                        f"  Selected Hotel: {itinerary['selected_accommodation']['name']}"
+                    )
 
             # Budget summary
             if travel_plan.get("budget"):
                 budget = travel_plan["budget"]
                 print(f"\n✓ Budget:")
-                print(f"  Total Estimated Cost: {budget['total_estimated_cost']:,.0f} VND")
+                print(
+                    f"  Total Estimated Cost: {budget['total_estimated_cost']:,.0f} VND"
+                )
                 print(f"  Budget Status: {budget['budget_status']}")
                 print(f"  Categories: {len(budget['categories'])} items")
 
@@ -126,8 +134,12 @@ def test_plan_trip(user_id: str = None):
             if travel_plan.get("accommodation"):
                 accommodation = travel_plan["accommodation"]
                 print(f"\n✓ Accommodation:")
-                print(f"  Recommendations: {len(accommodation['recommendations'])} options")
-                print(f"  Total Estimated: {accommodation['total_estimated_cost']:,.0f} VND")
+                print(
+                    f"  Recommendations: {len(accommodation['recommendations'])} options"
+                )
+                print(
+                    f"  Total Estimated: {accommodation['total_estimated_cost']:,.0f} VND"
+                )
 
             # Save to file
             output_file = "travel_plan_output.json"
@@ -209,7 +221,9 @@ def test_multi_turn_conversation():
             plan_1 = response_1.json()
             print(f"\n✅ Turn 1 Complete!")
             if plan_1.get("budget"):
-                print(f"   Total Cost: {plan_1['budget']['total_estimated_cost']:,.0f} VND")
+                print(
+                    f"   Total Cost: {plan_1['budget']['total_estimated_cost']:,.0f} VND"
+                )
             print(f"   Session saved to database")
 
             # Save Turn 1 output
@@ -263,7 +277,9 @@ def test_multi_turn_conversation():
             plan_2 = response_2.json()
             print(f"\n✅ Turn 2 Complete!")
             if plan_2.get("budget"):
-                print(f"   Total Cost: {plan_2['budget']['total_estimated_cost']:,.0f} VND")
+                print(
+                    f"   Total Cost: {plan_2['budget']['total_estimated_cost']:,.0f} VND"
+                )
             print(f"   Session updated in database")
 
             # Save Turn 2 output

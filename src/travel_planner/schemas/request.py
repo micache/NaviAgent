@@ -35,14 +35,17 @@ class TravelRequest(BaseModel):
 
     trip_duration: int = Field(..., description="Số ngày du lịch", gt=0)
 
-    travel_style: TravelStyle = Field(..., description="Phong cách du lịch: tour hoặc tự túc")
+    travel_style: TravelStyle = Field(
+        ..., description="Phong cách du lịch: tour hoặc tự túc"
+    )
 
     customer_notes: Optional[str] = Field(
         None, description="Ghi chú từ khách hàng (sở thích, yêu cầu đặc biệt, ...)"
     )
 
     user_id: Optional[str] = Field(
-        None, description="User ID for session tracking and memory management (optional)"
+        None,
+        description="User ID for session tracking and memory management (optional)",
     )
 
     class Config:

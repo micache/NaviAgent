@@ -1,4 +1,4 @@
-﻿"""Orchestrator Agent - Coordinates 7 specialists in 5 phases"""
+"""Orchestrator Agent - Coordinates 7 specialists in 5 phases"""
 
 import asyncio
 import sys
@@ -74,7 +74,9 @@ class OrchestratorAgent:
     5. No Redundancy: Each agent has a specific role, no overlap
     """
 
-    def __init__(self, user_id: str = None, session_id: str = None, enable_memory: bool = True):
+    def __init__(
+        self, user_id: str = None, session_id: str = None, enable_memory: bool = True
+    ):
         """
         Initialize orchestrator with all 7 specialist agents using centralized model config
 
@@ -119,16 +121,22 @@ class OrchestratorAgent:
 
         # Print configuration summary
         print("[Orchestrator] ✓ 7 specialist agents initialized")
-        print(f"[Orchestrator] ✓ Model provider: {model_settings.default_provider.value}")
+        print(
+            f"[Orchestrator] ✓ Model provider: {model_settings.default_provider.value}"
+        )
         print(
             f"[Orchestrator] ✓ Default model: {model_settings.model_mappings[model_settings.default_provider]}"
         )
         print(f"[Orchestrator] ✓ Database: Connected to PostgreSQL (Supabase)")
         print(f"[Orchestrator] ✓ User tracking: {'Enabled' if user_id else 'Disabled'}")
-        print(f"[Orchestrator] ✓ Memory management: {'Enabled' if enable_memory else 'Disabled'}")
+        print(
+            f"[Orchestrator] ✓ Memory management: {'Enabled' if enable_memory else 'Disabled'}"
+        )
         print(f"[Orchestrator] ✓ 5-phase sequential workflow ready")
 
-    async def plan_trip(self, request: TravelRequest, session_id: str = None) -> TravelPlan:
+    async def plan_trip(
+        self, request: TravelRequest, session_id: str = None
+    ) -> TravelPlan:
         """
         Execute 5-phase travel planning workflow with structured I/O
 
@@ -178,6 +186,13 @@ class OrchestratorAgent:
         )
         weather_out = weather_response.content
 
+        # Log tool calls for weather agent
+        if hasattr(weather_response, "messages") and weather_response.messages:
+            for msg in weather_response.messages:
+                if hasattr(msg, "role") and msg.role == "tool":
+                    tool_name = getattr(msg, "tool_name", "unknown")
+                    print(f"   🔧 Tool called: {tool_name}")
+
         print(f"   ✓ Season: {weather_out.season if weather_out else 'N/A'}")
         print(f"   ✓ Weather info provided for planning\n")
 
@@ -185,8 +200,7 @@ class OrchestratorAgent:
         # PHASE 2: OPTIONS RESEARCH (PARALLEL)
         # =====================================================================
         print(f"🔍 [Phase 2] Options Research (Parallel Execution)")
-        print(f"   → Logistics Agent: Finding 3-5 flight options...")
-        print(f"   → Accommodation Agent: Finding 4-6 hotel options...")
+        print(f"   → Pre-fetching API data to ensure real pricing...")
 
         # Calculate budget allocations
         flight_budget_per_person = (
@@ -196,6 +210,44 @@ class OrchestratorAgent:
             request.budget * 0.30
         ) / request.trip_duration  # 30% for accommodation
 
+        # PRE-FETCH FLIGHT DATA FROM API
+        print(f"   → Calling Flight API directly...")
+        from tools.external_api_tools import create_flight_tools
+
+        flight_tools = create_flight_tools()
+
+        # Call flight API for outbound
+        flight_api_result = await asyncio.to_thread(
+            flight_tools.search_flights,
+            origin=request.departure_point,
+            destination=request.destination,
+            departure_date=departure_date_str,
+            num_adults=request.num_travelers,
+            max_results=10,
+        )
+
+        # PRE-FETCH HOTEL DATA FROM API
+        print(f"   → Calling Hotel API directly...")
+        from tools.external_api_tools import create_hotel_tools
+
+        hotel_tools = create_hotel_tools()
+
+        hotel_api_result = await asyncio.to_thread(
+            hotel_tools.search_hotels,
+            location=request.destination,
+            check_in=departure_date_str,
+            check_out=return_date_str,
+            adults=request.num_travelers,
+            max_results=20,
+        )
+
+        print(f"   → API data fetched, now running agents with real data...\n")
+
+        # Prepare context with API results
+        flight_context = f"\n\n🔥 REAL-TIME FLIGHT DATA FROM API:\n{flight_api_result}\n\nUSE THIS DATA to create your flight options with REAL prices!"
+        hotel_context = f"\n\n🔥 REAL-TIME HOTEL DATA FROM API:\n{hotel_api_result}\n\nUSE THIS DATA to create your accommodation options with REAL prices!"
+        print(flight_context)
+        print(hotel_context)
         logistics_response, accommodation_response = await asyncio.gather(
             self.logistics_agent.arun(
                 LogisticsAgentInput(
@@ -205,7 +257,7 @@ class OrchestratorAgent:
                     return_date=return_date_str,
                     num_travelers=request.num_travelers,
                     budget_per_person=flight_budget_per_person,
-                    preferences=request.customer_notes or "",
+                    preferences=(request.customer_notes or "") + flight_context,
                 ),
                 session_id=active_session_id,
             ),
@@ -217,7 +269,7 @@ class OrchestratorAgent:
                     budget_per_night=accommodation_budget_per_night,
                     num_travelers=request.num_travelers,
                     travel_style=request.travel_style,
-                    preferences=request.customer_notes or "",
+                    preferences=(request.customer_notes or "") + hotel_context,
                 ),
                 session_id=active_session_id,
             ),
@@ -225,11 +277,46 @@ class OrchestratorAgent:
         logistics_out = logistics_response.content
         accommodation_out = accommodation_response.content
 
-        flight_count = len(logistics_out.flight_options) if logistics_out.flight_options else 0
-        hotel_count = (
-            len(accommodation_out.recommendations) if accommodation_out.recommendations else 0
+        # Log tool calls for logistics agent
+        print(f"\n   🔧 [Logistics Agent] Tool calls:")
+        if hasattr(logistics_response, "messages") and logistics_response.messages:
+            tool_found = False
+            for msg in logistics_response.messages:
+                if hasattr(msg, "role") and msg.role == "tool":
+                    tool_name = getattr(msg, "tool_name", "unknown")
+                    print(f"      → {tool_name}")
+                    tool_found = True
+            if not tool_found:
+                print(f"      (No external tools called)")
+        else:
+            print(f"      (No tool call data available)")
+
+        # Log tool calls for accommodation agent
+        print(f"   🔧 [Accommodation Agent] Tool calls:")
+        if (
+            hasattr(accommodation_response, "messages")
+            and accommodation_response.messages
+        ):
+            tool_found = False
+            for msg in accommodation_response.messages:
+                if hasattr(msg, "role") and msg.role == "tool":
+                    tool_name = getattr(msg, "tool_name", "unknown")
+                    print(f"      → {tool_name}")
+                    tool_found = True
+            if not tool_found:
+                print(f"      (No external tools called)")
+        else:
+            print(f"      (No tool call data available)")
+
+        flight_count = (
+            len(logistics_out.flight_options) if logistics_out.flight_options else 0
         )
-        print(f"   ✓ Found {flight_count} flight options")
+        hotel_count = (
+            len(accommodation_out.recommendations)
+            if accommodation_out.recommendations
+            else 0
+        )
+        print(f"\n   ✓ Found {flight_count} flight options")
         print(f"   ✓ Found {hotel_count} accommodation options\n")
 
         # =====================================================================
@@ -265,7 +352,9 @@ class OrchestratorAgent:
         )
         itinerary_out = itinerary_response.content
 
-        days_count = len(itinerary_out.daily_schedules) if itinerary_out.daily_schedules else 0
+        days_count = (
+            len(itinerary_out.daily_schedules) if itinerary_out.daily_schedules else 0
+        )
         print(f"   ✓ Created {days_count}-day itinerary")
         if itinerary_out.selected_flight:
             print(f"   ✓ Selected Flight: {itinerary_out.selected_flight.airline}")

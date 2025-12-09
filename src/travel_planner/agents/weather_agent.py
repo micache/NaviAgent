@@ -63,7 +63,10 @@ def create_weather_agent(
         enable_user_memories=enable_memory if db else False,
         enable_session_summaries=True if db else False,
         store_media=False,
-        tools=[weather_tools, search_tools],  # Weather API first, then fallback to search
+        tools=[
+            weather_tools,
+            search_tools,
+        ],  # Weather API first, then fallback to search
         add_datetime_to_context=True,
         instructions=[
             "You are the Weather Context Specialist for a travel planning pipeline.",
@@ -194,7 +197,9 @@ async def run_weather_agent(
 
     # Create structured input
     agent_input = WeatherAgentInput(
-        destination=destination, departure_date=departure_date, duration_days=duration_days
+        destination=destination,
+        departure_date=departure_date,
+        duration_days=duration_days,
     )
 
     # Run agent with structured input
@@ -203,11 +208,31 @@ async def run_weather_agent(
     # Response.content will be a WeatherAgentOutput object
     if isinstance(response.content, WeatherAgentOutput):
         print(f"[WeatherAgent] ✓ Season: {response.content.season}")
-        print(f"[WeatherAgent] ✓ Weather summary: {response.content.weather_summary[:100]}...")
+        print(
+            f"[WeatherAgent] ✓ Weather summary: {response.content.weather_summary[:100]}..."
+        )
+
+        # Check if data is from API or LLM by inspecting agent's run messages
+        run_response = str(
+            response.model_dump() if hasattr(response, "model_dump") else response
+        )
+        api_success = "WeatherAPI]" in run_response and (
+            "SUCCESS" in run_response or "Weather Forecast" in run_response
+        )
+
+        if api_success:
+            print("   📡 DATA SOURCE: External API (WeatherAPI.com)")
+        else:
+            print("   🤖 DATA SOURCE: LLM Generation (API failed or not called)")
+
         if response.content.daily_forecasts:
-            print(f"[WeatherAgent] ✓ Daily forecasts: {len(response.content.daily_forecasts)} days")
+            print(
+                f"[WeatherAgent] ✓ Daily forecasts: {len(response.content.daily_forecasts)} days"
+            )
         if response.content.seasonal_events:
-            print(f"[WeatherAgent] ✓ Found {len(response.content.seasonal_events)} seasonal events")
+            print(
+                f"[WeatherAgent] ✓ Found {len(response.content.seasonal_events)} seasonal events"
+            )
         if response.content.best_activities:
             print(
                 f"[WeatherAgent] ✓ Best activities: {len(response.content.best_activities)} suggestions"

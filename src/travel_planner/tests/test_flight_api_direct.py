@@ -33,7 +33,9 @@ headers = {
 
 print("Testing TripAdvisor Flight API - searchFlights")
 print("=" * 80)
-print(f"Route: {querystring['sourceAirportCode']} → {querystring['destinationAirportCode']}")
+print(
+    f"Route: {querystring['sourceAirportCode']} → {querystring['destinationAirportCode']}"
+)
 print(f"URL: {url}")
 print(f"Params: {querystring}")
 print("=" * 80)

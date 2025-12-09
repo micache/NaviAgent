@@ -9,7 +9,6 @@ from pathlib import Path
 from agno.agent import Agent
 from agno.db import PostgresDb
 from agno.memory import MemoryManager
-from agno.tools.reasoning import ReasoningTools
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -58,15 +57,13 @@ def create_budget_agent(
         enable_user_memories=enable_memory if db else False,
         enable_session_summaries=True if db else False,
         store_media=False,
-        tools=[ReasoningTools(add_instructions=True, add_few_shot=False)],
+        tools=[],  # No external tools needed - pure calculation
         instructions=[
             "You are the Budget Analyzer & Validator for the travel planning pipeline.",
             "",
-            "**Role**: Act as an auditor. Your job is to ANALYZE the completed plan from the ItineraryAgent, calculate the *total cost* of that plan, and VALIDATE it against the user's 'total_budget'.",
+            "**GOAL**: Act as an auditor to ANALYZE the completed itinerary, SUM all costs, and VALIDATE against the user's budget. DO NOT ESTIMATE costs yourself; only aggregate what is provided.",
             "",
-            "**DO NOT ESTIMATE COSTS YOURSELF.** The ItineraryAgent has already provided detailed 'estimated_cost' for every single activity. Your job is to SUM these costs.",
-            "",
-            "**Input Context**: You will receive:",
+            "INPUT CONTEXT (You will receive):",
             "  - itinerary: The complete plan object from ItineraryAgent.",
             "     - itinerary.selected_flight.total_cost (This is the FINAL flight cost)",
             "     - itinerary.selected_accommodation.total_cost (This is the FINAL accommodation cost)",
@@ -74,7 +71,7 @@ def create_budget_agent(
             "  - user_query: Contains 'total_budget' and 'num_travelers'.",
             "",
             "**Core Logic: Calculation Steps (MANDATORY)**:",
-            "Use the 'analyze' tool from ReasoningTools to perform these steps.",
+            "Perform these calculation steps systematically:",
             "",
             "1. **Initialize Categories**:",
             "   - total_food_cost = 0",
@@ -111,7 +108,10 @@ def create_budget_agent(
             "6. **Compare and Finalize**:",
             "   - 'total_budget' = user_query.total_budget",
             "   - 'remaining_balance' = total_budget - total_estimated_cost",
-            "   - 'budget_status': 'Within Budget', 'Over Budget', or 'At Budget Limit'.",
+            "   - 'budget_status':",
+            "       * 'Within Budget' when remaining_balance >= 0",
+            "       * 'Nearly Within Budget' when over budget but by less than 2,000,000 VND",
+            "       * 'Over Budget' when more than 2,000,000 VND over",
             "",
             "**Output Requirements**:",
             "Provide a clear, structured JSON output:",
@@ -132,9 +132,9 @@ def create_budget_agent(
             "   - { category: 'Emergency Fund (Buffer)', cost: emergency_fund, percentage: X% }",
             "",
             "3. **recommendations (3-5 bullet points)**:",
-            "   - **If Over Budget**: 'The plan is [X] VND OVER budget. This is critical. The plan MUST be revised. Suggestion: Ask ItineraryAgent to replace one 'premium' activity with a 'free' one, or reduce 'dining' costs by swapping 2 mid-range meals for 'local' food.'",
-            "   - **If Within Budget**: 'The plan is [X] VND UNDER budget. This is excellent! This extra buffer provides flexibility for spontaneous purchases or you can ask the ItineraryAgent to add one 'premium' activity or upgrade the hotel.'",
-            "   - **If At Budget Limit**: 'The plan is very tight, leaving only [X] VND. This is risky. Recommend asking ItineraryAgent to cut one small activity to create a safer buffer.'",
+            "   - **If Over Budget (>=2M)**: 'The plan exceeds budget by [X] VND. Flag caution and remind the user this is an estimate and to monitor spending.'",
+            "   - **If Nearly Within Budget (<2M over)**: 'The plan is slightly over budget; highlight this buffer and suggest the traveler can self-manage without forced edits.'",
+            "   - **If Within Budget**: 'The plan is [X] VND under budget—continue as planned or reallocate discretionarily.'",
             "   - Always include a general tip: 'Costs are estimates. Always bring extra for unexpected expenses.'",
             "",
             "All costs must be in VND. Be SPECIFIC with numbers.",
@@ -208,7 +208,9 @@ async def run_budget_agent(
 
     # Response.content will be a BudgetAgentOutput object
     if isinstance(response.content, BudgetAgentOutput):
-        print(f"[BudgetAgent] ✓ Total estimated: {response.content.total_estimated_cost:,.0f} VND")
+        print(
+            f"[BudgetAgent] ✓ Total estimated: {response.content.total_estimated_cost:,.0f} VND"
+        )
         print(f"[BudgetAgent] ✓ Status: {response.content.budget_status}")
         return response.content
     else:

@@ -25,7 +25,9 @@ request_data = {
     "customer_notes": "First time in Europe",
 }
 
-response = requests.post("http://localhost:8000/v1/plan_trip", json=request_data, timeout=600)
+response = requests.post(
+    "http://localhost:8000/v1/plan_trip", json=request_data, timeout=600
+)
 print(f"Status: {response.status_code}")
 
 if response.status_code == 200:
@@ -45,7 +47,9 @@ if response.status_code == 200:
     if result.get("logistics"):
         print(f"✓ Logistics: {len(result['logistics']['flight_options'])} flights")
     if result.get("accommodation"):
-        print(f"✓ Accommodation: {len(result['accommodation']['recommendations'])} hotels")
+        print(
+            f"✓ Accommodation: {len(result['accommodation']['recommendations'])} hotels"
+        )
 
     # Save to file
     with open("travel_plan_structured.json", "w", encoding="utf-8") as f:

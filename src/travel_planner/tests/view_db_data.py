@@ -8,7 +8,10 @@ import psycopg2
 from dotenv import load_dotenv
 from psycopg2.extras import RealDictCursor
 
-env_path = Path(__file__).parent.parent / ".env"
+# Load .env from repository root
+env_path = Path(__file__).resolve().parents[3] / ".env"
+if not env_path.exists():
+    env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
 DATABASE_URL = os.getenv("DATABASE_URL")

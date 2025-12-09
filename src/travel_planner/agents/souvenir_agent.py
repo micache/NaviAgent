@@ -133,7 +133,9 @@ async def run_souvenir_agent(agent: Agent, destination: str) -> SouvenirAgentOut
 
     # Response.content will be a SouvenirAgentOutput object
     if isinstance(response.content, SouvenirAgentOutput):
-        print(f"[SouvenirAgent] ✓ Recommended {len(response.content.souvenirs)} souvenir items")
+        print(
+            f"[SouvenirAgent] ✓ Recommended {len(response.content.souvenirs)} souvenir items"
+        )
         return response.content
     else:
         print(f"[SouvenirAgent] ⚠ Unexpected response type: {type(response.content)}")

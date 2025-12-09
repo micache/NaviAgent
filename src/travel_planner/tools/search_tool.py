@@ -59,7 +59,9 @@ class RobustSearchTools(DuckDuckGoTools):
             except Exception as e:
                 last_error = e
                 error_msg = str(e)
-                logger.warning(f"Search attempt {attempt + 1} failed for '{query}': {error_msg}")
+                logger.warning(
+                    f"Search attempt {attempt + 1} failed for '{query}': {error_msg}"
+                )
 
                 # If last attempt, fall through to error handling
                 if attempt == self.max_retries - 1:

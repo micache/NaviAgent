@@ -18,7 +18,9 @@ class Activity(BaseModel):
         ..., description="Loại hoạt động (tham quan, ăn uống, mua sắm, di chuyển, ...)"
     )
     description: str = Field(..., description="Mô tả chi tiết hoạt động")
-    estimated_cost: Optional[float] = Field(None, description="Chi phí ước tính (nếu có)")
+    estimated_cost: Optional[float] = Field(
+        None, description="Chi phí ước tính (nếu có)"
+    )
     notes: Optional[str] = Field(None, description="Ghi chú vận hành")
 
 
@@ -28,16 +30,22 @@ class DaySchedule(BaseModel):
     day_number: int = Field(..., description="Ngày thứ mấy trong chuyến đi")
     date: Optional[str] = Field(None, description="Ngày tháng (nếu có)")
     title: str = Field(..., description="Tiêu đề của ngày (ví dụ: 'Khám phá Tokyo')")
-    activities: List[Activity] = Field(..., description="Danh sách hoạt động trong ngày")
+    activities: List[Activity] = Field(
+        ..., description="Danh sách hoạt động trong ngày"
+    )
 
 
 class SelectedFlightInfo(BaseModel):
     """Schema cho thông tin chuyến bay đã chọn trong lịch trình"""
 
     airline: str = Field(..., description="Hãng hàng không đã chọn")
-    outbound_flight: str = Field(..., description="Chuyến đi (e.g., 'VN404 - 08:00 AM')")
+    outbound_flight: str = Field(
+        ..., description="Chuyến đi (e.g., 'VN404 - 08:00 AM')"
+    )
     return_flight: str = Field(..., description="Chuyến về (e.g., 'VN405 - 14:00 PM')")
-    total_cost: float = Field(..., description="Tổng chi phí cho tất cả hành khách (VND)")
+    total_cost: float = Field(
+        ..., description="Tổng chi phí cho tất cả hành khách (VND)"
+    )
 
 
 class SelectedAccommodationInfo(BaseModel):
@@ -53,8 +61,12 @@ class SelectedAccommodationInfo(BaseModel):
 class ItineraryTimeline(BaseModel):
     """Schema cho lịch trình chi tiết"""
 
-    daily_schedules: List[DaySchedule] = Field(..., description="Lịch trình theo từng ngày")
-    location_list: List[str] = Field(..., description="Danh sách tên các địa điểm chính")
+    daily_schedules: List[DaySchedule] = Field(
+        ..., description="Lịch trình theo từng ngày"
+    )
+    location_list: List[str] = Field(
+        ..., description="Danh sách tên các địa điểm chính"
+    )
     summary: Optional[str] = Field(None, description="Tóm tắt lịch trình")
     selected_flight: Optional[SelectedFlightInfo] = Field(
         None, description="Thông tin chuyến bay đã chọn cho chuyến đi"
@@ -71,17 +83,25 @@ class BudgetCategory(BaseModel):
         ..., description="Tên danh mục (Accommodation, Food, Transport, ...)"
     )
     estimated_cost: float = Field(..., description="Chi phí ước tính")
-    breakdown: Optional[List[Dict[str, float]]] = Field(None, description="Chi tiết phân bổ")
+    breakdown: Optional[List[Dict[str, float]]] = Field(
+        None, description="Chi tiết phân bổ"
+    )
     notes: Optional[str] = Field(None, description="Ghi chú về danh mục")
 
 
 class BudgetBreakdown(BaseModel):
     """Schema cho chi phí dự tính"""
 
-    categories: List[BudgetCategory] = Field(..., description="Danh sách các danh mục chi phí")
+    categories: List[BudgetCategory] = Field(
+        ..., description="Danh sách các danh mục chi phí"
+    )
     total_estimated_cost: float = Field(..., description="Tổng chi phí ước tính")
-    budget_status: str = Field(..., description="Trạng thái ngân sách (trong/vượt/dưới ngân sách)")
-    recommendations: Optional[List[str]] = Field(None, description="Gợi ý tiết kiệm/điều chỉnh")
+    budget_status: str = Field(
+        ..., description="Trạng thái ngân sách (trong/vượt/dưới ngân sách)"
+    )
+    recommendations: Optional[List[str]] = Field(
+        None, description="Gợi ý tiết kiệm/điều chỉnh"
+    )
 
 
 class LocationDescription(BaseModel):
@@ -95,8 +115,12 @@ class LocationDescription(BaseModel):
 class AdvisoryInfo(BaseModel):
     """Schema cho thông tin tư vấn và cảnh báo"""
 
-    warnings_and_tips: List[str] = Field(..., description="Danh sách cảnh báo và lưu ý quan trọng")
-    location_descriptions: List[LocationDescription] = Field(..., description="Mô tả các địa điểm")
+    warnings_and_tips: List[str] = Field(
+        ..., description="Danh sách cảnh báo và lưu ý quan trọng"
+    )
+    location_descriptions: List[LocationDescription] = Field(
+        ..., description="Mô tả các địa điểm"
+    )
     visa_info: Optional[str] = Field(None, description="Thông tin Visa")
     weather_info: Optional[str] = Field(None, description="Thông tin thời tiết")
     sim_and_apps: Optional[List[str]] = Field(None, description="Gợi ý SIM và ứng dụng")
@@ -121,8 +145,12 @@ class FlightOption(BaseModel):
     arrival_time: Optional[str] = Field(None, description="Giờ đến (nếu có)")
     duration: str = Field(..., description="Thời gian bay")
     price_per_person: float = Field(..., description="Giá vé/người (khứ hồi, VND)")
-    cabin_class: str = Field(..., description="Hạng ghế: Economy, Business, First Class")
-    benefits: List[str] = Field(..., description="Quyền lợi kèm vé (hành lý, bữa ăn, ...)")
+    cabin_class: str = Field(
+        ..., description="Hạng ghế: Economy, Business, First Class"
+    )
+    benefits: List[str] = Field(
+        ..., description="Quyền lợi kèm vé (hành lý, bữa ăn, ...)"
+    )
     booking_platforms: List[str] = Field(..., description="Nền tảng đặt vé")
     notes: Optional[str] = Field(None, description="Ghi chú thêm")
 
@@ -130,8 +158,12 @@ class FlightOption(BaseModel):
 class LogisticsInfo(BaseModel):
     """Schema cho thông tin vé máy bay"""
 
-    flight_options: List[FlightOption] = Field(..., description="Danh sách các lựa chọn chuyến bay")
-    recommended_flight: Optional[str] = Field(None, description="Chuyến bay được đề xuất")
+    flight_options: List[FlightOption] = Field(
+        ..., description="Danh sách các lựa chọn chuyến bay"
+    )
+    recommended_flight: Optional[str] = Field(
+        None, description="Chuyến bay được đề xuất"
+    )
     average_price: float = Field(..., description="Giá trung bình/người (VND)")
     booking_tips: List[str] = Field(..., description="Mẹo đặt vé máy bay")
     visa_requirements: Optional[str] = Field(None, description="Yêu cầu visa")
@@ -141,12 +173,16 @@ class AccommodationOption(BaseModel):
     """Schema cho thông tin khách sạn/lưu trú"""
 
     name: str = Field(..., description="Tên khách sạn/hostel/homestay")
-    type: str = Field(..., description="Loại hình (hotel, hostel, homestay, apartment, ...)")
+    type: str = Field(
+        ..., description="Loại hình (hotel, hostel, homestay, apartment, ...)"
+    )
     area: str = Field(..., description="Khu vực/quận")
     price_per_night: float = Field(..., description="Giá trung bình mỗi đêm (VND)")
     rating: Optional[float] = Field(None, description="Điểm đánh giá (nếu có)")
     amenities: List[str] = Field(..., description="Tiện nghi (WiFi, Pool, Gym, ...)")
-    distance_to_center: Optional[str] = Field(None, description="Khoảng cách đến trung tâm")
+    distance_to_center: Optional[str] = Field(
+        None, description="Khoảng cách đến trung tâm"
+    )
     booking_platforms: List[str] = Field(
         ..., description="Nền tảng đặt phòng (Booking.com, Agoda, ...)"
     )
@@ -178,10 +214,14 @@ class TravelPlan(BaseModel):
     request_summary: Optional[Dict] = Field(None, description="Tóm tắt yêu cầu gốc")
 
     # Output từ các agent (all optional for backward compatibility with Team mode)
-    itinerary: Optional[ItineraryTimeline] = Field(None, description="Lịch trình chi tiết")
+    itinerary: Optional[ItineraryTimeline] = Field(
+        None, description="Lịch trình chi tiết"
+    )
     budget: Optional[BudgetBreakdown] = Field(None, description="Chi phí dự tính")
     advisory: Optional[AdvisoryInfo] = Field(None, description="Tư vấn và cảnh báo")
-    souvenirs: Optional[List[SouvenirSuggestion]] = Field(None, description="Gợi ý quà tặng")
+    souvenirs: Optional[List[SouvenirSuggestion]] = Field(
+        None, description="Gợi ý quà tặng"
+    )
     logistics: Optional[LogisticsInfo] = Field(None, description="Thông tin hậu cần")
     accommodation: Optional[AccommodationInfo] = Field(
         None, description="Thông tin khách sạn và lưu trú chi tiết"
@@ -280,9 +320,15 @@ class TravelPlanTeamResponse(BaseModel):
 class GuidebookOptions(BaseModel):
     """Schema for guidebook generation options."""
 
-    include_maps: bool = Field(default=False, description="Include maps in guidebook (future)")
-    include_qr_codes: bool = Field(default=False, description="Include QR codes (future)")
-    language: str = Field(default="vi", description="Language for guidebook content (vi or en)")
+    include_maps: bool = Field(
+        default=False, description="Include maps in guidebook (future)"
+    )
+    include_qr_codes: bool = Field(
+        default=False, description="Include QR codes (future)"
+    )
+    language: str = Field(
+        default="vi", description="Language for guidebook content (vi or en)"
+    )
     template: str = Field(default="default", description="Template name (default)")
 
 
@@ -292,7 +338,9 @@ class GuidebookRequest(BaseModel):
     travel_plan: Optional[TravelPlan] = Field(
         None, description="TravelPlan object for guidebook generation"
     )
-    travel_plan_path: Optional[str] = Field(None, description="Path to travel plan JSON file")
+    travel_plan_path: Optional[str] = Field(
+        None, description="Path to travel plan JSON file"
+    )
     formats: List[str] = Field(
         default=["pdf", "html", "markdown"],
         description="List of formats to generate: pdf, html, markdown",
@@ -307,7 +355,9 @@ class GuidebookResponse(BaseModel):
     """Schema for guidebook generation response."""
 
     guidebook_id: str = Field(..., description="Unique identifier for this guidebook")
-    files: Dict[str, str] = Field(..., description="Dictionary mapping format names to file paths")
+    files: Dict[str, str] = Field(
+        ..., description="Dictionary mapping format names to file paths"
+    )
     generated_at: str = Field(
         default_factory=lambda: datetime.utcnow().isoformat(),
         description="Generation timestamp",

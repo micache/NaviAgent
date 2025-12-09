@@ -111,7 +111,9 @@ def test_agent_override():
 
         # Override itinerary agent to use Gemini
         model_settings.set_agent_model(
-            agent_name="itinerary", provider=ModelProvider.GOOGLE, model_name="gemini-2.0-flash-exp"
+            agent_name="itinerary",
+            provider=ModelProvider.GOOGLE,
+            model_name="gemini-2.0-flash-exp",
         )
 
         # Test default agent

@@ -13,8 +13,10 @@ from dotenv import load_dotenv
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Load .env from parent directory
-env_path = Path(__file__).parent.parent / ".env"
+# Load .env from repository root
+env_path = Path(__file__).resolve().parents[3] / ".env"
+if not env_path.exists():
+    env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
 from agents.accommodation_agent import create_accommodation_agent
@@ -48,7 +50,10 @@ async def test_weather_agent():
     departure_date = date.today() + timedelta(days=3)
 
     result = await run_weather_agent(
-        agent=agent, destination="Bangkok", departure_date=departure_date, duration_days=7
+        agent=agent,
+        destination="Bangkok",
+        departure_date=departure_date,
+        duration_days=7,
     )
 
     print("-" * 80)
@@ -114,7 +119,9 @@ async def test_logistics_agent():
     if hasattr(response.content, "flight_options"):
         flights = response.content.flight_options
         print(f"  - Flight options: {len(flights)} total")
-        print(f"  - Average price: {response.content.average_price:,.0f} VND per person")
+        print(
+            f"  - Average price: {response.content.average_price:,.0f} VND per person"
+        )
 
         if flights:
             print(f"\n  First flight option:")
@@ -126,10 +133,14 @@ async def test_logistics_agent():
             print(f"    • Stops: {flights[0].number_of_stops}")
 
         if response.content.booking_tips:
-            print(f"\n  Booking tips: {len(response.content.booking_tips)} tips provided")
+            print(
+                f"\n  Booking tips: {len(response.content.booking_tips)} tips provided"
+            )
 
         # Check if real API data (có giá cụ thể, không phải ước tính)
-        if flights and flights[0].price_vnd < 10000000:  # Less than 10M VND indicates real API data
+        if (
+            flights and flights[0].price_vnd < 10000000
+        ):  # Less than 10M VND indicates real API data
             print("\n✅ PASSED: Flight API trả về dữ liệu thực!")
         else:
             print("\n⚠️  WARNING: Có thể là dữ liệu ước tính (không phải từ API)")
@@ -177,7 +188,9 @@ async def test_accommodation_agent():
     if hasattr(response.content, "recommendations"):
         hotels = response.content.recommendations
         print(f"  - Recommendations: {len(hotels)} hotels")
-        print(f"  - Average price: {response.content.average_price_per_night:,.0f} VND/night")
+        print(
+            f"  - Average price: {response.content.average_price_per_night:,.0f} VND/night"
+        )
         print(f"  - Total cost: {response.content.total_estimated_cost:,.0f} VND")
 
         if hotels:
@@ -228,10 +241,14 @@ async def main():
         print("🎉 ALL INTEGRATION TESTS COMPLETED!")
         print("=" * 80)
         print("\n📊 Summary:")
-        print("  • Weather Agent: Check if 'API Forecast' or 'Forecast' in temperature_range")
+        print(
+            "  • Weather Agent: Check if 'API Forecast' or 'Forecast' in temperature_range"
+        )
         print("  • Logistics Agent: Check if flight prices are realistic (< 10M VND)")
         print("  • Accommodation Agent: Check if hotel ratings and prices are specific")
-        print("\n💡 Tip: Enable debug_mode=True in agent creation to see detailed tool calls")
+        print(
+            "\n💡 Tip: Enable debug_mode=True in agent creation to see detailed tool calls"
+        )
 
     except Exception as e:
         print(f"\n❌ ERROR: {e}")

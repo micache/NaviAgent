@@ -5,9 +5,12 @@ Handles agent sessions, chat history, and user memories
 
 import os
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from agno.db.postgres import PostgresDb
+from agno.db.schemas.memory import UserMemory
 from dotenv import load_dotenv
+
 
 # Load environment variables from root .env (outside travel_planner) with fallback
 def _find_env_file() -> Path | None:
@@ -28,6 +31,99 @@ if env_path:
     print(f"[DatabaseConfig] Loaded environment from {env_path}")
 else:
     print("[DatabaseConfig] No .env file found; using existing environment")
+
+
+class SafePostgresDb(PostgresDb):
+    """PostgresDb wrapper that ignores unexpected columns (e.g., created_at)."""
+
+    @staticmethod
+    def _sanitize_memory_dict(memory_raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if not memory_raw:
+            return {}
+        sanitized = dict(memory_raw)
+        sanitized.pop("created_at", None)
+        return sanitized
+
+    def get_user_memory(
+        self,
+        memory_id: str,
+        deserialize: bool | None = True,
+        user_id: str | None = None,
+    ) -> UserMemory | Dict[str, Any] | None:
+        memory_raw = super().get_user_memory(
+            memory_id, deserialize=False, user_id=user_id
+        )
+        if memory_raw is None:
+            return None
+
+        memory_raw = self._sanitize_memory_dict(memory_raw)
+        if not deserialize:
+            return memory_raw
+
+        return UserMemory.from_dict(memory_raw)
+
+    def get_user_memories(
+        self,
+        user_id: str | None = None,
+        agent_id: str | None = None,
+        team_id: str | None = None,
+        topics: List[str] | None = None,
+        search_content: str | None = None,
+        limit: int | None = None,
+        page: int | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+        deserialize: bool | None = True,
+    ) -> List[UserMemory] | Tuple[List[Dict[str, Any]], int]:
+        memories_raw, total_count = super().get_user_memories(
+            user_id=user_id,
+            agent_id=agent_id,
+            team_id=team_id,
+            topics=topics,
+            search_content=search_content,
+            limit=limit,
+            page=page,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            deserialize=False,
+        )
+
+        sanitized = [self._sanitize_memory_dict(memory) for memory in memories_raw]
+        if not deserialize:
+            return sanitized, total_count
+
+        return [UserMemory.from_dict(memory) for memory in sanitized]
+
+    def upsert_user_memory(
+        self, memory: UserMemory, deserialize: bool | None = True
+    ) -> UserMemory | Dict[str, Any] | None:
+        memory_raw = super().upsert_user_memory(memory, deserialize=False)
+        if memory_raw is None:
+            return None
+
+        memory_raw = self._sanitize_memory_dict(memory_raw)
+        if not deserialize:
+            return memory_raw
+
+        return UserMemory.from_dict(memory_raw)
+
+    def upsert_memories(
+        self,
+        memories: List[UserMemory],
+        deserialize: bool | None = True,
+        preserve_updated_at: bool = False,
+    ) -> List[UserMemory] | List[Dict[str, Any]]:
+        raw_results = super().upsert_memories(
+            memories,
+            deserialize=False,
+            preserve_updated_at=preserve_updated_at,
+        )
+
+        sanitized = [self._sanitize_memory_dict(memory) for memory in raw_results]
+        if not deserialize:
+            return sanitized
+
+        return [UserMemory.from_dict(memory) for memory in sanitized]
 
 
 class DatabaseConfig:
@@ -53,7 +149,7 @@ class DatabaseConfig:
         Returns:
             PostgresDb instance configured for the application
         """
-        return PostgresDb(
+        return SafePostgresDb(
             db_url=self.database_url,
             memory_table=memory_table,
             session_table=session_table,

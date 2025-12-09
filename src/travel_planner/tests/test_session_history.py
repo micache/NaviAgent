@@ -35,7 +35,9 @@ async def test_session_continuity():
     print(f"   User ID: {user_id}")
     print(f"   Session ID: {session_id}")
 
-    orchestrator = OrchestratorAgent(user_id=user_id, session_id=session_id, enable_memory=True)
+    orchestrator = OrchestratorAgent(
+        user_id=user_id, session_id=session_id, enable_memory=True
+    )
     print(f"   ✓ Orchestrator initialized with session tracking")
 
     # =========================================================================
@@ -79,7 +81,9 @@ async def test_session_continuity():
 
     # Check that data was stored
     print(f"\n📊 Checking database storage...")
-    stored_messages = orchestrator.weather_agent.get_messages_for_session(session_id=session_id)
+    stored_messages = orchestrator.weather_agent.get_messages_for_session(
+        session_id=session_id
+    )
     if stored_messages:
         print(f"   ✓ Found {len(stored_messages)} messages stored for Weather Agent")
     else:
@@ -91,7 +95,9 @@ async def test_session_continuity():
     print(f"\n{'=' * 80}")
     print("🔄 TURN 2: Follow-up Request (Same Session)")
     print("=" * 80)
-    print("\n💡 This request should have access to Turn 1's context via session history")
+    print(
+        "\n💡 This request should have access to Turn 1's context via session history"
+    )
 
     request_2 = TravelRequest(
         departure_point="Hanoi",
@@ -127,10 +133,14 @@ async def test_session_continuity():
 
     # Check session history
     print(f"\n📊 Checking session history after Turn 2...")
-    stored_messages_2 = orchestrator.weather_agent.get_messages_for_session(session_id=session_id)
+    stored_messages_2 = orchestrator.weather_agent.get_messages_for_session(
+        session_id=session_id
+    )
     if stored_messages_2:
         print(f"   ✓ Found {len(stored_messages_2)} total messages in session")
-        print(f"   ✓ History grew from {len(stored_messages)} to {len(stored_messages_2)} messages")
+        print(
+            f"   ✓ History grew from {len(stored_messages)} to {len(stored_messages_2)} messages"
+        )
     else:
         print(f"   ⚠️  No messages found in session")
 
@@ -222,7 +232,9 @@ async def test_session_summaries():
     user_id = "test_user_summary_001"
     session_id = "test_session_summary_001"
 
-    orchestrator = OrchestratorAgent(user_id=user_id, session_id=session_id, enable_memory=True)
+    orchestrator = OrchestratorAgent(
+        user_id=user_id, session_id=session_id, enable_memory=True
+    )
 
     print(f"\n📋 Testing session summary creation...")
     print(f"   User ID: {user_id}")
@@ -250,7 +262,9 @@ async def test_session_summaries():
     # Try to get session summary
     print(f"\n📊 Checking for session summary...")
     try:
-        session_summary = orchestrator.weather_agent.get_session_summary(session_id=session_id)
+        session_summary = orchestrator.weather_agent.get_session_summary(
+            session_id=session_id
+        )
         if session_summary:
             print(f"   ✓ Session summary created:")
             print(f"      Summary: {session_summary.summary[:150]}...")

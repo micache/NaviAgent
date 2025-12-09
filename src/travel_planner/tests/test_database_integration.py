@@ -48,10 +48,14 @@ async def test_database_integration():
     for agent_name, agent in agents:
         has_db = hasattr(agent, "db") and agent.db is not None
         has_user = hasattr(agent, "user_id") and agent.user_id is not None
-        has_memory = hasattr(agent, "memory_manager") and agent.memory_manager is not None
+        has_memory = (
+            hasattr(agent, "memory_manager") and agent.memory_manager is not None
+        )
 
         status = "✅" if (has_db and has_user and has_memory) else "❌"
-        print(f"{status} {agent_name:15s} - DB: {has_db}, User: {has_user}, Memory: {has_memory}")
+        print(
+            f"{status} {agent_name:15s} - DB: {has_db}, User: {has_user}, Memory: {has_memory}"
+        )
 
     print("\n" + "=" * 80)
     print("✅ All Tests Passed!")

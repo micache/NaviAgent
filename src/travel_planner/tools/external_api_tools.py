@@ -63,13 +63,17 @@ class WeatherAPITools(Toolkit):
                 "alerts": "yes" if include_alerts else "no",
             }
 
-            print(f"🌤️  [WeatherAPI] Calling get_weather_forecast for '{location}', {days} days")
+            print(
+                f"🌤️  [WeatherAPI] Calling get_weather_forecast for '{location}', {days} days"
+            )
             logger.info(f"Fetching weather forecast for {location}, {days} days")
             response = requests.get(url, params=params, timeout=15)
 
             if response.status_code == 200:
                 data = response.json()
-                print(f"✅ [WeatherAPI] Successfully fetched forecast for '{location}'")
+                print(
+                    f"✅ [WeatherAPI] SUCCESS - Got {days}-day forecast for '{location}'"
+                )
                 return self._format_forecast_vietnamese(data)
             elif response.status_code == 401:
                 print(f"❌ [WeatherAPI] Authentication error")
@@ -79,14 +83,18 @@ class WeatherAPITools(Toolkit):
                 return f"❌ Không tìm thấy địa điểm: {location}"
             else:
                 print(f"❌ [WeatherAPI] Error {response.status_code}")
-                logger.error(f"WeatherAPI error: {response.status_code} - {response.text[:200]}")
+                logger.error(
+                    f"WeatherAPI error: {response.status_code} - {response.text[:200]}"
+                )
                 return f"❌ Lỗi lấy dữ liệu thời tiết (Status {response.status_code})"
 
         except requests.exceptions.Timeout:
             logger.error(f"WeatherAPI timeout for {location}")
+            print(f"❌ [WeatherAPI] TIMEOUT - API did not respond in time")
             return "❌ Timeout khi gọi WeatherAPI - vui lòng thử lại"
         except Exception as e:
             logger.error(f"WeatherAPI exception: {e}")
+            print(f"❌ [WeatherAPI] ERROR - {str(e)}")
             return f"❌ Lỗi không xác định: {str(e)}"
 
     def get_current_weather(self, location: str) -> str:
@@ -107,21 +115,27 @@ class WeatherAPITools(Toolkit):
 
             params = {"key": self.api_key, "q": location, "aqi": "no"}
 
+            print(f"🌤️  [WeatherAPI] Calling get_current_weather for '{location}'")
             logger.info(f"Fetching current weather for {location}")
             response = requests.get(url, params=params, timeout=10)
 
             if response.status_code == 200:
                 data = response.json()
+                print(f"✅ [WeatherAPI] SUCCESS - Got current weather for '{location}'")
                 return self._format_current_weather_vietnamese(data)
             elif response.status_code == 401:
+                print(f"❌ [WeatherAPI] Authentication error")
                 return "❌ Lỗi xác thực WeatherAPI"
             elif response.status_code == 400:
+                print(f"❌ [WeatherAPI] Location not found: {location}")
                 return f"❌ Không tìm thấy địa điểm: {location}"
             else:
+                print(f"❌ [WeatherAPI] Error {response.status_code}")
                 return f"❌ Lỗi lấy dữ liệu thời tiết (Status {response.status_code})"
 
         except Exception as e:
             logger.error(f"Current weather error: {e}")
+            print(f"❌ [WeatherAPI] ERROR - {str(e)}")
             return f"❌ Lỗi: {str(e)}"
 
     def _format_forecast_vietnamese(self, data: Dict) -> str:
@@ -244,12 +258,14 @@ class BookingFlightTools(Toolkit):
             # Step 1: Get origin and destination IDs
             origin_id = self._get_destination_id(origin)
             if not origin_id:
-                return (
-                    f"❌ Cannot find airport/city: {origin}. Try with airport code (e.g., BKK, SGN)"
-                )
+                print(f"❌ [Booking.com API] FAILED - Could not find origin: {origin}")
+                return f"❌ Cannot find airport/city: {origin}. Try with airport code (e.g., BKK, SGN)"
 
             dest_id = self._get_destination_id(destination)
             if not dest_id:
+                print(
+                    f"❌ [Booking.com API] FAILED - Could not find destination: {destination}"
+                )
                 return f"❌ Cannot find airport/city: {destination}. Try with airport code (e.g., JFK, LAX)"
 
             # Step 2: Search flights
@@ -267,14 +283,17 @@ class BookingFlightTools(Toolkit):
             }
 
             print(
-                f"✈️  [Booking.com] Searching flights: {origin} ({origin_id}) → {destination} ({dest_id}) on {departure_date}"
+                f"✈️  [Booking.com API] Searching flights: {origin} ({origin_id}) → {destination} ({dest_id}) on {departure_date}"
             )
             logger.info(
                 f"Searching flights: {origin} ({origin_id}) → {destination} ({dest_id}) on {departure_date}"
             )
-            response = requests.get(url, headers=self.headers, params=params, timeout=25)
+            response = requests.get(
+                url, headers=self.headers, params=params, timeout=25
+            )
 
             if response.status_code == 200:
+                print(f"✅ [Booking.com API] SUCCESS - Got response from API")
                 data = response.json()
 
                 # Check if API returned success
@@ -283,7 +302,9 @@ class BookingFlightTools(Toolkit):
                     print(
                         f"✅ [Booking.com] Found {flight_count} flights for {origin} → {destination}"
                     )
-                    return self._format_flights_english(data, origin, destination, max_results)
+                    return self._format_flights_english(
+                        data, origin, destination, max_results
+                    )
                 else:
                     # API returned error
                     error_msg = data.get("message", "Unknown error")
@@ -303,10 +324,14 @@ class BookingFlightTools(Toolkit):
 
         except requests.exceptions.Timeout:
             logger.error(f"Flight API timeout: {origin} → {destination}")
+            print(f"❌ [Booking.com API] TIMEOUT - API did not respond in time")
             return f"⚠️ Flight API timeout\n\nPlease use web search tool for flights: {origin} → {destination} on {departure_date}"
         except Exception as e:
             logger.error(f"Flight search exception: {e}")
-            return f"⚠️ Error accessing flight API: {str(e)}\n\nPlease use web search tool."
+            print(f"❌ [Booking.com API] ERROR - {str(e)}")
+            return (
+                f"⚠️ Error accessing flight API: {str(e)}\n\nPlease use web search tool."
+            )
 
     def search_destination(self, query: str) -> str:
         """
@@ -327,7 +352,9 @@ class BookingFlightTools(Toolkit):
             params = {"query": query}
 
             logger.info(f"Searching destinations for: {query}")
-            response = requests.get(url, headers=self.headers, params=params, timeout=15)
+            response = requests.get(
+                url, headers=self.headers, params=params, timeout=15
+            )
 
             if response.status_code == 200:
                 data = response.json()
@@ -353,7 +380,9 @@ class BookingFlightTools(Toolkit):
                 url = f"{self.base_url}/searchDestination"
                 params = {"query": query_upper}
 
-                response = requests.get(url, headers=self.headers, params=params, timeout=15)
+                response = requests.get(
+                    url, headers=self.headers, params=params, timeout=15
+                )
 
                 if response.status_code == 200:
                     data = response.json()
@@ -367,7 +396,9 @@ class BookingFlightTools(Toolkit):
                                 dest.get("code", "").upper() == query_upper
                                 and dest.get("type") == "AIRPORT"
                             ):
-                                logger.info(f"Found airport {query_upper}: {dest.get('id')}")
+                                logger.info(
+                                    f"Found airport {query_upper}: {dest.get('id')}"
+                                )
                                 return dest.get("id")
 
                         # Try first AIRPORT in list
@@ -382,7 +413,9 @@ class BookingFlightTools(Toolkit):
             url = f"{self.base_url}/searchDestination"
             params = {"query": query}
 
-            response = requests.get(url, headers=self.headers, params=params, timeout=15)
+            response = requests.get(
+                url, headers=self.headers, params=params, timeout=15
+            )
 
             if response.status_code == 200:
                 data = response.json()
@@ -393,7 +426,9 @@ class BookingFlightTools(Toolkit):
                     # Prefer AIRPORT type
                     for dest in destinations:
                         if dest.get("type") == "AIRPORT":
-                            logger.info(f"Found airport for '{query}': {dest.get('id')}")
+                            logger.info(
+                                f"Found airport for '{query}': {dest.get('id')}"
+                            )
                             return dest.get("id")
 
                     # Fallback to first result (might be CITY)
@@ -473,9 +508,13 @@ Showing top {min(max_results, len(flight_offers))} results:
 
             # Format departure and arrival times
             dep_time_str = (
-                departure_time.replace("T", " ") if "T" in departure_time else departure_time
+                departure_time.replace("T", " ")
+                if "T" in departure_time
+                else departure_time
             )
-            arr_time_str = arrival_time.replace("T", " ") if "T" in arrival_time else arrival_time
+            arr_time_str = (
+                arrival_time.replace("T", " ") if "T" in arrival_time else arrival_time
+            )
 
             result += f"""Flight #{i}:
 - Airline: {", ".join(airlines_set) if airlines_set else "N/A"}
@@ -497,7 +536,9 @@ Showing top {min(max_results, len(flight_offers))} results:
         if not destinations:
             return f"No destinations found for: {query}"
 
-        result = f"Destinations for '{query}':\n\nFound {len(destinations)} results:\n\n"
+        result = (
+            f"Destinations for '{query}':\n\nFound {len(destinations)} results:\n\n"
+        )
 
         for i, dest in enumerate(destinations, 1):
             dest_id = dest.get("id", "N/A")
@@ -544,7 +585,12 @@ class TripAdvisorHotelTools(Toolkit):
         self.register(self.search_hotel_location)
 
     def search_hotels(
-        self, location: str, check_in: str, check_out: str, adults: int = 2, max_results: int = 5
+        self,
+        location: str,
+        check_in: str,
+        check_out: str,
+        adults: int = 2,
+        max_results: int = 5,
     ) -> str:
         """
         Search for hotels in a location.
@@ -563,6 +609,9 @@ class TripAdvisorHotelTools(Toolkit):
             return "❌ RAPIDAPI_KEY không được cấu hình trong .env file"
 
         try:
+            print(f"🏨 [TripAdvisor API] Starting hotel search for: {location}")
+            print(f"    Check-in: {check_in}, Check-out: {check_out}, Adults: {adults}")
+
             # Step 1: Get location ID if location is city name
             if not location.isdigit():
                 logger.info(f"Searching location ID for: {location}")
@@ -572,15 +621,22 @@ class TripAdvisorHotelTools(Toolkit):
                 if not location_id and "," in location:
                     cleaned_location = location.split(",")[0].strip()
                     if cleaned_location and cleaned_location != location:
+                        print(
+                            f"🔄 [TripAdvisor] Retrying with cleaned city name: {cleaned_location}"
+                        )
                         logger.info(
                             f"Retrying location ID lookup with cleaned city: {cleaned_location}"
                         )
                         location_id = self._get_location_id(cleaned_location)
 
                 if not location_id:
+                    print(
+                        f"❌ [TripAdvisor API] FAILED - Could not find location ID for: {location}"
+                    )
                     return f"❌ Không tìm thấy địa điểm: {location}"
             else:
                 location_id = location
+                print(f"✓ [TripAdvisor] Using provided location ID: {location_id}")
 
             # Step 2: Search hotels
             url = f"{self.base_url}/searchHotels"
@@ -594,11 +650,16 @@ class TripAdvisorHotelTools(Toolkit):
                 "sortOrder": "POPULARITY",
             }
 
-            print(f"🏨 [TripAdvisor] Searching hotels in {location} (ID: {location_id})")
+            print(
+                f"🏨 [TripAdvisor API] Calling searchHotels with location ID: {location_id}"
+            )
             logger.info(f"Searching hotels in location ID {location_id}")
-            response = requests.get(url, headers=self.headers, params=params, timeout=25)
+            response = requests.get(
+                url, headers=self.headers, params=params, timeout=25
+            )
 
             if response.status_code == 200:
+                print(f"✅ [TripAdvisor API] SUCCESS - Got response from API")
                 data = response.json()
                 hotel_count = len(data.get("data", {}).get("data", []))
                 print(f"✅ [TripAdvisor] Found {hotel_count} hotels in {location}")
@@ -606,16 +667,28 @@ class TripAdvisorHotelTools(Toolkit):
                     data, location, check_in, check_out, max_results
                 )
             elif response.status_code == 401:
+                print(f"❌ [TripAdvisor API] FAILED - Authentication error (401)")
                 return "❌ Lỗi xác thực RapidAPI"
             elif response.status_code == 403:
+                print(f"❌ [TripAdvisor API] FAILED - Access denied (403)")
                 return "❌ Không có quyền truy cập - Đăng ký API trên RapidAPI"
             elif response.status_code == 429:
+                print(f"❌ [TripAdvisor API] FAILED - Rate limit exceeded (429)")
                 return "❌ Đã vượt quá hạn mức API"
             else:
-                logger.error(f"Hotel API error: {response.status_code}")
+                print(f"❌ [TripAdvisor API] FAILED - Status {response.status_code}")
+                print(f"    Response: {response.text[:300]}")
+                logger.error(
+                    f"Hotel API error: {response.status_code} - {response.text[:500]}"
+                )
                 return f"❌ Lỗi tìm khách sạn (Status {response.status_code})"
 
+        except requests.exceptions.Timeout:
+            print(f"❌ [TripAdvisor API] TIMEOUT - API did not respond in time")
+            logger.error(f"Hotel API timeout for {location}")
+            return f"❌ Timeout khi gọi Hotel API - vui lòng thử lại"
         except Exception as e:
+            print(f"❌ [TripAdvisor API] ERROR - {str(e)}")
             logger.error(f"Hotel search exception: {e}")
             return f"❌ Lỗi: {str(e)}"
 
@@ -638,7 +711,9 @@ class TripAdvisorHotelTools(Toolkit):
             params = {"query": query}
 
             logger.info(f"Searching hotel locations for: {query}")
-            response = requests.get(url, headers=self.headers, params=params, timeout=15)
+            response = requests.get(
+                url, headers=self.headers, params=params, timeout=15
+            )
 
             if response.status_code == 200:
                 data = response.json()
@@ -656,17 +731,35 @@ class TripAdvisorHotelTools(Toolkit):
             url = f"{self.base_url}/searchLocation"
             params = {"query": city_name}
 
-            response = requests.get(url, headers=self.headers, params=params, timeout=15)
+            print(f"🔍 [TripAdvisor] Looking up location ID for: {city_name}")
+            response = requests.get(
+                url, headers=self.headers, params=params, timeout=15
+            )
 
             if response.status_code == 200:
                 data = response.json()
                 locations = data.get("data", [])
 
                 if locations:
-                    return locations[0].get("geoId")
-
-            return None
+                    location_id = locations[0].get("geoId")
+                    location_name = locations[0].get("localizedName", city_name)
+                    print(
+                        f"✅ [TripAdvisor] Found location: {location_name} (ID: {location_id})"
+                    )
+                    return location_id
+                else:
+                    print(f"❌ [TripAdvisor] No locations found for: {city_name}")
+                    return None
+            else:
+                print(
+                    f"❌ [TripAdvisor] Location lookup failed (Status {response.status_code})"
+                )
+                logger.error(
+                    f"Location lookup status {response.status_code}: {response.text[:200]}"
+                )
+                return None
         except Exception as e:
+            print(f"❌ [TripAdvisor] Location lookup error: {str(e)}")
             logger.error(f"Location ID lookup failed: {e}")
             return None
 
@@ -677,8 +770,10 @@ class TripAdvisorHotelTools(Toolkit):
         hotels = data.get("data", {}).get("data", [])
 
         if not hotels:
-            return f"No hotels found in {location}"
+            print(f"❌ [TripAdvisor API] No hotels found for: {location}")
+            return f"No hotels found for location: {location}"
 
+        print(f"✅ [TripAdvisor API] SUCCESS - Found {len(hotels)} hotels")
         result = f"Hotel Search Results: {location}\nCheck-in: {check_in} | Check-out: {check_out}\n\nFound {len(hotels)} hotels:\n"
 
         for i, hotel in enumerate(hotels[:max_results], 1):

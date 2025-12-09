@@ -10,7 +10,11 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from tools.external_api_tools import create_flight_tools, create_hotel_tools, create_weather_tools
+from tools.external_api_tools import (
+    create_flight_tools,
+    create_hotel_tools,
+    create_weather_tools,
+)
 
 
 def test_weather():
@@ -51,7 +55,11 @@ def test_flights():
     print("\n\n✈️ Search flights BKK → SGN:")
     departure = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
     result = flights.search_flights(
-        origin="BKK", destination="SGN", departure_date=departure, num_adults=1, max_results=3
+        origin="BKK",
+        destination="SGN",
+        departure_date=departure,
+        num_adults=1,
+        max_results=3,
     )
     print(result)
 
@@ -77,7 +85,11 @@ def test_hotels():
     check_out = (datetime.now() + timedelta(days=35)).strftime("%Y-%m-%d")
 
     result = hotels.search_hotels(
-        location="Bangkok", check_in=check_in, check_out=check_out, adults=2, max_results=3
+        location="Bangkok",
+        check_in=check_in,
+        check_out=check_out,
+        adults=2,
+        max_results=3,
     )
     print(result)
 

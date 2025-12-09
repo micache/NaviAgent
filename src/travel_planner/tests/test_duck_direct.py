@@ -6,8 +6,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Load env
-env_path = Path(__file__).parent / ".env"
+# Load .env from repository root
+env_path = Path(__file__).resolve().parents[3] / ".env"
+if not env_path.exists():
+    env_path = Path(__file__).parent / ".env"
 load_dotenv(env_path)
 
 print("=" * 80)
@@ -69,7 +71,9 @@ print("=" * 80)
 try:
     import ddgs
 
-    print(f"\n📦 ddgs version: {ddgs.__version__ if hasattr(ddgs, '__version__') else 'Unknown'}")
+    print(
+        f"\n📦 ddgs version: {ddgs.__version__ if hasattr(ddgs, '__version__') else 'Unknown'}"
+    )
 
     from ddgs import DDGS
 
@@ -110,7 +114,9 @@ try:
     print(f"✅ DuckDuckGo accessible: Status {response.status_code}")
 
     # Test with headers
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    }
     response = httpx.get("https://duckduckgo.com", headers=headers, timeout=10)
     print(f"✅ DuckDuckGo with headers: Status {response.status_code}")
 

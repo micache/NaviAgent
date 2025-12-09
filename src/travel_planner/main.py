@@ -70,7 +70,7 @@ async def startup_event():
     # ============================================================================
     # Model provider is configured in config/model_config.py
     # Current: model_settings = create_deepseek_config()
-    # 
+    #
     # To change provider, edit config/model_config.py line 339:
     #   - create_default_config() → OpenAI
     #   - create_deepseek_config() → DeepSeek (current)
@@ -105,7 +105,9 @@ async def startup_event():
 
     print(f"\n{'=' * 80}")
     print(f"API ready at: http://{settings.host}:{settings.port}{settings.api_prefix}")
-    print(f"Documentation: http://{settings.host}:{settings.port}{settings.api_prefix}/docs")
+    print(
+        f"Documentation: http://{settings.host}:{settings.port}{settings.api_prefix}/docs"
+    )
     print(f"{'=' * 80}\n")
 
 
@@ -251,7 +253,9 @@ async def plan_trip(request: TravelRequest):
 
     except Exception as e:
         print(f"\n[API] Error generating travel plan: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating travel plan: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generating travel plan: {str(e)}"
+        )
 
 
 @app.get(f"{settings.api_prefix}/test-openai")
@@ -286,7 +290,9 @@ async def test_openai():
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"OpenAI connection failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"OpenAI connection failed: {str(e)}"
+        )
 
 
 @app.get(f"{settings.api_prefix}/config")
@@ -387,7 +393,9 @@ async def generate_guidebook(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         print(f"[API] Error generating guidebook: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating guidebook: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error generating guidebook: {str(e)}"
+        )
 
 
 @app.get(

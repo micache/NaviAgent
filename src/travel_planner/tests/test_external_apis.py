@@ -11,8 +11,12 @@ from pathlib import Path
 import requests
 from dotenv import load_dotenv
 
-# Load environment variables
-env_path = Path(__file__).parent.parent / ".env"
+# Load environment variables from repository root
+# tests/test_external_apis.py -> travel_planner -> src -> NaviAgent
+env_path = Path(__file__).resolve().parents[3] / ".env"
+if not env_path.exists():
+    # Fallback to travel_planner/.env
+    env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
 
@@ -74,7 +78,9 @@ def test_weatherapi():
             print(f"   Local time: {location.get('localtime')}")
 
             print(f"\n🌡️  Current Weather:")
-            print(f"   Temperature: {current.get('temp_c')}°C / {current.get('temp_f')}°F")
+            print(
+                f"   Temperature: {current.get('temp_c')}°C / {current.get('temp_f')}°F"
+            )
             print(f"   Feels like: {current.get('feelslike_c')}°C")
             print(f"   Condition: {current.get('condition', {}).get('text')}")
             print(f"   Wind: {current.get('wind_kph')} kph")
@@ -94,7 +100,9 @@ def test_weatherapi():
                     print(
                         f"      Max: {day_data.get('maxtemp_c')}°C / Min: {day_data.get('mintemp_c')}°C"
                     )
-                    print(f"      Condition: {day_data.get('condition', {}).get('text')}")
+                    print(
+                        f"      Condition: {day_data.get('condition', {}).get('text')}"
+                    )
                     print(f"      Rain chance: {day_data.get('daily_chance_of_rain')}%")
                     print(f"      Sunrise: {day.get('astro', {}).get('sunrise')}")
                     print(f"      Sunset: {day.get('astro', {}).get('sunset')}")
@@ -167,7 +175,7 @@ def test_tripadvisor_hotels():
     print(f"\n✓ RapidAPI Key found: {api_key[:15]}...")
 
     # Test parameters - Search for hotels in Bangkok
-    test_location = "Bangkok"
+    test_location = "Seoul, South Korea"
 
     print(f"\n🏨 Testing Hotel Search:")
     print(f"   Location: {test_location}")
@@ -179,7 +187,10 @@ def test_tripadvisor_hotels():
 
         search_url = "https://tripadvisor16.p.rapidapi.com/api/v1/hotels/searchLocation"
 
-        headers = {"X-RapidAPI-Key": api_key, "X-RapidAPI-Host": "tripadvisor16.p.rapidapi.com"}
+        headers = {
+            "X-RapidAPI-Key": api_key,
+            "X-RapidAPI-Host": "tripadvisor16.p.rapidapi.com",
+        }
 
         search_params = {"query": test_location}
 
@@ -208,7 +219,9 @@ def test_tripadvisor_hotels():
             # Step 2: Search for hotels in this location
             print(f"\n📡 Step 2: Searching for hotels...")
 
-            hotels_url = "https://tripadvisor16.p.rapidapi.com/api/v1/hotels/searchHotels"
+            hotels_url = (
+                "https://tripadvisor16.p.rapidapi.com/api/v1/hotels/searchHotels"
+            )
 
             check_in = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
             check_out = (datetime.now() + timedelta(days=35)).strftime("%Y-%m-%d")
@@ -279,7 +292,9 @@ def test_tripadvisor_hotels():
                     return False
 
             elif hotels_response.status_code == 401:
-                print(f"\n❌ Authentication Failed (Status {hotels_response.status_code})")
+                print(
+                    f"\n❌ Authentication Failed (Status {hotels_response.status_code})"
+                )
                 print("   → Check your RapidAPI key is correct")
                 print("   → Make sure you're subscribed to the API")
                 return False
@@ -289,7 +304,9 @@ def test_tripadvisor_hotels():
                 print("   → Go to RapidAPI and subscribe to free plan")
                 return False
             elif hotels_response.status_code == 429:
-                print(f"\n❌ Rate Limit Exceeded (Status {hotels_response.status_code})")
+                print(
+                    f"\n❌ Rate Limit Exceeded (Status {hotels_response.status_code})"
+                )
                 print("   → You've exceeded your monthly quota")
                 print("   → Free plan: 500 requests/month")
                 return False
@@ -354,7 +371,10 @@ def test_tripadvisor_flights():
         # TripAdvisor Flight Search - Correct format from RapidAPI docs
         url = "https://tripadvisor16.p.rapidapi.com/api/v1/flights/searchFlights"
 
-        headers = {"x-rapidapi-key": api_key, "x-rapidapi-host": "tripadvisor16.p.rapidapi.com"}
+        headers = {
+            "x-rapidapi-key": api_key,
+            "x-rapidapi-host": "tripadvisor16.p.rapidapi.com",
+        }
 
         params = {
             "sourceAirportCode": origin,
@@ -395,22 +415,30 @@ def test_tripadvisor_flights():
                         if legs:
                             leg = legs[0]
                             print(f"\n   {i}. Flight Option:")
-                            print(f"      🛫 Departure: {leg.get('departureDateTime', 'N/A')}")
-                            print(f"      🛬 Arrival: {leg.get('arrivalDateTime', 'N/A')}")
+                            print(
+                                f"      🛫 Departure: {leg.get('departureDateTime', 'N/A')}"
+                            )
+                            print(
+                                f"      🛬 Arrival: {leg.get('arrivalDateTime', 'N/A')}"
+                            )
                             print(
                                 f"      ⏱️  Duration: {leg.get('durationMinutes', 'N/A')} minutes"
                             )
                             print(
                                 f"      ✈️  Airline: {leg.get('marketingCarrier', {}).get('displayName', 'N/A')}"
                             )
-                            print(f"      🔢 Flight #: {leg.get('flightNumber', 'N/A')}")
+                            print(
+                                f"      🔢 Flight #: {leg.get('flightNumber', 'N/A')}"
+                            )
 
                     # Price
                     price_info = flight.get("purchaseLinks", [])
                     if price_info:
                         price = price_info[0].get("totalPrice", "N/A")
                         currency = price_info[0].get("currency", "USD")
-                        provider = price_info[0].get("partner", {}).get("displayName", "N/A")
+                        provider = (
+                            price_info[0].get("partner", {}).get("displayName", "N/A")
+                        )
                         print(f"      💰 Price: {price} {currency}")
                         print(f"      🏷️  Provider: {provider}")
 
@@ -467,9 +495,14 @@ def test_tripadvisor_restaurants():
         # Step 1: Search for location
         print(f"\n📡 Step 1: Searching for location...")
 
-        search_url = "https://tripadvisor16.p.rapidapi.com/api/v1/restaurant/searchLocation"
+        search_url = (
+            "https://tripadvisor16.p.rapidapi.com/api/v1/restaurant/searchLocation"
+        )
 
-        headers = {"X-RapidAPI-Key": api_key, "X-RapidAPI-Host": "tripadvisor16.p.rapidapi.com"}
+        headers = {
+            "X-RapidAPI-Key": api_key,
+            "X-RapidAPI-Host": "tripadvisor16.p.rapidapi.com",
+        }
 
         search_params = {"query": test_location}
         search_response = requests.get(
@@ -493,9 +526,7 @@ def test_tripadvisor_restaurants():
             # Step 2: Search for restaurants
             print(f"\n📡 Step 2: Searching for restaurants...")
 
-            restaurants_url = (
-                "https://tripadvisor16.p.rapidapi.com/api/v1/restaurant/searchRestaurants"
-            )
+            restaurants_url = "https://tripadvisor16.p.rapidapi.com/api/v1/restaurant/searchRestaurants"
 
             restaurants_params = {"locationId": location_id}
 
@@ -545,7 +576,9 @@ def test_tripadvisor_restaurants():
                     print("\n⚠️  No restaurants found")
                     return False
             else:
-                print(f"\n❌ Restaurant Search Error (Status {restaurants_response.status_code})")
+                print(
+                    f"\n❌ Restaurant Search Error (Status {restaurants_response.status_code})"
+                )
                 return False
         else:
             print(f"\n❌ Location Search Error (Status {search_response.status_code})")
@@ -580,7 +613,10 @@ def test_booking_vacation_rentals():
         # TripAdvisor Rentals Search - Correct format from RapidAPI docs
         url = "https://tripadvisor16.p.rapidapi.com/api/v1/rentals/rentalSearch"
 
-        headers = {"x-rapidapi-key": api_key, "x-rapidapi-host": "tripadvisor16.p.rapidapi.com"}
+        headers = {
+            "x-rapidapi-key": api_key,
+            "x-rapidapi-host": "tripadvisor16.p.rapidapi.com",
+        }
 
         params = {"sortOrder": "POPULARITY", "page": "1", "currencyCode": "USD"}
 
@@ -681,7 +717,10 @@ def test_rentalcars_api():
 
         search_url = "https://booking-com.p.rapidapi.com/v1/car-rental/locations"
 
-        headers = {"x-rapidapi-key": api_key, "x-rapidapi-host": "booking-com.p.rapidapi.com"}
+        headers = {
+            "x-rapidapi-key": api_key,
+            "x-rapidapi-host": "booking-com.p.rapidapi.com",
+        }
 
         search_params = {"name": test_location, "locale": "en-gb"}
 
@@ -722,7 +761,9 @@ def test_rentalcars_api():
                 "currency": "USD",
             }
 
-            cars_response = requests.get(cars_url, headers=headers, params=cars_params, timeout=20)
+            cars_response = requests.get(
+                cars_url, headers=headers, params=cars_params, timeout=20
+            )
 
             if cars_response.status_code == 200:
                 cars_data = cars_response.json()
@@ -800,8 +841,8 @@ def main():
     # results['weather'] = test_weatherapi()
 
     # Test TripAdvisor APIs via RapidAPI
-    # results['hotels'] = test_tripadvisor_hotels()
-    results["flights"] = test_tripadvisor_flights()
+    results["hotels"] = test_tripadvisor_hotels()
+    # results["flights"] = test_tripadvisor_flights()
     # results['restaurants'] = test_tripadvisor_restaurants()
 
     # Test Booking.com APIs via RapidAPI

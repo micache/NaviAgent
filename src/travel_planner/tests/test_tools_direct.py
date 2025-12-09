@@ -12,11 +12,17 @@ from dotenv import load_dotenv
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Load .env
-env_path = Path(__file__).parent.parent / ".env"
+# Load .env from repository root
+env_path = Path(__file__).resolve().parents[3] / ".env"
+if not env_path.exists():
+    env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
-from tools.external_api_tools import create_flight_tools, create_hotel_tools, create_weather_tools
+from tools.external_api_tools import (
+    create_flight_tools,
+    create_hotel_tools,
+    create_weather_tools,
+)
 
 
 def print_section(title: str):
@@ -97,7 +103,11 @@ def test_hotel_api():
     print("-" * 80)
 
     result = hotel_tools.search_hotels(
-        location="Bangkok", check_in=check_in, check_out=check_out, adults=2, max_results=3
+        location="Bangkok",
+        check_in=check_in,
+        check_out=check_out,
+        adults=2,
+        max_results=3,
     )
 
     print("-" * 80)

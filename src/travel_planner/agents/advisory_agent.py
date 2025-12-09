@@ -131,7 +131,11 @@ def create_advisory_agent(
 
 
 async def run_advisory_agent(
-    agent: Agent, destination: str, departure_date, duration_days: int, location_list: list = None
+    agent: Agent,
+    destination: str,
+    departure_date,
+    duration_days: int,
+    location_list: list = None,
 ) -> AdvisoryAgentOutput:
     """
     Run the advisory agent with structured input and output.
@@ -147,7 +151,9 @@ async def run_advisory_agent(
         AdvisoryAgentOutput with structured advisory information
     """
     print(f"[AdvisoryAgent] Gathering advisory information for {destination}")
-    print(f"[AdvisoryAgent] Departure: {departure_date}, Duration: {duration_days} days")
+    print(
+        f"[AdvisoryAgent] Departure: {departure_date}, Duration: {duration_days} days"
+    )
 
     if location_list:
         print(f"[AdvisoryAgent] Will describe {len(location_list)} locations")
@@ -165,7 +171,9 @@ async def run_advisory_agent(
 
     # Response.content will be an AdvisoryAgentOutput object
     if isinstance(response.content, AdvisoryAgentOutput):
-        print(f"[AdvisoryAgent] ✓ Generated {len(response.content.warnings_and_tips)} tips")
+        print(
+            f"[AdvisoryAgent] ✓ Generated {len(response.content.warnings_and_tips)} tips"
+        )
         print(
             f"[AdvisoryAgent] ✓ Described {len(response.content.location_descriptions)} locations"
         )

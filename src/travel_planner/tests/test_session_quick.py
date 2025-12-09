@@ -25,7 +25,9 @@ def test_orchestrator_session_support():
         user_id = "test_user_quick"
         session_id = "test_session_quick"
 
-        orchestrator = OrchestratorAgent(user_id=user_id, session_id=session_id, enable_memory=True)
+        orchestrator = OrchestratorAgent(
+            user_id=user_id, session_id=session_id, enable_memory=True
+        )
 
         print(f"   ✓ Orchestrator initialized")
         print(f"   ✓ User ID: {orchestrator.user_id}")

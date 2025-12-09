@@ -23,6 +23,7 @@ from .model_config import (
     model_settings,
 )
 
+
 # Locate root-level .env (outside travel_planner) with fallback to local .env
 def _find_env_file() -> Path | None:
     candidates = [

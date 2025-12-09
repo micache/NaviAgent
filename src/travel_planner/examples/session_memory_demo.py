@@ -49,7 +49,9 @@ async def demo_basic_session():
 
     # Third message - agent remembers entire conversation
     print("\n🔹 User: What was my first question?")
-    response3 = agent.run("What was my first question?", user_id=user_id, session_id=session_id)
+    response3 = agent.run(
+        "What was my first question?", user_id=user_id, session_id=session_id
+    )
     print(f"🤖 Agent: {response3.content}")
 
     print(f"\n✅ Session ID: {session_id}")
@@ -112,7 +114,9 @@ async def demo_user_memory():
         session_id=session_2,
     )
     print(f"🤖 Agent: {response.content[:300]}...")
-    print("\n✅ Agent remembered: name, preferences (beach/seafood), budget, hotel preference")
+    print(
+        "\n✅ Agent remembered: name, preferences (beach/seafood), budget, hotel preference"
+    )
 
 
 async def demo_multi_user():
@@ -163,7 +167,9 @@ async def demo_multi_user():
     response_1 = agent.run(
         "Recommend a destination for me", user_id=user_1_id, session_id=session_1_id
     )
-    print(f"🤖 Agent: {response_1.content[:150]}... (should mention mountains/adventure)")
+    print(
+        f"🤖 Agent: {response_1.content[:150]}... (should mention mountains/adventure)"
+    )
 
     print("\n👤 USER 2 (Bob): Recommend a destination for me")
     response_2 = agent.run(
@@ -232,7 +238,9 @@ async def demo_memory_management():
         user_id=user_id, memory="User prefers vegetarian food", input="I'm vegetarian"
     )
     db.upsert_user_memory(
-        user_id=user_id, memory="User has motion sickness", input="I get car sick easily"
+        user_id=user_id,
+        memory="User has motion sickness",
+        input="I get car sick easily",
     )
     db.upsert_user_memory(
         user_id=user_id,

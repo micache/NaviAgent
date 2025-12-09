@@ -22,7 +22,9 @@ async def check_database_tables():
     # Get database instance
     db = get_db()
     print(f"\n1. Database Connection:")
-    print(f"   ✓ Connected to: {db.db_url.split('@')[1] if '@' in db.db_url else 'database'}")
+    print(
+        f"   ✓ Connected to: {db.db_url.split('@')[1] if '@' in db.db_url else 'database'}"
+    )
     print(f"   ✓ Memory table: {db.memory_table}")
     print(f"   ✓ Session table: {db.session_table}")
 
@@ -76,7 +78,9 @@ async def check_database_tables():
 
         if weather_has_db:
             print(f"      → Memory table: {orchestrator.weather_agent.db.memory_table}")
-            print(f"      → Session table: {orchestrator.weather_agent.db.session_table}")
+            print(
+                f"      → Session table: {orchestrator.weather_agent.db.session_table}"
+            )
 
     except Exception as e:
         print(f"   ❌ Error creating agent: {e}")
@@ -91,7 +95,9 @@ async def check_database_tables():
         from agents.weather_agent import create_weather_agent
         from models.schemas import WeatherAgentInput
 
-        weather_agent = create_weather_agent(agent_name="test_weather", db=db, user_id=user_id)
+        weather_agent = create_weather_agent(
+            agent_name="test_weather", db=db, user_id=user_id
+        )
 
         print(f"   ✓ Weather agent created")
         print(f"   ✓ Agent has storage: {weather_agent.storage is not None}")
@@ -101,7 +107,9 @@ async def check_database_tables():
         print(f"   → Running agent with session_id: {session_id}")
 
         response = await weather_agent.arun(
-            WeatherAgentInput(destination="Tokyo", departure_date="2025-12-15", duration_days=5),
+            WeatherAgentInput(
+                destination="Tokyo", departure_date="2025-12-15", duration_days=5
+            ),
             session_id=session_id,
         )
 

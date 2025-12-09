@@ -11,6 +11,7 @@ from typing import Any, Dict, Optional
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
+
 # Load environment variables from root .env (outside travel_planner) with fallback
 def _find_env_file() -> Path | None:
     candidates = [
@@ -60,8 +61,12 @@ class AgentModelSettings(BaseModel):
     # API Keys (loaded from environment)
     openai_api_key: str = Field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
     google_api_key: str = Field(default_factory=lambda: os.getenv("GOOGLE_API_KEY", ""))
-    deepseek_api_key: str = Field(default_factory=lambda: os.getenv("DEEPSEEK_API_KEY", ""))
-    anthropic_api_key: str = Field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY", ""))
+    deepseek_api_key: str = Field(
+        default_factory=lambda: os.getenv("DEEPSEEK_API_KEY", "")
+    )
+    anthropic_api_key: str = Field(
+        default_factory=lambda: os.getenv("ANTHROPIC_API_KEY", "")
+    )
 
     # Default provider for all agents
     default_provider: ModelProvider = ModelProvider.OPENAI
@@ -294,10 +299,12 @@ def create_default_config() -> AgentModelSettings:
         },
         default_temperature=0.7,
     )
-    
+
     # Set higher max_tokens for itinerary agent (complex JSON output)
-    config.set_agent_model("itinerary", ModelProvider.OPENAI, "gpt-4o-mini", 0.7, max_tokens=16384)
-    
+    config.set_agent_model(
+        "itinerary", ModelProvider.OPENAI, "gpt-4o-mini", 0.7, max_tokens=16384
+    )
+
     return config
 
 
@@ -334,7 +341,9 @@ def create_hybrid_config() -> AgentModelSettings:
     Create hybrid configuration with different models for different agents
     Example: Fast models for simple tasks, powerful models for complex tasks
     """
-    config = AgentModelSettings(default_provider=ModelProvider.OPENAI, default_temperature=0.7)
+    config = AgentModelSettings(
+        default_provider=ModelProvider.OPENAI, default_temperature=0.7
+    )
 
     # Use faster/cheaper models for simple tasks
     config.set_agent_model("weather", ModelProvider.OPENAI, "gpt-4o-mini", 0.5)
