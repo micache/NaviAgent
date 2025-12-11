@@ -153,7 +153,7 @@ export default function ItineraryDetailPage() {
         await loadExistingGuidebook(planData.guidebook_id);
       } else if (planData && planData.plan) {
         console.log("📚 No guidebook found, generating new one...");
-        await generateGuidebook(planData.plan, planId);
+        await generateGuidebook(planData.plan, planId, planData.travel_data);
       } else {
         console.log("⚠️ No travel plan data available for guidebook generation");
         setGuidebookHtml("<p style='color: orange;'>Không có dữ liệu để tạo guidebook.</p>");
@@ -194,12 +194,19 @@ export default function ItineraryDetailPage() {
     }
   };
 
-  const generateGuidebook = async (travelPlanData: any, planId: string) => {
+  const generateGuidebook = async (travelPlanData: any, planId: string, travelData?: TravelPlan["travel_data"]) => {
     setIsGeneratingGuidebook(true);
     try {  
       const generateUrl = `${TRAVEL_PLANNER_API}/v1/generate_guidebook`;
       console.log("📚 Generating new guidebook...");
       console.log("📡 API URL:", generateUrl);
+
+      // Ensure trip_duration is present for guidebook generation
+      const travelPlanForGuidebook = {
+        ...travelPlanData,
+        trip_duration: travelPlanData?.trip_duration || travelPlanData?.duration || travelData?.trip_duration,
+        duration: travelPlanData?.duration || travelPlanData?.trip_duration || travelData?.trip_duration,
+      };
       
       const response = await fetch(generateUrl, {
         method: "POST",
@@ -207,7 +214,7 @@ export default function ItineraryDetailPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          travel_plan: travelPlanData,
+          travel_plan: travelPlanForGuidebook,
           formats: ["html"],
           language: "vi"
         }),

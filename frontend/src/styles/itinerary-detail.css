@@ -333,8 +333,8 @@
   font-size: 1.8rem;
   margin-top: 32px;
   margin-bottom: 16px;
-  border-left: 4px solid var(--primary);
   padding-left: 16px;
+  border-bottom: none;
 }
 
 .guidebook-content h3 {
@@ -423,6 +423,30 @@
   padding: 16px;
   margin: 16px 0;
   border-left: 4px solid var(--primary);
+}
+
+/* Guidebook generic card styling */
+.guidebook-content .card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.guidebook-content .card-header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+}
+
+.guidebook-content .card-body {
+  padding: 16px 20px;
+  color: #333;
 }
 
 .guidebook-content .warning,
