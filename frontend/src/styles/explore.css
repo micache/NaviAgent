@@ -6,7 +6,7 @@
   justify-content: flex-start;
   align-items: center;
   overflow-y: auto;
-  background: #f5f5f7;
+  background: linear-gradient(135deg, rgba(199, 249, 204, 0.4) 0%, rgba(128, 237, 153, 0.2) 100%);
   border-radius: 12px;
   padding: 18px 12px;
   min-height: 400px;
@@ -105,8 +105,8 @@
   flex: 1;
   padding: 10px 16px;
   border-radius: 24px;
-  border: 1px solid #ddd;
-  background: #f5f5f7;
+  border: 1px solid var(--primary-light);
+  background: rgba(255, 255, 255, 0.9);
   font-size: 1rem;
   outline: none;
   transition: border 0.2s;
@@ -250,9 +250,10 @@
 /* ===== RIGHT (Chatbot) ===== */
 .explore-right {
   flex: 3;
-  background: var(--card-bg);
+  background: linear-gradient(180deg, var(--card-bg) 0%, rgba(199, 249, 204, 0.6) 100%);
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(34, 87, 122, 0.15);
+  border: 1px solid var(--accent);
   padding: 24px;
   display: flex;
   flex-direction: column;

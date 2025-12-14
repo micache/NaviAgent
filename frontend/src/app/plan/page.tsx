@@ -698,12 +698,6 @@ export default function PlanPage() {
             <h2>{t("tripPlanner")}</h2>
           </div>
           <p className="chat-subtext">{t("tripPlannerDesc")}</p>
-          {sessionId && (
-            <div className="session-indicator">
-              <span className="status-dot"></span>
-              <span className="status-text">Connected</span>
-            </div>
-          )}
 
         {/* Chat messages area */}
         <div className="chat-messages">

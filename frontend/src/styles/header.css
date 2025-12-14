@@ -19,9 +19,10 @@
 }
 
 .main-header.solid {
-  background-color: white;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(199, 249, 204, 0.5) 100%);
   color: var(--foreground);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(34, 87, 122, 0.12);
+  border-bottom: 1px solid rgba(87, 204, 153, 0.2);
 }
 
 .main-header nav {

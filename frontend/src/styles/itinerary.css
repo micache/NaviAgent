@@ -105,11 +105,12 @@
 
 /* Card */
 .itinerary-card {
-  background: white;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, var(--card-bg) 100%);
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(34, 87, 122, 0.15);
   overflow: hidden;
   transition: all 0.3s ease;
+  border: 1px solid var(--accent);
 }
 
 .itinerary-card:hover {
@@ -118,12 +119,13 @@
 }
 
 .card-header {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
   color: white;
   padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  box-shadow: 0 4px 8px rgba(34, 87, 122, 0.2);
 }
 
 .card-header h3 {

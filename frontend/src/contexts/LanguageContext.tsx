@@ -75,7 +75,7 @@ const translations = {
     date: "Ngày",
     notes: "Ghi chú",
     tripPlanner: "Trợ lý Lập kế hoạch",
-    tripPlannerDesc: "Hỏi trợ lý của chúng tôi để tạo lịch trình chi tiết, ước tính ngân sách, hoặc gợi ý điểm đến cho chuyến phiêu lưu tiếp theo của bạn!",
+    tripPlannerDesc: "Hỏi trợ lý của chúng tôi để tạo lịch trình chi tiết, ước tính ngân sách, hoặc gợi ý điểm đến cho chuyến phiêu lưu tiếp theo!",
     plannerGreeting: "👋 Xin chào! Cần trợ giúp lên kế hoạch cho chuyến đi tiếp theo của bạn?",
     plannerExample: "Có, gợi ý cho tôi chuyến đi 3 ngày!",
     typeQuestion: "Nhập câu hỏi của bạn...",

@@ -1,17 +1,46 @@
-:root {
-  /* ===== Theme: Ocean Blue ===== */
-  --primary: #0077b6;
-  --primary-light: #00b4d8;
-  --primary-dark: #023e8a;
+/* ===== Font Faces: Montserrat ===== */
+@font-face {
+  font-family: "Montserrat";
+  src: url("/fonts/font-montserrat/Montserrat-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+}
 
-  --background: #ffffff;
-  --foreground: #171717;
-  --card-bg: #f8f9fa;
-  --accent: #90e0ef;
-  --border: #e0e0e0;
+@font-face {
+  font-family: "Montserrat";
+  src: url("/fonts/font-montserrat/Montserrat-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("/fonts/font-montserrat/Montserrat-SemiBold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("/fonts/font-montserrat/Montserrat-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+:root {
+  /* ===== Theme: Baltic Tropic Palette ===== */
+  --primary: #38a3a5;        /* Tropical Teal */
+  --primary-light: #57cc99;  /* Mint Leaf */
+  --primary-dark: #22577a;   /* Baltic Blue */
+
+  --background: #f6fff8;     /* soft Tea-inspired background */
+  --foreground: #0f1f2d;
+  --card-bg: #c7f9cc;        /* Tea Green */
+  --accent: #80ed99;         /* Light Green */
+  --border: #b5e8bb;
 
   /* ===== Fonts ===== */
-  --font-main: "Poppins", sans-serif;
+  --font-main: "Montserrat", sans-serif;
   --font-secondary: "Roboto", sans-serif;
   --font-display: "Playfair Display", serif;
   --heading-text: black;
