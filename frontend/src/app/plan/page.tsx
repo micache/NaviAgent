@@ -624,12 +624,10 @@ export default function PlanPage() {
               <strong>{t("travelStyle")}:</strong>
               <span>{formatTravelStyle(travelData.travel_style)}</span>
             </div>
-            {travelData.customer_notes && (
-              <div className="travel-data-item travel-data-notes">
-                <strong>{t("notes") || "Ghi chú"}:</strong>
-                <span>{travelData.customer_notes}</span>
-              </div>
-            )}
+            <div className="travel-data-item travel-data-notes">
+              <strong>{t("notes") || "Ghi chú"}:</strong>
+              <span>{travelData.customer_notes || "—"}</span>
+            </div>
           </div>
         </div>
       </div>
