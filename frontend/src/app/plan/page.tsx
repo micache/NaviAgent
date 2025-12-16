@@ -54,11 +54,27 @@ export default function PlanPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
+  
+  // Popup states for itinerary creation
+  const [showCreatingPopup, setShowCreatingPopup] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Auto scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  // Auto-change gallery images every 2 seconds
+  useEffect(() => {
+    if (!showCreatingPopup || galleryImages.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [showCreatingPopup, galleryImages]);
 
   // Check authentication on mount
   useEffect(() => {
@@ -356,10 +372,49 @@ export default function PlanPage() {
     return style;
   };
 
+  // Fetch images from Unsplash
+  const fetchUnsplashImages = async (destination: string, count: number = 10): Promise<string[]> => {
+    try {
+      const query = encodeURIComponent(`${destination} travel landmark`);
+      const accessKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 'YOUR_ACCESS_KEY';
+      
+      const response = await fetch(
+        `https://api.unsplash.com/search/photos?query=${query}&per_page=${count}&orientation=landscape`,
+        {
+          headers: {
+            'Authorization': `Client-ID ${accessKey}`,
+            'Accept-Version': 'v1'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Unsplash API error');
+      }
+
+      const data = await response.json();
+      if (data.results && data.results.length > 0) {
+        return data.results.map((img: any) => img.urls.regular);
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Failed to fetch Unsplash images:', error);
+      return [];
+    }
+  };
+
   // Handle create itinerary
   const handleCreateItinerary = async () => {
     console.log("🚀 Creating itinerary with travel data:");
     console.log(JSON.stringify(travelData, null, 2));
+    
+    // Show popup and fetch images
+    setShowCreatingPopup(true);
+    const destination = travelData.destination || "Vietnam";
+    const images = await fetchUnsplashImages(destination, 10);
+    setGalleryImages(images);
+    setCurrentImageIndex(0);
     
     setIsLoading(true);
     
@@ -558,12 +613,17 @@ export default function PlanPage() {
       
       console.log("💾 Plan saved to localStorage with ID:", planId);
       
+      // Close popup after completion
+      setShowCreatingPopup(false);
+      
       // Navigate to detail page
       router.push(`/itinerary/${planId}`);
       
     } catch (error) {
       console.error("❌ Error creating itinerary:", error);
       alert("Không thể tạo lịch trình. Vui lòng thử lại!");
+      // Close popup on error too
+      setShowCreatingPopup(false);
     } finally {
       setIsLoading(false);
     }
@@ -761,6 +821,108 @@ export default function PlanPage() {
         </div>
         </div>
       </div>
+
+      {/* ===== POPUP: Creating Itinerary ===== */}
+      {showCreatingPopup && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 9999,
+          padding: "20px"
+        }}>
+          <div style={{
+            backgroundColor: "white",
+            borderRadius: "16px",
+            padding: "40px",
+            maxWidth: "700px",
+            width: "100%",
+            textAlign: "center",
+            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)"
+          }}>
+            <h2 style={{
+              fontSize: "28px",
+              fontWeight: "700",
+              marginBottom: "16px",
+              color: "#2c3e50"
+            }}>
+              ✨ Đang tạo lịch trình của bạn đến<br />
+              <strong>{travelData.destination || "điểm đến"}</strong>
+            </h2>
+            <p style={{
+              fontSize: "16px",
+              color: "#7f8c8d",
+              marginBottom: "30px"
+            }}>
+              Lịch trình dự kiến hoàn thành trong khoảng <strong>5 phút</strong> tới
+            </p>
+
+            {/* Gallery */}
+            {galleryImages.length > 0 && (
+              <div style={{
+                width: "100%",
+                height: "350px",
+                borderRadius: "12px",
+                overflow: "hidden",
+                position: "relative",
+                marginBottom: "20px",
+                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)"
+              }}>
+                <img
+                  src={galleryImages[currentImageIndex]}
+                  alt={`Destination ${currentImageIndex + 1}`}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    transition: "opacity 0.5s ease-in-out"
+                  }}
+                />
+                <div style={{
+                  position: "absolute",
+                  bottom: "16px",
+                  right: "16px",
+                  backgroundColor: "rgba(0, 0, 0, 0.6)",
+                  color: "white",
+                  padding: "6px 12px",
+                  borderRadius: "20px",
+                  fontSize: "14px",
+                  fontWeight: "600"
+                }}>
+                  {currentImageIndex + 1} / {galleryImages.length}
+                </div>
+              </div>
+            )}
+
+            {/* Loading spinner */}
+            <div style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "8px"
+            }}>
+              <div className="spinner" style={{
+                border: "3px solid #f3f3f3",
+                borderTop: "3px solid #3498db",
+                borderRadius: "50%",
+                width: "24px",
+                height: "24px",
+                animation: "spin 1s linear infinite"
+              }}></div>
+              <span style={{ fontSize: "14px", color: "#7f8c8d" }}>
+                Đang xử lý...
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
