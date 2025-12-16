@@ -695,7 +695,16 @@ export default function PlanPage() {
         {/* Chat content */}
         <div className="chat-content">
           <div className="chat-header center">
-            <h2>{t("tripPlanner")}</h2>
+            <div className="chat-title">
+              <Image
+                src="/images/plan222.jpg"
+                alt="Trip planner assistant"
+                width={40}
+                height={40}
+                className="chat-title-icon"
+              />
+              <h2>{t("tripPlanner")}</h2>
+            </div>
           </div>
           <p className="chat-subtext">{t("tripPlannerDesc")}</p>
 
