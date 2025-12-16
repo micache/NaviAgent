@@ -78,7 +78,7 @@ export default function PlanPage() {
 
   // Check authentication on mount
   useEffect(() => {
-    const token = localStorage.getItem("user");
+    const token = sessionStorage.getItem("user");
     setIsAuthenticated(!!token);
     console.log("🔐 Authentication status:", !!token);
     
@@ -91,7 +91,7 @@ export default function PlanPage() {
   // Load user sessions
   const loadUserSessions = async () => {
     try {
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       if (!token) return;
 
       const user = JSON.parse(token);
@@ -169,7 +169,7 @@ export default function PlanPage() {
   // Create new chat session
   const handleNewChat = async () => {
     try {
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       if (!token) {
         alert("Please sign in first!");
         return;
@@ -226,7 +226,7 @@ export default function PlanPage() {
     }
     
     // Check authentication
-    const token = localStorage.getItem("user");
+    const token = sessionStorage.getItem("user");
     if (!token) {
       console.error("❌ Not authenticated");
       setMessages([{ role: "assistant", content: "Please sign in to start planning your trip." }]);
@@ -514,7 +514,7 @@ export default function PlanPage() {
       let databasePlanId = null;
       
       try {
-        const token = localStorage.getItem("user");
+        const token = sessionStorage.getItem("user");
         console.log("🔑 Token exists:", !!token);
         
         if (token) {

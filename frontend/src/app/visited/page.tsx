@@ -42,7 +42,7 @@ export default function VisitedPage() {
 
   // Check authentication
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
+    const userStr = sessionStorage.getItem("user");
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -60,9 +60,9 @@ export default function VisitedPage() {
 
   const loadTrips = async () => {
     try {
-      const userStr = localStorage.getItem("user");
+      const userStr = sessionStorage.getItem("user");
       if (!userStr) {
-        console.log("No user found in localStorage");
+        console.log("No user found in sessionStorage");
         return;
       }
 
@@ -374,7 +374,7 @@ export default function VisitedPage() {
       };
 
       // Add to database
-      const userStr = localStorage.getItem("user");
+      const userStr = sessionStorage.getItem("user");
       console.log("User data:", userStr);
 
       if (!userStr) {

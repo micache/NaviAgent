@@ -32,7 +32,7 @@ export default function ItineraryListPage() {
       console.log("🔍 Loading itineraries...");
       
       // Try loading from database first (if user is authenticated)
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       let plans: SavedItinerary[] = [];
       
       if (token) {
@@ -109,7 +109,7 @@ export default function ItineraryListPage() {
       const isMockPlan = id.startsWith('mock_');
       
       // Try deleting from database first (if authenticated and NOT a mock plan)
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       let deletedFromDB = false;
       
       if (token && !isMockPlan) {

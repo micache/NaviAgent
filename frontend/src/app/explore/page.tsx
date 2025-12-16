@@ -197,7 +197,7 @@ export default function ExplorePage() {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       if (!token) {
         setMessages((prev) => [
           ...prev,

@@ -1320,7 +1320,7 @@ tbody tr:last-child td:last-child {
             for cat in categories:
                 name = sanitize_text(cat.get("category_name", ""))
                 cost = format_currency(cat.get("estimated_cost", 0))
-                notes = sanitize_text(cat.get("notes", ""), max_length=40) or "-"
+                notes = sanitize_text(cat.get("notes", "")) or "-"
                 table_rows += f"""
                 <tr>
                     <td><strong>{name}</strong></td>
