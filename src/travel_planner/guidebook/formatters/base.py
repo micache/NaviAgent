@@ -56,16 +56,53 @@ class BaseFormatter(ABC):
         self.generated_at = self.travel_plan.get("generated_at", "")
         self.version = self.travel_plan.get("version", "1.0")
 
-        # Extract destination info
-        if self.request_summary:
-            self.destination = self.request_summary.get("destination", "")
-            self.trip_duration = self.request_summary.get("duration", 0)
-            self.num_travelers = self.request_summary.get("travelers", 1)
-            self.budget_amount = self.request_summary.get("budget", 0)
-        else:
-            self.destination = ""
+        # Extract destination info with fallback from multiple sources
+        # Priority: request_summary -> root level -> defaults
+        self.destination = (
+            self.request_summary.get("destination", "") 
+            or self.travel_plan.get("destination", "")
+        )
+        
+        # For trip_duration: check multiple field names and sources
+        self.trip_duration = (
+            self.request_summary.get("duration") 
+            or self.request_summary.get("trip_duration")
+            or self.travel_plan.get("trip_duration")
+            or self.travel_plan.get("duration")
+            or 0
+        )
+        
+        # For num_travelers: check multiple field names
+        self.num_travelers = (
+            self.request_summary.get("travelers")
+            or self.request_summary.get("num_travelers") 
+            or self.travel_plan.get("num_travelers")
+            or self.travel_plan.get("travelers")
+            or 1
+        )
+        
+        # For budget
+        self.budget_amount = (
+            self.request_summary.get("budget")
+            or self.travel_plan.get("budget_amount")
+            or self.travel_plan.get("budget")
+            or 0
+        )
+        
+        # Convert to int if they're strings
+        try:
+            self.trip_duration = int(self.trip_duration) if self.trip_duration else 0
+        except (ValueError, TypeError):
             self.trip_duration = 0
+            
+        try:
+            self.num_travelers = int(self.num_travelers) if self.num_travelers else 1
+        except (ValueError, TypeError):
             self.num_travelers = 1
+            
+        try:
+            self.budget_amount = float(self.budget_amount) if self.budget_amount else 0
+        except (ValueError, TypeError):
             self.budget_amount = 0
 
     @abstractmethod

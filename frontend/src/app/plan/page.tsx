@@ -78,7 +78,7 @@ export default function PlanPage() {
 
   // Check authentication on mount
   useEffect(() => {
-    const token = localStorage.getItem("user");
+    const token = sessionStorage.getItem("user");
     setIsAuthenticated(!!token);
     console.log("🔐 Authentication status:", !!token);
     
@@ -91,7 +91,7 @@ export default function PlanPage() {
   // Load user sessions
   const loadUserSessions = async () => {
     try {
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       if (!token) return;
 
       const user = JSON.parse(token);
@@ -169,7 +169,7 @@ export default function PlanPage() {
   // Create new chat session
   const handleNewChat = async () => {
     try {
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       if (!token) {
         alert("Please sign in first!");
         return;
@@ -226,7 +226,7 @@ export default function PlanPage() {
     }
     
     // Check authentication
-    const token = localStorage.getItem("user");
+    const token = sessionStorage.getItem("user");
     if (!token) {
       console.error("❌ Not authenticated");
       setMessages([{ role: "assistant", content: "Please sign in to start planning your trip." }]);
@@ -372,7 +372,6 @@ export default function PlanPage() {
     return style;
   };
 
-  // Handle create itinerary
   // Fetch images from Unsplash
   const fetchUnsplashImages = async (destination: string, count: number = 10): Promise<string[]> => {
     try {
@@ -405,6 +404,7 @@ export default function PlanPage() {
     }
   };
 
+  // Handle create itinerary
   const handleCreateItinerary = async () => {
     console.log("🚀 Creating itinerary with travel data:");
     console.log(JSON.stringify(travelData, null, 2));
@@ -514,7 +514,7 @@ export default function PlanPage() {
       let databasePlanId = null;
       
       try {
-        const token = localStorage.getItem("user");
+        const token = sessionStorage.getItem("user");
         console.log("🔑 Token exists:", !!token);
         
         if (token) {
@@ -684,12 +684,10 @@ export default function PlanPage() {
               <strong>{t("travelStyle")}:</strong>
               <span>{formatTravelStyle(travelData.travel_style)}</span>
             </div>
-            {travelData.customer_notes && (
-              <div className="travel-data-item travel-data-notes">
-                <strong>{t("notes") || "Ghi chú"}:</strong>
-                <span>{travelData.customer_notes}</span>
-              </div>
-            )}
+            <div className="travel-data-item travel-data-notes">
+              <strong>{t("notes") || "Ghi chú"}:</strong>
+              <span>{travelData.customer_notes || "—"}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -757,15 +755,18 @@ export default function PlanPage() {
         {/* Chat content */}
         <div className="chat-content">
           <div className="chat-header center">
-            <h2>{t("tripPlanner")}</h2>
+            <div className="chat-title">
+              <Image
+                src="/images/plan222.jpg"
+                alt="Trip planner assistant"
+                width={40}
+                height={40}
+                className="chat-title-icon"
+              />
+              <h2>{t("tripPlanner")}</h2>
+            </div>
           </div>
           <p className="chat-subtext">{t("tripPlannerDesc")}</p>
-          {sessionId && (
-            <div className="session-indicator">
-              <span className="status-dot"></span>
-              <span className="status-text">Connected</span>
-            </div>
-          )}
 
         {/* Chat messages area */}
         <div className="chat-messages">

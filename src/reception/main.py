@@ -15,6 +15,7 @@ from reception.db_helpers import (
     get_session_messages,
     get_user_sessions,
     save_chat_message,
+    update_session_title,
     update_session_timestamp,
 )
 from reception.receptionist_agent import ReceptionistAgent
@@ -235,6 +236,14 @@ async def chat(request: ChatRequest):
         # Check if conversation is complete
         travel_data = agent.get_travel_data()
         is_complete = False
+
+        # Update session title once we have a destination
+        destination = travel_data.get("destination")
+        if destination:
+            try:
+                update_session_title(request.session_id, destination)
+            except Exception as e:
+                print(f"⚠️ Failed to update session title: {e}")
 
         # Print travel data for debugging
         print("\n" + "="*80)

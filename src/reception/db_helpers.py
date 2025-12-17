@@ -138,3 +138,15 @@ def update_session_timestamp(session_id: str) -> None:
     supabase.table("chat_sessions").update({"update_at": datetime.utcnow().isoformat()}).eq(
         "id", session_id
     ).execute()
+
+
+def update_session_title(session_id: str, title: str) -> None:
+    """Update the title of a chat session.
+
+    Args:
+        session_id: Session ID
+        title: New title for the session
+    """
+    supabase = get_supabase_client()
+
+    supabase.table("chat_sessions").update({"title": title}).eq("id", session_id).execute()

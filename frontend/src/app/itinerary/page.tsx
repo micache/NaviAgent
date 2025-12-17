@@ -32,7 +32,7 @@ export default function ItineraryListPage() {
       console.log("🔍 Loading itineraries...");
       
       // Try loading from database first (if user is authenticated)
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       let plans: SavedItinerary[] = [];
       
       if (token) {
@@ -109,7 +109,7 @@ export default function ItineraryListPage() {
       const isMockPlan = id.startsWith('mock_');
       
       // Try deleting from database first (if authenticated and NOT a mock plan)
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       let deletedFromDB = false;
       
       if (token && !isMockPlan) {
@@ -190,7 +190,7 @@ export default function ItineraryListPage() {
   return (
     <div className="itinerary-list-container">
       <div className="itinerary-list-header">
-        <h1>📋 Lịch trình đã tạo</h1>
+        <h1>Lịch trình đã tạo</h1>
         <p className="subtitle">Xem lại các chuyến đi bạn đã lên kế hoạch</p>
       </div>
 
@@ -241,13 +241,13 @@ export default function ItineraryListPage() {
                   className="view-btn"
                   onClick={() => handleViewItinerary(itinerary.id)}
                 >
-                  👁️ Xem chi tiết
+                  Xem chi tiết
                 </button>
                 <button 
                   className="delete-btn"
                   onClick={() => handleDeleteItinerary(itinerary.id)}
                 >
-                  🗑️ Xóa
+                  Xóa
                 </button>
               </div>
             </div>

@@ -197,7 +197,7 @@ export default function ExplorePage() {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       if (!token) {
         setMessages((prev) => [
           ...prev,
@@ -299,7 +299,16 @@ export default function ExplorePage() {
       {/* ========== RIGHT PANEL (CHATBOT + CHAT INPUT) ========== */}
       <div className="explore-right">
         <div className="chat-header center">
-          <h2>{t("travelAssistantTitle")}</h2>
+          <div className="chat-title">
+            <Image
+              src="/images/beach.jpg"
+              alt="Travel assistant"
+              width={40}
+              height={40}
+              className="chat-title-icon"
+            />
+            <h2>{t("travelAssistantTitle")}</h2>
+          </div>
         </div>
         {/* Hiển thị tin nhắn chat */}
         <div className="chat-messages">

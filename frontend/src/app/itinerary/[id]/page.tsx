@@ -49,7 +49,7 @@ export default function ItineraryDetailPage() {
       const isMockPlan = planId.startsWith('mock_');
       
       // Try loading from database first (if user is authenticated and NOT a mock plan)
-      const token = localStorage.getItem("user");
+      const token = sessionStorage.getItem("user");
       let planData = null;
       
       if (token && !isMockPlan) {
@@ -153,7 +153,7 @@ export default function ItineraryDetailPage() {
         await loadExistingGuidebook(planData.guidebook_id);
       } else if (planData && planData.plan) {
         console.log("📚 No guidebook found, generating new one...");
-        await generateGuidebook(planData.plan, planId);
+        await generateGuidebook(planData.plan, planId, planData.travel_data);
       } else {
         console.log("⚠️ No travel plan data available for guidebook generation");
         setGuidebookHtml("<p style='color: orange;'>Không có dữ liệu để tạo guidebook.</p>");
@@ -194,12 +194,38 @@ export default function ItineraryDetailPage() {
     }
   };
 
-  const generateGuidebook = async (travelPlanData: any, planId: string) => {
+  const generateGuidebook = async (travelPlanData: any, planId: string, travelData?: TravelPlan["travel_data"]) => {
     setIsGeneratingGuidebook(true);
     try {  
       const generateUrl = `${TRAVEL_PLANNER_API}/v1/generate_guidebook`;
       console.log("📚 Generating new guidebook...");
       console.log("📡 API URL:", generateUrl);
+      console.log("📋 Travel plan data:", travelPlanData);
+      console.log("📋 Travel data:", travelData);
+
+      // Ensure trip_duration and num_travelers are present for guidebook generation
+      // Try to extract from multiple sources with priority: travelData > travelPlanData.request_summary > travelPlanData root
+      const travelPlanForGuidebook = {
+        ...travelPlanData,
+        trip_duration: travelData?.trip_duration || travelPlanData?.request_summary?.duration || travelPlanData?.trip_duration || travelPlanData?.duration,
+        duration: travelData?.trip_duration || travelPlanData?.request_summary?.duration || travelPlanData?.duration || travelPlanData?.trip_duration,
+        num_travelers: travelData?.num_travelers || travelPlanData?.request_summary?.travelers || travelPlanData?.num_travelers || travelPlanData?.travelers,
+        travelers: travelData?.num_travelers || travelPlanData?.request_summary?.travelers || travelPlanData?.travelers || travelPlanData?.num_travelers,
+        destination: travelData?.destination || travelPlanData?.request_summary?.destination || travelPlanData?.destination,
+        budget: travelData?.budget || travelPlanData?.request_summary?.budget || travelPlanData?.budget,
+        // Make sure request_summary also has these fields
+        request_summary: {
+          ...(travelPlanData?.request_summary || {}),
+          duration: travelData?.trip_duration || travelPlanData?.request_summary?.duration || travelPlanData?.duration || travelPlanData?.trip_duration,
+          trip_duration: travelData?.trip_duration || travelPlanData?.request_summary?.trip_duration || travelPlanData?.trip_duration || travelPlanData?.duration,
+          travelers: travelData?.num_travelers || travelPlanData?.request_summary?.travelers || travelPlanData?.travelers || travelPlanData?.num_travelers,
+          num_travelers: travelData?.num_travelers || travelPlanData?.request_summary?.num_travelers || travelPlanData?.num_travelers || travelPlanData?.travelers,
+          destination: travelData?.destination || travelPlanData?.request_summary?.destination || travelPlanData?.destination,
+          budget: travelData?.budget || travelPlanData?.request_summary?.budget || travelPlanData?.budget,
+        }
+      };
+      
+      console.log("📦 Final travel plan for guidebook:", travelPlanForGuidebook);
       
       const response = await fetch(generateUrl, {
         method: "POST",
@@ -207,7 +233,7 @@ export default function ItineraryDetailPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          travel_plan: travelPlanData,
+          travel_plan: travelPlanForGuidebook,
           formats: ["html"],
           language: "vi"
         }),
