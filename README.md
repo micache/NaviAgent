@@ -56,38 +56,24 @@ license: mit
 
 ### Multi-Agent Pipeline
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     ORCHESTRATOR AGENT                       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-         ┌────────────────────┼────────────────────┐
-         ▼                    ▼                    ▼
-    Phase 1              Phase 2              Phase 3
-  ┌─────────┐    ┌───────────────────┐    ┌─────────────┐
-  │ Weather │    │  Logistics (∥)    │    │  Itinerary  │
-  │  Agent  │───▶│  Accommodation(∥) │───▶│    Agent    │
-  └─────────┘    └───────────────────┘    └─────────────┘
-                   3-5 flights              Selection +
-                   4-6 hotels               Daily Plans
-         ┌────────────────────┼────────────────────┐
-         ▼                    ▼                    ▼
-    Phase 4              Phase 4              Phase 4
-  ┌─────────┐        ┌──────────┐        ┌──────────┐
-  │ Budget  │        │ Advisory │        │ Souvenir │
-  │  Agent  │   (∥)  │  Agent   │   (∥)  │  Agent   │
-  └─────────┘        └──────────┘        └──────────┘
-         │                    │                    │
-         └────────────────────┼────────────────────┘
-                              ▼
-                         Phase 5
-                    ┌──────────────┐
-                    │ TravelPlan   │
-                    │ (Final JSON) │
-                    └──────────────┘
-```
+<div align="center">
 
-*∥ = Parallel execution with asyncio.gather()*
+![NaviAgent Architecture](pipeline.jpg)
+
+</div>
+
+**System Components:**
+
+1. **Destination Recommendation Module** - BERT-powered semantic search with ChromaDB retrieval
+2. **Receptionist Agent** - Conversational metadata collection with slot filling
+3. **Planner Agents** - 5-phase orchestrated pipeline with 7 specialized agents:
+   - **Phase 1: Context Gathering** - Weather Agent analyzes climate conditions
+   - **Phase 2: Options Research** - Logistics & Accommodation agents search in parallel (∥)
+   - **Phase 3: Core Planning** - Itinerary Agent selects and schedules activities
+   - **Phase 4: Analysis** - Budget, Advisory, and Souvenir agents refine in parallel (∥)
+   - **Phase 5: Compilation** - Orchestrator assembles final TravelPlan
+4. **Guidebook Generator** - Exports to PDF/HTML/Markdown with images from Unsplash/ReportLab
+
 
 ### Core Artifacts
 
