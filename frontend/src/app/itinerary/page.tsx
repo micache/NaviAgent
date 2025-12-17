@@ -98,7 +98,7 @@ export default function ItineraryListPage() {
   };
 
   const handleDeleteItinerary = async (id: string) => {
-    if (!confirm("Bạn có chắc muốn xóa lịch trình này?")) {
+    if (!confirm(t("confirmDelete"))) {
       return;
     }
     
@@ -149,15 +149,15 @@ export default function ItineraryListPage() {
       console.log("✅ Itinerary deleted successfully");
       
       if (deletedFromDB) {
-        alert("Đã xóa lịch trình khỏi database và localStorage!");
+        alert(t("deleteSuccessDB"));
       } else if (isMockPlan) {
-        alert("Đã xóa mock plan khỏi localStorage!");
+        alert(t("deleteSuccessMock"));
       } else {
-        alert("Đã xóa lịch trình khỏi localStorage!");
+        alert(t("deleteSuccessLocal"));
       }
     } catch (error) {
       console.error("❌ Error deleting itinerary:", error);
-      alert("Lỗi khi xóa lịch trình!");
+      alert(t("deleteError"));
     }
   };
 
@@ -181,7 +181,7 @@ export default function ItineraryListPage() {
       <div className="itinerary-list-container">
         <div className="loading">
           <div className="spinner"></div>
-          <p>Đang tải...</p>
+          <p>{t("loading")}</p>
         </div>
       </div>
     );
@@ -190,20 +190,20 @@ export default function ItineraryListPage() {
   return (
     <div className="itinerary-list-container">
       <div className="itinerary-list-header">
-        <h1>Lịch trình đã tạo</h1>
-        <p className="subtitle">Xem lại các chuyến đi bạn đã lên kế hoạch</p>
+        <h1>{t("createdItineraries")}</h1>
+        <p className="subtitle">{t("reviewItineraries")}</p>
       </div>
 
       {itineraries.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">🗺️</div>
-          <h2>Chưa có lịch trình nào</h2>
-          <p>Hãy bắt đầu tạo lịch trình cho chuyến đi của bạn!</p>
+          <h2>{t("noItineraries")}</h2>
+          <p>{t("startCreating")}</p>
           <button 
             className="create-plan-btn"
             onClick={() => router.push('/plan')}
           >
-            + Tạo lịch trình mới
+            {t("createNewItinerary")}
           </button>
         </div>
       ) : (
@@ -219,19 +219,19 @@ export default function ItineraryListPage() {
               
               <div className="card-body">
                 <div className="info-row">
-                  <span className="label">📅 Khởi hành:</span>
+                  <span className="label">{t("departureLabel")}</span>
                   <span className="value">{formatDate(itinerary.departure_date)}</span>
                 </div>
                 <div className="info-row">
-                  <span className="label">⏱️ Thời gian:</span>
-                  <span className="value">{itinerary.trip_duration} ngày</span>
+                  <span className="label">{t("durationLabel")}</span>
+                  <span className="value">{itinerary.trip_duration} {t("days")}</span>
                 </div>
                 <div className="info-row">
-                  <span className="label">👥 Số người:</span>
-                  <span className="value">{itinerary.num_travelers} người</span>
+                  <span className="label">{t("travelersLabel")}</span>
+                  <span className="value">{itinerary.num_travelers} {t("people")}</span>
                 </div>
                 <div className="info-row">
-                  <span className="label">💰 Ngân sách:</span>
+                  <span className="label">{t("budgetLabel")}</span>
                   <span className="value">{formatCurrency(itinerary.budget)}</span>
                 </div>
               </div>
@@ -241,13 +241,13 @@ export default function ItineraryListPage() {
                   className="view-btn"
                   onClick={() => handleViewItinerary(itinerary.id)}
                 >
-                  Xem chi tiết
+                  {t("viewDetails")}
                 </button>
                 <button 
                   className="delete-btn"
                   onClick={() => handleDeleteItinerary(itinerary.id)}
                 >
-                  Xóa
+                  {t("delete")}
                 </button>
               </div>
             </div>

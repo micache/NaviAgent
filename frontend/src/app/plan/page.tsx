@@ -17,6 +17,8 @@ const NAVIAGENT_API_URL = process.env.NEXT_PUBLIC_NAVIAGENT_API_URL || "http://l
 interface Message {
   role: string;
   content: string;
+  message_id?: string;
+  timestamp?: string;
 }
 
 interface TravelData {
@@ -171,7 +173,7 @@ export default function PlanPage() {
     try {
       const token = sessionStorage.getItem("user");
       if (!token) {
-        alert("Please sign in first!");
+        alert(t("pleaseSignInFirst"));
         return;
       }
 
@@ -229,7 +231,7 @@ export default function PlanPage() {
     const token = sessionStorage.getItem("user");
     if (!token) {
       console.error("❌ Not authenticated");
-      setMessages([{ role: "assistant", content: "Please sign in to start planning your trip." }]);
+      setMessages([{ role: "assistant", content: t("pleaseSignInToStart") }]);
       return;
     }
 
@@ -621,14 +623,13 @@ export default function PlanPage() {
       
     } catch (error) {
       console.error("❌ Error creating itinerary:", error);
-      alert("Không thể tạo lịch trình. Vui lòng thử lại!");
+      alert(t("createItineraryError"));
       // Close popup on error too
       setShowCreatingPopup(false);
     } finally {
       setIsLoading(false);
     }
   };
-
 
 
   return (
@@ -647,7 +648,7 @@ export default function PlanPage() {
             <div className="banner-content">
               <span className="banner-text">{t("planComplete")}</span>
               <button className="create-itinerary-btn" onClick={handleCreateItinerary}>
-                Tạo lịch trình
+                {t("createItineraryButton")}
               </button>
             </div>
           </div>
@@ -699,7 +700,7 @@ export default function PlanPage() {
           <button 
             className="menu-toggle-btn"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            title={isSidebarOpen ? "Ẩn lịch sử" : "Hiện lịch sử"}
+            title={isSidebarOpen ? t("hideHistory") : t("showHistory")}
           >
             <Image src={menuIcon} alt="Menu" width={24} height={24} />
           </button>
@@ -709,7 +710,7 @@ export default function PlanPage() {
               className="new-chat-icon-btn"
               onClick={handleNewChat}
               disabled={isLoading}
-              title="Tạo đoạn chat mới"
+              title={t("newChatButton")}
             >
               <Image src={newchatIcon} alt="New Chat" width={22} height={22} className="icon-white" />
             </button>
@@ -723,14 +724,14 @@ export default function PlanPage() {
                 disabled={isLoading}
               >
                 <Image src={newchatIcon} alt="New Chat" width={24} height={24} />
-                <span>Tạo đoạn chat mới</span>
+                <span>{t("newChatButton")}</span>
               </button>
 
               <div className="sessions-list">
                 {loadingSessions ? (
                   <div className="loading-sessions">Loading...</div>
                 ) : sessions.length === 0 ? (
-                  <div className="no-sessions">No chat history</div>
+                  <div className="no-sessions">{t("noHistory")}</div>
                 ) : (
                   sessions.map((session) => (
                     <div
@@ -773,8 +774,7 @@ export default function PlanPage() {
           {!isAuthenticated && messages.length === 0 && (
             <div className="auth-prompt">
               <h3>🔐 {t("signIn")} / {t("signUp")}</h3>
-              <p>Please sign in to start planning your trip with our AI assistant.</p>
-              <p>Vui lòng đăng nhập để bắt đầu lên kế hoạch chuyến đi với trợ lý AI của chúng tôi.</p>
+              <p>{t("pleaseSignInToStart")}</p>
             </div>
           )}
           {messages.map((msg, idx) => (
@@ -804,7 +804,7 @@ export default function PlanPage() {
             <input
               type="text"
               className="chat-input"
-              placeholder={isAuthenticated ? t("typeQuestion") : "Please sign in to chat / Vui lòng đăng nhập để chat"}
+              placeholder={isAuthenticated ? t("typeQuestion") : `${t("pleaseSignInToChat")} / Vui lòng đăng nhập để chat`}
               value={chatInput}
               onChange={e => setChatInput(e.target.value)}
               disabled={isLoading}
@@ -853,7 +853,7 @@ export default function PlanPage() {
               marginBottom: "16px",
               color: "#2c3e50"
             }}>
-              ✨ Đang tạo lịch trình của bạn đến<br />
+              {t("createItineraryTitle")}<br />
               <strong>{travelData.destination || "điểm đến"}</strong>
             </h2>
             <p style={{
@@ -861,7 +861,7 @@ export default function PlanPage() {
               color: "#7f8c8d",
               marginBottom: "30px"
             }}>
-              Lịch trình dự kiến hoàn thành trong khoảng <strong>5 phút</strong> tới
+              {t("createItineraryEstimate")}
             </p>
 
             {/* Gallery */}
@@ -917,7 +917,7 @@ export default function PlanPage() {
                 animation: "spin 1s linear infinite"
               }}></div>
               <span style={{ fontSize: "14px", color: "#7f8c8d" }}>
-                Đang xử lý...
+                {t("processing")}
               </span>
             </div>
           </div>

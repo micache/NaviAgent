@@ -3,9 +3,11 @@ import "@/styles/home.css";
 import Image from "next/image";
 import "@/styles/features.css";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const { t } = useLanguage();
+  const router = useRouter();
 
   return (
     <main className="home-page">
@@ -16,9 +18,9 @@ export default function HomePage() {
           <p className="hero-subtitle">
             {t("heroSubtitle")}
           </p>
-          <a href="#features" className="hero-btn">
+          <button onClick={() => router.push('/explore')} className="hero-btn">
             {t("exploreNow")}
-          </a>
+          </button>
         </div>
       </section>
 

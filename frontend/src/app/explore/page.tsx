@@ -201,7 +201,7 @@ export default function ExplorePage() {
       if (!token) {
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", content: "Please sign in to get destination suggestions." },
+          { role: "assistant", content: t("pleaseSignIn") },
         ]);
         setIsLoading(false);
         return;
@@ -256,7 +256,7 @@ export default function ExplorePage() {
       console.error("Error:", error);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, there was an error getting suggestions. Please try again." },
+        { role: "assistant", content: t("errorGettingSuggestion") },
       ]);
     } finally {
       setIsLoading(false);
@@ -268,7 +268,7 @@ export default function ExplorePage() {
       {/* ========== LEFT PANEL ========== */}
       <div className="explore-left">
         <div className="gallery-header">
-          <h2>Khám Phá Địa Điểm Du Lịch</h2>
+          <h2>{t("exploreDestinationTitle")}</h2>
         </div>
         <div className="explore-gallery">
               <AnimatePresence mode="wait">
