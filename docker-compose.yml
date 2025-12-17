@@ -1,0 +1,164 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: naviagent-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-naviagent_password}
+      POSTGRES_DB: naviagent
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - naviagent-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Main API Service (Port 8000)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: naviagent-api
+    environment:
+      # Database
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-naviagent_password}@postgres:5432/naviagent
+      
+      # AI Models
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      
+      # Server Config
+      NAVIAGENT_API_PORT: 8000
+      APP_NAME: NaviAgent API
+      APP_VERSION: 1.0.0
+      DEBUG: ${DEBUG:-True}
+      ALLOW_ORIGINS: "*"
+      
+      # External APIs
+      TRIPADVISOR_API_KEY: ${TRIPADVISOR_API_KEY}
+      WEATHERAPI_KEY: ${WEATHERAPI_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - naviagent-network
+    volumes:
+      - ./src/naviagent:/app/src/naviagent
+    restart: unless-stopped
+
+  # Reception Service (Port 8002)
+  reception:
+    build:
+      context: .
+      dockerfile: Dockerfile.reception
+    container_name: naviagent-reception
+    environment:
+      # Database
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-naviagent_password}@postgres:5432/naviagent
+      
+      # AI Models
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      
+      # Server Config
+      RECEPTIONIST_API_PORT: 8002
+      HOST: 0.0.0.0
+      PORT: 8002
+      DEBUG: ${DEBUG:-True}
+      ALLOW_ORIGINS: "*"
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - naviagent-network
+    volumes:
+      - ./src/reception:/app/src/reception
+      - chromadb_data:/app/chromadb_data
+    restart: unless-stopped
+
+  # Travel Planner Service (Port 8003)
+  planner:
+    build:
+      context: .
+      dockerfile: Dockerfile.planner
+    container_name: naviagent-planner
+    environment:
+      # Database
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-naviagent_password}@postgres:5432/naviagent
+      
+      # AI Models
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      
+      # External APIs
+      WEATHERAPI_KEY: ${WEATHERAPI_KEY}
+      RAPIDAPI_KEY: ${RAPIDAPI_KEY}
+      TRIPADVISOR_API_KEY: ${TRIPADVISOR_API_KEY}
+      
+      # Server Config
+      TRAVEL_PLANNER_API_PORT: 8003
+      API_PREFIX: /v1
+      HOST: 0.0.0.0
+      PORT: 8003
+      RELOAD: ${RELOAD:-true}
+      DEBUG: ${DEBUG:-True}
+      ALLOW_ORIGINS: "*"
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - naviagent-network
+    volumes:
+      - ./src/travel_planner:/app/src/travel_planner
+    restart: unless-stopped
+
+  # Frontend (Port 3000)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: naviagent-frontend
+    environment:
+      # API URLs
+      NEXT_PUBLIC_NAVIAGENT_API_URL: http://localhost:8000
+      NEXT_PUBLIC_RECEPTION_API_URL: http://localhost:8002
+      NEXT_PUBLIC_TRAVEL_PLANNER_API_URL: http://localhost:8003
+      
+      # Internal service URLs (for SSR)
+      INTERNAL_API_URL: http://api:8000
+      INTERNAL_RECEPTION_URL: http://reception:8002
+      INTERNAL_PLANNER_URL: http://planner:8003
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+      - reception
+      - planner
+    networks:
+      - naviagent-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  chromadb_data:
+    driver: local
+
+networks:
+  naviagent-network:
+    driver: bridge
