@@ -40,8 +40,8 @@ export default function Header() {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // Load user session from localStorage on mount
-    const savedUser = localStorage.getItem("user");
+    // Load user session from sessionStorage on mount (session-only, cleared on browser close)
+    const savedUser = sessionStorage.getItem("user");
     if (savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
@@ -49,7 +49,7 @@ export default function Header() {
         console.log("🔄 Restored user session:", parsedUser.email);
       } catch (error) {
         console.error("❌ Failed to parse saved user:", error);
-        localStorage.removeItem("user");
+        sessionStorage.removeItem("user");
       }
     }
   }, []);
@@ -145,7 +145,7 @@ export default function Header() {
           user_id: loginData.user?.id || loginData.user?.user_id,
         };
         console.log("📝 Registered user:", newUser);
-        localStorage.setItem("user", JSON.stringify(newUser));
+        sessionStorage.setItem("user", JSON.stringify(newUser));
         setUser(newUser);
         closeModal();
       } else {
@@ -174,7 +174,7 @@ export default function Header() {
           user_id: data.user?.id || data.user?.user_id,
         };
         console.log("🔐 Logged in user:", loggedUser);
-        localStorage.setItem("user", JSON.stringify(loggedUser));
+        sessionStorage.setItem("user", JSON.stringify(loggedUser));
         setUser(loggedUser);
         closeModal();
       }
@@ -225,7 +225,7 @@ export default function Header() {
       // Logout locally even if API call fails
     }
 
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
     setUser(null);
   };
 

@@ -42,7 +42,7 @@ export default function VisitedPage() {
 
   // Check authentication
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
+    const userStr = sessionStorage.getItem("user");
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
@@ -60,9 +60,9 @@ export default function VisitedPage() {
 
   const loadTrips = async () => {
     try {
-      const userStr = localStorage.getItem("user");
+      const userStr = sessionStorage.getItem("user");
       if (!userStr) {
-        console.log("No user found in localStorage");
+        console.log("No user found in sessionStorage");
         return;
       }
 
@@ -374,7 +374,7 @@ export default function VisitedPage() {
       };
 
       // Add to database
-      const userStr = localStorage.getItem("user");
+      const userStr = sessionStorage.getItem("user");
       console.log("User data:", userStr);
 
       if (!userStr) {
@@ -519,7 +519,16 @@ export default function VisitedPage() {
 
       <div className="visited-right">
         <div className="chat-header center">
-          <h2>{t("travelAssistant")}</h2>
+          <div className="chat-title">
+            <Image
+              src="/images/map2.jpg"
+              alt="Travel journey assistant"
+              width={40}
+              height={40}
+              className="chat-title-icon"
+            />
+            <h2>{t("travelAssistant")}</h2>
+          </div>
         </div>
         <div className="chat-messages">
           {chatMessages.map((msg, i) => (

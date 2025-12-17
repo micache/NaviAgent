@@ -174,7 +174,11 @@ class HTMLFormatter(BaseFormatter):
         // Print button
         const printBtn = document.getElementById('printBtn');
         if (printBtn) {{
-            printBtn.addEventListener('click', () => window.print());
+            printBtn.addEventListener('click', function(e) {{
+                e.preventDefault();
+                window.print();
+            }});
+            printBtn.style.cursor = 'pointer';
         }}
 
         // Smooth scroll for navigation
@@ -416,7 +420,6 @@ body {
     justify-content: center;
     width: 50px;
     height: 50px;
-    background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
     border-radius: 12px;
     color: white;
 }
@@ -600,6 +603,10 @@ th, td {
     padding: 15px 20px;
     text-align: left;
     border: 2px solid var(--border-color);
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
 }
 
 th {
@@ -859,7 +866,6 @@ tbody tr:last-child td:last-child {
 }
 
 .badge-primary {
-    background: var(--primary-color);
     color: white;
 }
 
@@ -1314,7 +1320,7 @@ tbody tr:last-child td:last-child {
             for cat in categories:
                 name = sanitize_text(cat.get("category_name", ""))
                 cost = format_currency(cat.get("estimated_cost", 0))
-                notes = sanitize_text(cat.get("notes", ""), max_length=40) or "-"
+                notes = sanitize_text(cat.get("notes", "")) or "-"
                 table_rows += f"""
                 <tr>
                     <td><strong>{name}</strong></td>
